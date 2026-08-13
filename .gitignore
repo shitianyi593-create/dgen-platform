@@ -1,0 +1,74 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.trae/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Project-specific
+exports/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+
+# Generated / test files (not source)
+*.mp4
+*.png
+*.zip
+API doc.md
+Archive.zip
+tmp/
+
+# Local-only reference docs / vendor SDK clones — contain credentials and/or
+# nested git history we don't want to bring into this repo.
+/TOS-SDK/
+/seedance-2.0-api-reference/
+/seedance-2.5-api-reference/
+/Seedance-2-0-Virtual_portrait_library-reference/
+/Seedream-api-reference/
+/Text-gen-api-reference/
+/superpowers/
+/design_ref/
+/design_handoff_ui_optimization/
+/UI_code-changes/
+
+# Defense-in-depth for ad-hoc credential note files. Real credentials must
+# live in .env.local; this rule prevents an accidentally-recreated note from
+# being staged.
+r18_env_info
+EP_KEY
+
+# Claude Code workflow artefacts — Claude's local config, instructions, and
+# internal planning/spec notes. Public consumers don't need these; everything
+# user-facing lives in README.md and docs/deployment-guide.md.
+.claude/
+.agents/
+.superpowers/
+skills-lock.json
+CLAUDE.md
+CLAUDE.local.md
+PROJECT_PLAN.md
+docs/superpowers/
+
+# Git worktrees (used by superpowers workflow)
+.worktrees/
