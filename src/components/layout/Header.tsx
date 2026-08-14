@@ -1,6 +1,8 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import { HeaderStatusPills } from '../credentials/HeaderStatusPills'
 import { useCredentialsUiStore } from '../credentials/uiStore'
+import { BRAND } from '../../brand/config'
+import { DGenWordmark } from '../common/DGenWordmark'
 
 // Only the implemented tabs are shown. 語音模型 is still in the roadmap
 // (see README "後續開發") but not built yet — kept out of nav so users
@@ -31,15 +33,12 @@ export default function Header() {
         flexShrink: 0,
       }}
     >
-      {/* Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M8 12l2 2 4-4" />
-        </svg>
-        <span style={{ fontWeight: 600, fontSize: 16, color: 'var(--text-primary)' }}>
-          BytePlus AI Gen Platform
-        </span>
+      {/* Brand */}
+      <div
+        aria-label={BRAND.title}
+        style={{ display: 'flex', alignItems: 'center', color: 'var(--text-primary)' }}
+      >
+        <DGenWordmark />
       </div>
 
       {/* Tabs — nowrap + no-shrink so the CJK labels can't wrap inside the
