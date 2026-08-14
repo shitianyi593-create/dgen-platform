@@ -1,0 +1,77 @@
+:root {
+  color-scheme: dark;
+
+  --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
+  --color-bg: #0A0A0B;
+  --color-surface: #141416;
+  --color-surface-raised: #1C1C1F;
+  --color-text: #F5F5F6;
+  --color-text-muted: #A0A0A8;
+  --color-text-subtle: #68686F;
+  --color-border: #303036;
+  --color-accent: #F2F2F3;
+  --color-success: #36C98A;
+  --color-warning: #E3A43B;
+  --color-danger: #FF6B6B;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-pill: 999px;
+
+  --shadow-panel: 0 18px 54px rgba(0, 0, 0, 0.42);
+  --shadow-drawer: -30px 0 60px rgba(0, 0, 0, 0.58);
+  --shadow-focus: 0 0 0 3px rgba(242, 242, 243, 0.18);
+
+  /* Compatibility aliases for the existing component surface. */
+  --bg-primary: var(--color-bg);
+  --bg-secondary: var(--color-surface);
+  --bg-tertiary: #18181B;
+  --bg-input: var(--color-surface-raised);
+  --border: var(--color-border);
+  --border-focus: var(--color-accent);
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-muted);
+  --text-muted: var(--color-text-subtle);
+
+  /* Existing buttons often hard-code #fff text, so keep this alias dark. */
+  --accent: #3F3F46;
+  --accent-hover: #52525B;
+  --accent-contrast: #111113;
+
+  --danger: var(--color-danger);
+  --success: var(--color-success);
+  --warning: var(--color-warning);
+
+  --ok: var(--color-success);
+  --warn: var(--color-danger);
+  --pend: var(--color-text-muted);
+
+  --ok-bg: rgba(54, 201, 138, 0.12);
+  --warn-bg: rgba(255, 107, 107, 0.12);
+  --pend-bg: rgba(160, 160, 168, 0.11);
+  --ok-bd: rgba(54, 201, 138, 0.34);
+  --warn-bd: rgba(255, 107, 107, 0.34);
+  --pend-bd: rgba(160, 160, 168, 0.24);
+
+  --success-bg: rgba(54, 201, 138, 0.12);
+  --success-bd: rgba(54, 201, 138, 0.34);
+  --danger-bg: rgba(255, 107, 107, 0.12);
+  --danger-bd: rgba(255, 107, 107, 0.38);
+  --warning-bg: rgba(227, 164, 59, 0.13);
+  --warning-bd: rgba(227, 164, 59, 0.36);
+  --accent-bg: rgba(242, 242, 243, 0.10);
+  --accent-bd: rgba(242, 242, 243, 0.22);
+
+  --type-image: #B8A3FF;
+}
