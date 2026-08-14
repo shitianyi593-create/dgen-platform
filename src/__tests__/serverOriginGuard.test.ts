@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, afterEach } from 'vitest'
 import request from 'supertest'
 
 import { isLoopbackEquivalent } from '../../server/config/env'
+import { createApp } from '../../server/app'
 
 afterEach(() => {
-  vi.resetModules()
   delete process.env.PLATFORM_ORIGIN
   delete process.env.NODE_ENV
 })
@@ -38,7 +38,6 @@ describe('originGuard — loopback-equivalent acceptance', () => {
   it('in development, accepts 127.0.0.1 origin when PLATFORM_ORIGIN is localhost', async () => {
     process.env.NODE_ENV = 'development'
     process.env.PLATFORM_ORIGIN = 'http://localhost:5173'
-    const { createApp } = await import('../../server/app')
     const res = await request(createApp())
       .post('/local-api/download-asset')
       .set('Origin', 'http://127.0.0.1:5173')
@@ -52,7 +51,6 @@ describe('originGuard — loopback-equivalent acceptance', () => {
   it('in development, accepts localhost origin when PLATFORM_ORIGIN is 127.0.0.1', async () => {
     process.env.NODE_ENV = 'development'
     process.env.PLATFORM_ORIGIN = 'http://127.0.0.1:5173'
-    const { createApp } = await import('../../server/app')
     const res = await request(createApp())
       .post('/local-api/download-asset')
       .set('Origin', 'http://localhost:5173')
@@ -64,7 +62,6 @@ describe('originGuard — loopback-equivalent acceptance', () => {
   it('rejects unrelated origins in development', async () => {
     process.env.NODE_ENV = 'development'
     process.env.PLATFORM_ORIGIN = 'http://localhost:5173'
-    const { createApp } = await import('../../server/app')
     const res = await request(createApp())
       .post('/local-api/download-asset')
       .set('Origin', 'https://attacker.example.com')
@@ -76,7 +73,6 @@ describe('originGuard — loopback-equivalent acceptance', () => {
   it('in production, does NOT accept the loopback-equivalent (strict match only)', async () => {
     process.env.NODE_ENV = 'production'
     process.env.PLATFORM_ORIGIN = 'http://localhost:5173'
-    const { createApp } = await import('../../server/app')
     const res = await request(createApp())
       .post('/local-api/download-asset')
       .set('Origin', 'http://127.0.0.1:5173')
