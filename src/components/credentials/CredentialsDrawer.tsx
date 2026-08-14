@@ -3,6 +3,7 @@ import { useCredentialsUiStore } from './uiStore'
 import { CredentialSection } from './CredentialSection'
 import { CREDENTIALS, type CredKey } from './schema'
 import { useEnvDrop } from './useEnvDrop'
+import { useI18n } from '../../i18n/useI18n'
 
 export function CredentialsDrawer() {
   const drawerOpen = useCredentialsUiStore((s) => s.drawerOpen)
@@ -10,6 +11,7 @@ export function CredentialsDrawer() {
   const expandedSection = useCredentialsUiStore((s) => s.expandedSection)
   const closeDrawer = useCredentialsUiStore((s) => s.closeDrawer)
   const setExpandedSection = useCredentialsUiStore((s) => s.setExpandedSection)
+  const { t } = useI18n()
 
   useEnvDrop(drawerOpen)
 
@@ -35,7 +37,7 @@ export function CredentialsDrawer() {
       <aside
         className={`cred-drawer${drawerOpen ? ' open' : ''}`}
         role="dialog"
-        aria-label="憑證設定"
+        aria-label={t('credentials.title')}
         aria-modal="true"
         aria-hidden={!drawerOpen}
         // `inert` blocks Tab focus AND clicks on the closed (off-screen)
@@ -46,13 +48,13 @@ export function CredentialsDrawer() {
       >
         <div className="cred-drawer-h">
           <div>
-            <div className="cred-drawer-title">憑證設定</div>
-            <div className="cred-drawer-sub">可在任何頁面開啟 · ⌘,</div>
+            <div className="cred-drawer-title">{t('credentials.title')}</div>
+            <div className="cred-drawer-sub">{t('credentials.drawerShortcut')}</div>
           </div>
           <button
             type="button"
             className="cred-drawer-close"
-            aria-label="關閉憑證設定"
+            aria-label={t('credentials.closeSettings')}
             onClick={closeDrawer}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -64,6 +66,7 @@ export function CredentialsDrawer() {
           </button>
         </div>
         <div className="cred-drawer-body">
+          <div className="cred-security-note">{t('credentials.securityNote')}</div>
           {CREDENTIALS.map((def) => (
             <CredentialSection
               key={def.key}

@@ -1,5 +1,6 @@
 import { useAuthStore } from '../../stores/authStore'
-import { CREDENTIALS, STATUS_TEXT, type CredKey } from './schema'
+import { useI18n } from '../../i18n/useI18n'
+import { CREDENTIALS, STATUS_TEXT_KEYS, type CredKey } from './schema'
 
 interface HeaderStatusPillsProps {
   onPillClick: (key: CredKey) => void
@@ -7,8 +8,9 @@ interface HeaderStatusPillsProps {
 
 export function HeaderStatusPills({ onPillClick }: HeaderStatusPillsProps) {
   const verifyState = useAuthStore((s) => s.verifyState)
+  const { t } = useI18n()
   return (
-    <div className="status-pill-cluster" role="group" aria-label="憑證狀態">
+    <div className="status-pill-cluster" role="group" aria-label={t('credentials.statusGroup')}>
       {CREDENTIALS.map((def) => {
         const status = verifyState[def.key].status
         const fullLabelId = `${def.key}-full-label`
@@ -23,10 +25,10 @@ export function HeaderStatusPills({ onPillClick }: HeaderStatusPillsProps) {
             onClick={() => onPillClick(def.key)}
           >
             <span id={fullLabelId} className="sr-only">
-              {def.label} {STATUS_TEXT[status]}
+              {t(def.labelKey)} {t(STATUS_TEXT_KEYS[status])}
             </span>
             <span className="dot" />
-            <span id={pillLabelId}>{def.pillLabel}</span>
+            <span id={pillLabelId}>{t(def.pillLabelKey)}</span>
           </button>
         )
       })}

@@ -10,6 +10,15 @@ vi.mock('../api/verify', () => ({
 
 import { CredentialSection } from '../components/credentials/CredentialSection'
 import { useAuthStore } from '../stores/authStore'
+import { I18nProvider } from '../i18n/I18nProvider'
+
+function renderSection(props: Parameters<typeof CredentialSection>[0]) {
+  return render(
+    <I18nProvider initialLocale="zh-CN">
+      <CredentialSection {...props} />
+    </I18nProvider>,
+  )
+}
 
 describe('CredentialSection', () => {
   beforeEach(() => {
@@ -31,24 +40,30 @@ describe('CredentialSection', () => {
   })
 
   it('shows the section title and hint from schema', () => {
-    render(<CredentialSection credKey="asset" expanded={false} onToggle={() => {}} />)
-    expect(screen.getByText('私有素材庫憑證')).toBeInTheDocument()
-    expect(screen.getByText(/ARK AKSK/)).toBeInTheDocument()
+    renderSection({ credKey: 'asset', expanded: false, onToggle: () => {} })
+    expect(screen.getByText('私有素材库凭证')).toBeInTheDocument()
+    expect(screen.getByText(/上传和管理私有素材/)).toBeInTheDocument()
   })
 
   it('clicking the header invokes onToggle', () => {
     const onToggle = vi.fn()
-    render(<CredentialSection credKey="asset" expanded={false} onToggle={onToggle} />)
-    fireEvent.click(screen.getByRole('button', { name: /私有素材庫憑證/ }))
+    renderSection({ credKey: 'asset', expanded: false, onToggle })
+    fireEvent.click(screen.getByRole('button', { name: /私有素材库凭证/ }))
     expect(onToggle).toHaveBeenCalledWith('asset')
   })
 
   it('renders the form only when expanded', () => {
     const { rerender } = render(
-      <CredentialSection credKey="asset" expanded={false} onToggle={() => {}} />,
+      <I18nProvider initialLocale="zh-CN">
+        <CredentialSection credKey="asset" expanded={false} onToggle={() => {}} />
+      </I18nProvider>,
     )
     expect(screen.queryByLabelText('Project Name')).not.toBeInTheDocument()
-    rerender(<CredentialSection credKey="asset" expanded={true} onToggle={() => {}} />)
+    rerender(
+      <I18nProvider initialLocale="zh-CN">
+        <CredentialSection credKey="asset" expanded={true} onToggle={() => {}} />
+      </I18nProvider>,
+    )
     expect(screen.getByLabelText('Project Name')).toBeInTheDocument()
   })
 
@@ -56,8 +71,8 @@ describe('CredentialSection', () => {
     useAuthStore.setState({
       assetCreds: { accessKeyId: 'AK', accessKeySecret: 'SK', projectName: 'p' },
     })
-    render(<CredentialSection credKey="asset" expanded={true} onToggle={() => {}} />)
-    fireEvent.click(screen.getByRole('button', { name: /測試連線/ }))
+    renderSection({ credKey: 'asset', expanded: true, onToggle: () => {} })
+    fireEvent.click(screen.getByRole('button', { name: /测试连接/ }))
     await waitFor(() => {
       expect(useAuthStore.getState().verifyState.asset.status).toBe('ok')
     })
@@ -65,7 +80,9 @@ describe('CredentialSection', () => {
 
   it('adds the "target" class when target prop is true', () => {
     const { container } = render(
-      <CredentialSection credKey="asset" expanded={true} onToggle={() => {}} target />,
+      <I18nProvider initialLocale="zh-CN">
+        <CredentialSection credKey="asset" expanded={true} onToggle={() => {}} target />
+      </I18nProvider>,
     )
     expect(container.querySelector('.cred-section.target')).toBeInTheDocument()
   })
@@ -77,33 +94,37 @@ describe('CredentialSection', () => {
         asset: { status: 'pend', message: '驗證中…' },
       },
     })
-    render(<CredentialSection credKey="asset" expanded={true} onToggle={() => {}} />)
+    renderSection({ credKey: 'asset', expanded: true, onToggle: () => {} })
     const btn = screen.getByRole('button', { name: /驗證中…/ }) as HTMLButtonElement
     expect(btn).toBeDisabled()
   })
 
   it('focuses the first form input when target=true and expanded=true', () => {
     render(
-      <CredentialSection credKey="asset" expanded={true} onToggle={() => {}} target />,
+      <I18nProvider initialLocale="zh-CN">
+        <CredentialSection credKey="asset" expanded={true} onToggle={() => {}} target />
+      </I18nProvider>,
     )
     expect(screen.getByLabelText('Access Key ID')).toHaveFocus()
   })
 
   it('does NOT focus the first form input when target=false', () => {
     render(
-      <CredentialSection credKey="asset" expanded={true} onToggle={() => {}} />,
+      <I18nProvider initialLocale="zh-CN">
+        <CredentialSection credKey="asset" expanded={true} onToggle={() => {}} />
+      </I18nProvider>,
     )
     expect(screen.getByLabelText('Access Key ID')).not.toHaveFocus()
   })
 
   it('inference section does NOT render the 測試連線 button (live-validation)', () => {
-    render(<CredentialSection credKey="inference" expanded={true} onToggle={() => {}} />)
-    expect(screen.queryByRole('button', { name: /測試連線/ })).toBeNull()
+    renderSection({ credKey: 'inference', expanded: true, onToggle: () => {} })
+    expect(screen.queryByRole('button', { name: /测试连接/ })).toBeNull()
     expect(screen.queryByRole('button', { name: /驗證中/ })).toBeNull()
   })
 
   it('asset section still renders the 測試連線 button', () => {
-    render(<CredentialSection credKey="asset" expanded={true} onToggle={() => {}} />)
-    expect(screen.getByRole('button', { name: /測試連線/ })).toBeInTheDocument()
+    renderSection({ credKey: 'asset', expanded: true, onToggle: () => {} })
+    expect(screen.getByRole('button', { name: /测试连接/ })).toBeInTheDocument()
   })
 })

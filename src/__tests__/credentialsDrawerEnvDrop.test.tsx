@@ -12,6 +12,15 @@ vi.mock('../api/verify', () => ({
 import { CredentialsDrawer } from '../components/credentials/CredentialsDrawer'
 import { useCredentialsUiStore } from '../components/credentials/uiStore'
 import { useAuthStore } from '../stores/authStore'
+import { I18nProvider } from '../i18n/I18nProvider'
+
+function renderDrawer() {
+  return render(
+    <I18nProvider initialLocale="zh-CN">
+      <CredentialsDrawer />
+    </I18nProvider>,
+  )
+}
 
 function makeDropEvent(file: File): Event {
   const event = new Event('drop', { bubbles: true, cancelable: true })
@@ -53,7 +62,7 @@ describe('CredentialsDrawer env drop', () => {
 
   it('drops a full .env with the drawer OPEN → store gets populated', async () => {
     useCredentialsUiStore.setState({ drawerOpen: true })
-    render(<CredentialsDrawer />)
+    renderDrawer()
     const file = new File([FULL_ENV], '.env', { type: 'text/plain' })
     const ev = makeDropEvent(file)
     await act(async () => {
@@ -69,7 +78,7 @@ describe('CredentialsDrawer env drop', () => {
   })
 
   it('drops .env with the drawer CLOSED → store unchanged', async () => {
-    render(<CredentialsDrawer />)
+    renderDrawer()
     const file = new File([FULL_ENV], '.env', { type: 'text/plain' })
     await act(async () => {
       document.dispatchEvent(makeDropEvent(file))
@@ -80,7 +89,7 @@ describe('CredentialsDrawer env drop', () => {
 
   it('drops an oversized file → store unchanged', async () => {
     useCredentialsUiStore.setState({ drawerOpen: true })
-    render(<CredentialsDrawer />)
+    renderDrawer()
     const huge = 'TOS_BUCKET=mybucket\n' + 'x'.repeat(70_000)
     const file = new File([huge], '.env', { type: 'text/plain' })
     await act(async () => {
@@ -92,7 +101,7 @@ describe('CredentialsDrawer env drop', () => {
 
   it('drops a file whose content matches no aliases → store unchanged', async () => {
     useCredentialsUiStore.setState({ drawerOpen: true })
-    render(<CredentialsDrawer />)
+    renderDrawer()
     const file = new File(['SOME_OTHER_KEY=irrelevant'], '.env', { type: 'text/plain' })
     await act(async () => {
       document.dispatchEvent(makeDropEvent(file))
@@ -110,7 +119,7 @@ describe('CredentialsDrawer env drop', () => {
       tosCreds: { accessKeyId: '', accessKeySecret: '', region: 'ap-southeast-1', bucket: '' },
     })
     useCredentialsUiStore.setState({ drawerOpen: true })
-    render(<CredentialsDrawer />)
+    renderDrawer()
     const file = new File(['TOS_BUCKET=only-bucket'], '.env', { type: 'text/plain' })
     await act(async () => {
       document.dispatchEvent(makeDropEvent(file))

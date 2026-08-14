@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useAuthStore } from '../../stores/authStore'
+import { useI18n } from '../../i18n/useI18n'
 import { CREDENTIALS_BY_KEY, type CredKey } from './schema'
 
 interface CredentialFormProps {
@@ -12,6 +13,7 @@ export function CredentialForm({ credKey, autoFocus = false }: CredentialFormPro
   const def = CREDENTIALS_BY_KEY[credKey]
   const verify = useAuthStore((s) => s.verifyState[credKey])
   const setField = useAuthStore((s) => s.setField)
+  const { t } = useI18n()
 
   // Subscribe only to the slice this form actually needs. useShallow keeps
   // re-renders limited to changes within that slice (vs. the whole store).
@@ -70,7 +72,7 @@ export function CredentialForm({ credKey, autoFocus = false }: CredentialFormPro
         const isShown = field.secret && shownSecrets.has(field.key)
         return (
           <div key={field.key} className="cred-form-field">
-            <label htmlFor={id} className="cred-form-label">{field.label}</label>
+            <label htmlFor={id} className="cred-form-label">{t(field.labelKey)}</label>
             {isSelect ? (
               <select
                 id={id}
@@ -80,9 +82,8 @@ export function CredentialForm({ credKey, autoFocus = false }: CredentialFormPro
                 onChange={(e) => setField(credKey, field.key, e.target.value)}
                 autoComplete="off"
               >
-                {/* Empty placeholder so a fresh form (value === '') shows
-                    "請選擇" instead of silently picking the first option. */}
-                {value === '' && <option value="" disabled>請選擇…</option>}
+                {/* Empty placeholder keeps a fresh form from silently picking the first option. */}
+                {value === '' && <option value="" disabled>{t('credentials.selectPlaceholder')}</option>}
                 {field.options.map((opt) => (
                   <option key={opt} value={opt}>{opt}</option>
                 ))}
@@ -96,7 +97,7 @@ export function CredentialForm({ credKey, autoFocus = false }: CredentialFormPro
                   type={field.secret && !isShown ? 'password' : 'text'}
                   value={value}
                   onChange={(e) => setField(credKey, field.key, e.target.value)}
-                  placeholder={'placeholder' in field ? field.placeholder : undefined}
+                  placeholder={'placeholderKey' in field && field.placeholderKey ? t(field.placeholderKey) : undefined}
                   spellCheck={false}
                   autoComplete="off"
                 />
@@ -104,8 +105,8 @@ export function CredentialForm({ credKey, autoFocus = false }: CredentialFormPro
                   <button
                     type="button"
                     className="cred-form-secret-toggle"
-                    aria-label={isShown ? '隱藏' : '顯示'}
-                    title={isShown ? '隱藏' : '顯示'}
+                    aria-label={isShown ? t('credentials.hideSecret') : t('credentials.showSecret')}
+                    title={isShown ? t('credentials.hideSecret') : t('credentials.showSecret')}
                     onClick={() => toggleShown(field.key)}
                   >
                     {isShown ? (
@@ -131,7 +132,7 @@ export function CredentialForm({ credKey, autoFocus = false }: CredentialFormPro
                 )}
               </div>
             )}
-            {field.hint && (
+            {field.hintKey && (
               <div
                 className="cred-form-field-hint"
                 style={{
@@ -142,7 +143,7 @@ export function CredentialForm({ credKey, autoFocus = false }: CredentialFormPro
                   whiteSpace: 'pre-line',
                 }}
               >
-                {field.hint}
+                {t(field.hintKey)}
               </div>
             )}
           </div>

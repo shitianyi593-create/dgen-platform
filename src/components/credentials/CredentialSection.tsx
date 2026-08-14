@@ -1,5 +1,6 @@
 import { useAuthStore, PENDING_TEST_MSG } from '../../stores/authStore'
-import { CREDENTIALS_BY_KEY, STATUS_TEXT, type CredKey } from './schema'
+import { useI18n } from '../../i18n/useI18n'
+import { CREDENTIALS_BY_KEY, STATUS_TEXT_KEYS, type CredKey } from './schema'
 import { CredentialForm } from './CredentialForm'
 
 interface CredentialSectionProps {
@@ -15,6 +16,7 @@ export function CredentialSection({
   const def = CREDENTIALS_BY_KEY[credKey]
   const verify = useAuthStore((s) => s.verifyState[credKey])
   const runVerify = useAuthStore((s) => s.verify)
+  const { t } = useI18n()
 
   const pendingTest = expanded && verify.message === PENDING_TEST_MSG
 
@@ -38,11 +40,11 @@ export function CredentialSection({
           <polyline points="9 18 15 12 9 6" />
         </svg>
         <div className="cred-meta">
-          <div className="cred-meta-title">{def.label}</div>
-          <div className="cred-meta-hint">{def.hint}</div>
+          <div className="cred-meta-title">{t(def.labelKey)}</div>
+          <div className="cred-meta-hint">{t(def.hintKey)}</div>
         </div>
         <span className="cred-pill" data-state={verify.status}>
-          {STATUS_TEXT[verify.status]}
+          {t(STATUS_TEXT_KEYS[verify.status])}
         </span>
       </button>
       {expanded && (
@@ -52,7 +54,7 @@ export function CredentialSection({
             {credKey === 'inference' ? (
               // Inference uses live local format validation; no manual test button needed.
               <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                {verify.status === 'ok' ? verify.message : '輸入即時驗證'}
+                {verify.status === 'ok' ? verify.message : t('credentials.liveValidation')}
               </span>
             ) : (
               <>
@@ -62,7 +64,7 @@ export function CredentialSection({
                   disabled={pendingTest}
                   onClick={() => { void runVerify(credKey) }}
                 >
-                  {pendingTest ? PENDING_TEST_MSG : '測試連線'}
+                  {pendingTest ? PENDING_TEST_MSG : t('credentials.testConnection')}
                 </button>
                 {verify.status === 'ok' && (
                   <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{verify.message}</span>
