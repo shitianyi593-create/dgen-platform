@@ -3,14 +3,21 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Header from '../components/layout/Header'
 import ImageGenPage from '../components/image/ImageGenPage'
+import { I18nProvider } from '../i18n/I18nProvider'
 
 describe('Header tabs', () => {
-  it('shows the 圖片生成 tab between video and assets', () => {
-    render(<MemoryRouter initialEntries={['/image']}><Header /></MemoryRouter>)
+  it('shows the 图片生成 tab between video and assets', () => {
+    render(
+      <MemoryRouter initialEntries={['/image']}>
+        <I18nProvider initialLocale="zh-CN">
+          <Header />
+        </I18nProvider>
+      </MemoryRouter>,
+    )
     const labels = screen.getAllByRole('button').map((b) => b.textContent)
-    expect(labels).toContain('影片生成')
-    expect(labels).toContain('圖片生成')
-    expect(labels).toContain('私有素材庫管理')
+    expect(labels).toContain('视频生成')
+    expect(labels).toContain('图片生成')
+    expect(labels).toContain('私有素材库管理')
   })
 })
 

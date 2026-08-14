@@ -3,22 +3,26 @@ import { HeaderStatusPills } from '../credentials/HeaderStatusPills'
 import { useCredentialsUiStore } from '../credentials/uiStore'
 import { BRAND } from '../../brand/config'
 import { DGenWordmark } from '../common/DGenWordmark'
+import { useI18n } from '../../i18n/useI18n'
+import type { MessageKey } from '../../i18n/locales'
+import { LanguageSwitcher } from './LanguageSwitcher'
 
 // Only the implemented tabs are shown. 語音模型 is still in the roadmap
 // (see README "後續開發") but not built yet — kept out of nav so users
 // don't click into a placeholder.
-const TABS = [
-  { path: '/video', label: '影片生成' },
-  { path: '/video-25', label: '影片生成 2.5' },
-  { path: '/image', label: '圖片生成' },
-  { path: '/chat', label: '文字生成' },
-  { path: '/assets', label: '私有素材庫管理' },
+const TABS: Array<{ path: string; labelKey: MessageKey }> = [
+  { path: '/video', labelKey: 'nav.video' },
+  { path: '/video-25', labelKey: 'nav.video25' },
+  { path: '/image', labelKey: 'nav.image' },
+  { path: '/chat', labelKey: 'nav.chat' },
+  { path: '/assets', labelKey: 'nav.assets' },
 ]
 
 export default function Header() {
   const location = useLocation()
   const navigate = useNavigate()
   const openDrawer = useCredentialsUiStore((s) => s.openDrawer)
+  const { t } = useI18n()
 
   return (
     <header
@@ -26,6 +30,7 @@ export default function Header() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        gap: 16,
         padding: '0 24px',
         height: 56,
         borderBottom: '1px solid var(--border)',
@@ -36,7 +41,7 @@ export default function Header() {
       {/* Brand */}
       <div
         aria-label={BRAND.title}
-        style={{ display: 'flex', alignItems: 'center', color: 'var(--text-primary)' }}
+        style={{ display: 'flex', alignItems: 'center', color: 'var(--text-primary)', flexShrink: 0 }}
       >
         <DGenWordmark />
       </div>
@@ -45,9 +50,20 @@ export default function Header() {
           fixed 56px header band. The 5th tab (影片生成 2.5) narrowed the
           slack between the logo block and the status pills; without these
           the labels start wrapping around ~1100px viewport width. */}
-      <nav style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-        {TABS.map(({ path, label }) => {
+      <nav
+        aria-label="Primary"
+        style={{
+          display: 'flex',
+          gap: 4,
+          flex: '1 1 auto',
+          minWidth: 0,
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+        }}
+      >
+        {TABS.map(({ path, labelKey }) => {
           const isActive = location.pathname === path
+          const label = t(labelKey)
           return (
             <button
               key={path}
@@ -71,12 +87,13 @@ export default function Header() {
         })}
       </nav>
 
-      {/* Right side: status pills + gear */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      {/* Right side: language switcher + status pills + gear */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+        <LanguageSwitcher />
         <HeaderStatusPills onPillClick={openDrawer} />
         <button
           type="button"
-          aria-label="開啟憑證設定"
+          aria-label={t('credentials.openSettings')}
           onClick={() => openDrawer()}
           style={{
             background: 'transparent',
@@ -87,7 +104,7 @@ export default function Header() {
             display: 'grid',
             placeItems: 'center',
           }}
-          title="憑證設定 (⌘,)"
+          title={`${t('credentials.title')} (⌘,)`}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="3" />

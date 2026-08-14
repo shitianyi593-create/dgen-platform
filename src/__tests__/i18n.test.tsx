@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from 'vitest'
+import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import {
   DEFAULT_LOCALE,
@@ -27,10 +27,20 @@ function Probe() {
   )
 }
 
+function mockBrowserLanguage(language: string) {
+  vi.spyOn(window.navigator, 'languages', 'get').mockReturnValue([language])
+  vi.spyOn(window.navigator, 'language', 'get').mockReturnValue(language)
+}
+
 describe('i18n infrastructure', () => {
   beforeEach(() => {
     localStorage.clear()
     document.documentElement.lang = ''
+    mockBrowserLanguage('zh-CN')
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
   it('ships zh-CN and en-US dictionaries with identical keys', () => {
@@ -53,6 +63,21 @@ describe('i18n infrastructure', () => {
     expect(screen.getByTestId('nav-video')).toHaveTextContent('视频生成')
     expect(screen.getByTestId('brand-description')).toHaveTextContent('AI 创意工作台')
     expect(document.documentElement.lang).toBe('zh-CN')
+  })
+
+  it('uses en-US for first visit on a non-Chinese browser', () => {
+    vi.restoreAllMocks()
+    mockBrowserLanguage('en-US')
+
+    render(
+      <I18nProvider>
+        <Probe />
+      </I18nProvider>,
+    )
+
+    expect(screen.getByTestId('locale')).toHaveTextContent('en-US')
+    expect(screen.getByTestId('nav-video')).toHaveTextContent('Video')
+    expect(document.documentElement.lang).toBe('en-US')
   })
 
   it('persists locale changes to localStorage and updates document lang', () => {
@@ -88,5 +113,21 @@ describe('i18n infrastructure', () => {
       </I18nProvider>,
     )
     expect(screen.getByTestId('locale')).toHaveTextContent(DEFAULT_LOCALE)
+  })
+
+  it('interpolates plain text params without HTML rendering', () => {
+    function InterpolationProbe() {
+      const { t } = useI18n()
+      return <p>{t('common.namedError', { name: '<strong>Ada</strong>' })}</p>
+    }
+
+    render(
+      <I18nProvider initialLocale="en-US">
+        <InterpolationProbe />
+      </I18nProvider>,
+    )
+
+    expect(screen.getByText('Something went wrong: <strong>Ada</strong>')).toBeInTheDocument()
+    expect(document.querySelector('strong')).toBeNull()
   })
 })

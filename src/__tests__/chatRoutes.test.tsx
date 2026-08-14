@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import Header from '../components/layout/Header'
 import ChatPage from '../components/chat/ChatPage'
 import { useChatStore } from '../stores/chatStore'
+import { I18nProvider } from '../i18n/I18nProvider'
 
 beforeEach(() => {
   sessionStorage.clear()
@@ -12,8 +13,14 @@ beforeEach(() => {
 })
 
 describe('Header tabs', () => {
-  it('顯示 文字生成 分頁', () => {
-    render(<MemoryRouter initialEntries={['/chat']}><Header /></MemoryRouter>)
+  it('显示 文字生成 分页', () => {
+    render(
+      <MemoryRouter initialEntries={['/chat']}>
+        <I18nProvider initialLocale="zh-CN">
+          <Header />
+        </I18nProvider>
+      </MemoryRouter>,
+    )
     const labels = screen.getAllByRole('button').map((b) => b.textContent)
     expect(labels).toContain('文字生成')
   })

@@ -4,12 +4,15 @@ import { describe, expect, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Header from '../components/layout/Header'
+import { I18nProvider } from '../i18n/I18nProvider'
 
 describe('DGen brand identity', () => {
   it('renders the DGen wordmark in the header without the legacy product name', () => {
     render(
       <MemoryRouter initialEntries={['/video']}>
-        <Header />
+        <I18nProvider initialLocale="zh-CN">
+          <Header />
+        </I18nProvider>
       </MemoryRouter>,
     )
 

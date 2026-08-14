@@ -16,6 +16,7 @@ import userEvent from '@testing-library/user-event'
 import App from '../App'
 import { useVideoStore } from '../stores/videoStore'
 import { useVideo25Store } from '../stores/video25Store'
+import { I18nProvider } from '../i18n/I18nProvider'
 
 vi.mock('react-hot-toast', () => ({
   default: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }),
@@ -24,7 +25,11 @@ vi.mock('react-hot-toast', () => ({
 
 function renderAppAt(path: string) {
   window.history.pushState({}, '', path)
-  return render(<App />)
+  return render(
+    <I18nProvider initialLocale="zh-CN">
+      <App />
+    </I18nProvider>,
+  )
 }
 
 function seedBothHistories() {
@@ -70,7 +75,7 @@ describe('Header 影片生成 2.5 分頁', () => {
   it('分頁存在且點擊後導向 2.5 頁', async () => {
     const user = userEvent.setup()
     renderAppAt('/video')
-    const tab = screen.getByRole('button', { name: '影片生成 2.5' })
+    const tab = screen.getByRole('button', { name: '视频生成 2.5' })
     expect(tab).toBeInTheDocument()
 
     await user.click(tab)
