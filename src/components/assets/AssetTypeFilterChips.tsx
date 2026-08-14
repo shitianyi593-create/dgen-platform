@@ -23,9 +23,9 @@ const CHIPS: Array<{
   color?: string
 }> = [
   { key: 'all', label: '全部' },
-  { key: 'Image', label: '圖片', icon: 'image', color: 'var(--type-image)' },
-  { key: 'Video', label: '影片', icon: 'video', color: 'var(--border-focus)' },
-  { key: 'Audio', label: '音訊', icon: 'music', color: 'var(--success)' },
+  { key: 'Image', label: '图片', icon: 'image', color: 'var(--type-image)' },
+  { key: 'Video', label: '视频', icon: 'video', color: 'var(--border-focus)' },
+  { key: 'Audio', label: '音频', icon: 'music', color: 'var(--success)' },
 ]
 
 export default function AssetTypeFilterChips({

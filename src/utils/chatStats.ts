@@ -6,9 +6,9 @@ export interface ChatTotals {
   totalTokens: number
   promptTokens: number
   cachedTokens: number
-  /** Σcached ÷ Σprompt；尚無 usage 時 null。 */
+  /** Σcached ÷ Σprompt；尚无 usage 时 null。 */
   cacheHitRate: number | null
-  /** 最近一次請求的 prompt_tokens = 模型實際看到的 context 大小；null = 尚無。 */
+  /** 最近一次请求的 prompt_tokens = 模型实际看到的 context 大小；null = 尚无。 */
   currentContextTokens: number | null
 }
 
@@ -30,7 +30,7 @@ export function computeChatTotals(turns: ChatTurn[]): ChatTotals {
   }
 }
 
-/** completion_tokens ÷ 生成秒數。串流扣掉 TTFT（等待期不算生成）。 */
+/** completion_tokens ÷ 生成秒数。流式扣掉 TTFT（等待期不算生成）。 */
 export function computeTokensPerSec(
   completionTokens: number | undefined,
   totalMs: number,

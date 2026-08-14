@@ -43,11 +43,11 @@ export interface VerifyState {
 interface AuthState {
   apiKey: string
   endpoint: string
-  /** Seedream 圖片生成接入點。與影片的 `endpoint` 平行；API Key 共用。 */
+  /** Seedream 图片生成接入点。与视频的 `endpoint` 平行；API Key 共用。 */
   imageEndpoint: string
-  /** Seed 文字生成接入點。與影片 `endpoint`、圖片 `imageEndpoint` 平行；API Key 共用。 */
+  /** Seed 文字生成接入点。与视频 `endpoint`、图片 `imageEndpoint` 平行；API Key 共用。 */
   textEndpoint: string
-  /** Seedance 2.5 影片生成接入點。選填：留空時直接以 Model ID 呼叫。 */
+  /** Seedance 2.5 视频生成接入点。选填：留空时直接以 Model ID 呼叫。 */
   videoEndpoint25: string
   assetCreds: AssetCreds
   tosCreds: TosCreds
@@ -78,9 +78,9 @@ const EMPTY_TOS_CREDS: TosCreds = {
   bucket: '',
 }
 
-const PEND_ENTRY: VerifyEntry = { status: 'pend', message: '尚未驗證' }
+const PEND_ENTRY: VerifyEntry = { status: 'pend', message: '尚未验证' }
 /** Sentinel message set on a credential's verifyState while a network test is in flight. */
-export const PENDING_TEST_MSG = '驗證中…'
+export const PENDING_TEST_MSG = '验证中…'
 const PENDING_TEST_ENTRY: VerifyEntry = { status: 'pend', message: PENDING_TEST_MSG }
 
 const EMPTY_VERIFY_STATE: VerifyState = {
@@ -128,46 +128,46 @@ const validateInference = (
   if (!isValidApiKey(apiKeyTrimmed)) {
     return {
       status: 'warn',
-      message: 'API 金鑰格式不符（UUID 或 ark-{UUID}-{5字元}）',
+      message: 'API 密钥格式不符（UUID 或 ark-{UUID}-{5字符}）',
       lastTestedAt: Date.now(),
     }
   }
   if (!epTrimmed && !imgEpTrimmed && !txtEpTrimmed && !ep25Trimmed) {
     return {
       status: 'warn',
-      message: '至少需填一個接入點（影片、圖片或文字生成）',
+      message: '至少需填一个接入点（视频、图片或文字生成）',
       lastTestedAt: Date.now(),
     }
   }
   if (epTrimmed && !ENDPOINT_PATTERN.test(epTrimmed)) {
     return {
       status: 'warn',
-      message: '影片生成接入點格式不符（應為 ep-YYYYMMDDHHMMSS-XXXXX）',
+      message: '视频生成接入点格式不符（应为 ep-YYYYMMDDHHMMSS-XXXXX）',
       lastTestedAt: Date.now(),
     }
   }
   if (imgEpTrimmed && !ENDPOINT_PATTERN.test(imgEpTrimmed)) {
     return {
       status: 'warn',
-      message: '圖片生成接入點格式不符（應為 ep-YYYYMMDDHHMMSS-XXXXX）',
+      message: '图片生成接入点格式不符（应为 ep-YYYYMMDDHHMMSS-XXXXX）',
       lastTestedAt: Date.now(),
     }
   }
   if (txtEpTrimmed && !ENDPOINT_PATTERN.test(txtEpTrimmed)) {
     return {
       status: 'warn',
-      message: '文字生成接入點格式不符（應為 ep-YYYYMMDDHHMMSS-XXXXX）',
+      message: '文字生成接入点格式不符（应为 ep-YYYYMMDDHHMMSS-XXXXX）',
       lastTestedAt: Date.now(),
     }
   }
   if (ep25Trimmed && !ENDPOINT_PATTERN.test(ep25Trimmed)) {
     return {
       status: 'warn',
-      message: '2.5 影片生成接入點格式不符（應為 ep-YYYYMMDDHHMMSS-XXXXX；選填）',
+      message: '2.5 视频生成接入点格式不符（应为 ep-YYYYMMDDHHMMSS-XXXXX；选填）',
       lastTestedAt: Date.now(),
     }
   }
-  return { status: 'ok', message: '格式檢查通過', lastTestedAt: Date.now() }
+  return { status: 'ok', message: '格式检查通过', lastTestedAt: Date.now() }
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -274,12 +274,12 @@ export const useAuthStore = create<AuthState>()(
               bucket,
             })
             const entry: VerifyEntry = r.ok
-              ? { status: 'ok', message: r.detail ?? '驗證通過', lastTestedAt: Date.now() }
+              ? { status: 'ok', message: r.detail ?? '验证通过', lastTestedAt: Date.now() }
               : { status: 'warn', message: r.message, lastTestedAt: Date.now() }
             set((s) => ({ verifyState: { ...s.verifyState, tos: entry } }))
           }
         } catch (e) {
-          const message = e instanceof Error ? e.message : '驗證異常'
+          const message = e instanceof Error ? e.message : '验证异常'
           set((s) => ({
             verifyState: {
               ...s.verifyState,

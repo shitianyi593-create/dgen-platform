@@ -1,12 +1,12 @@
 // src/utils/chatExport.ts
-// 一鍵下載對話 debug JSON。純前端 Blob 下載，無 server 參與。
+// 一键下载对话 debug JSON。纯前端 Blob 下载，无 server 参与。
 import type { ChatApiMode, ChatTurn, GenParams, SystemPromptMode } from '../types/chat'
 import { computeChatTotals, type ChatTotals } from './chatStats'
 
 export interface ChatExportBundle {
   exportedAt: string
   apiMode: ChatApiMode
-  /** ep ID（非機密）。API key 絕不進 bundle。 */
+  /** ep ID（非机密）。API key 绝不进 bundle。 */
   endpoint: string
   params: GenParams
   systemPrompt: string
@@ -22,7 +22,7 @@ export function buildChatExport(args: {
   systemPrompt: string
   systemPromptMode: SystemPromptMode
   turns: ChatTurn[]
-  /** 測試可注入；預設取現在時間。 */
+  /** 测试可注入；默认取现在时间。 */
   exportedAt?: string
 }): ChatExportBundle {
   return {

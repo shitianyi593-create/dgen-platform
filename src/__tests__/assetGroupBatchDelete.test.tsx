@@ -23,18 +23,18 @@ vi.mock('react-hot-toast', () => ({
 
 function fakeGroup(i: number): AssetGroup {
   return {
-    id: `g-${i}`, name: `群組 ${i}`, groupType: 'AIGC',
+    id: `g-${i}`, name: `群组 ${i}`, groupType: 'AIGC',
     projectName: 'default', createTime: '', updateTime: '',
   }
 }
 
 const deletedIds: string[] = []
-/** 這些 id 上的 DeleteAssetGroup 會以非暫時性錯誤（400）持續失敗。 */
+/** 这些 id 上的 DeleteAssetGroup 会以非暂时性错误（400）持续失败。 */
 const failGroupIds = new Set<string>()
-/** 非 null 時每次 DeleteAssetGroup 先等這個 gate — 把批次釘在 running。 */
+/** 非 null 时每次 DeleteAssetGroup 先等这个 gate — 把批次钉在 running。 */
 let deleteGate: Promise<void> | null = null
 
-/** 刪除後 refreshGroups 會再被呼叫 — 只回傳「尚存」群組。 */
+/** 删除后 refreshGroups 会再被呼叫 — 只回传「尚存」群组。 */
 async function listPage(
   _filter?: unknown,
   page: { pageNumber: number; pageSize: number } = {
@@ -74,10 +74,10 @@ vi.mock('../api/asset', async (importOriginal) => {
 import { deleteAssetGroup, listAssetGroups, HttpError } from '../api/asset'
 
 /**
- * 等整條批刪管線收尾。batchDelete 以 4 QPS 派送（每筆間隔 250ms），所以
- * 「job 狀態變了」遠早於「runGroupBatchDelete 回傳、resolver 回到 sidebar」——
- * 收尾的訊號是批次結束後的那次 refreshGroups（listAssetGroups 再被呼叫），
- * 之後只剩 microtask，一個 macrotask 邊界就沖得乾淨。
+ * 等整条批删管线收尾。batchDelete 以 4 QPS 派送（每笔间隔 250ms），所以
+ * 「job 状态变了」遠早于「runGroupBatchDelete 回传、resolver 回到 sidebar」——
+ * 收尾的讯号是批次结束后的那次 refreshGroups（listAssetGroups 再被呼叫），
+ * 之后只剩 microtask，一个 macrotask 边界就沖得乾淨。
  */
 async function settleBatch(listCallsBefore: number) {
   await waitFor(
@@ -110,13 +110,13 @@ describe('batch group delete wiring', () => {
     fireEvent.click(screen.getByRole('button', { name: '管理' }))
     fireEvent.click(screen.getByTestId('group-row-g-0'))
     fireEvent.click(screen.getByTestId('group-row-g-1'))
-    fireEvent.click(screen.getByRole('button', { name: /刪除選取 \(2\)/ }))
+    fireEvent.click(screen.getByRole('button', { name: /删除选择 \(2\)/ }))
   }
 
   it('typed confirmation gates the deletion', async () => {
     await enterManageAndCheckTwo()
-    // Modal 開啟，確認鈕在未輸入「刪除」前 disabled
-    const confirm = await screen.findByRole('button', { name: '永久刪除' })
+    // Modal 打开，确认钮在未输入「删除」前 disabled
+    const confirm = await screen.findByRole('button', { name: '永久删除' })
     expect((confirm as HTMLButtonElement).disabled).toBe(true)
     expect(vi.mocked(deleteAssetGroup)).not.toHaveBeenCalled()
   })
@@ -124,20 +124,20 @@ describe('batch group delete wiring', () => {
   it('lists the checked group names so a filtered-away check is still visible', async () => {
     await enterManageAndCheckTwo()
     const dialog = await screen.findByRole('dialog')
-    // 勾選刻意在搜尋過濾下保留 — 名單（而非只有數字）才是防誤刪的關鍵，
-    // 標題行則讓這串名字不會被讀成「還剩下這些」之類的相反意思。
-    expect(dialog.textContent).toContain('將刪除以下群組：')
-    expect(dialog.textContent).toContain('群組 0')
-    expect(dialog.textContent).toContain('群組 1')
-    expect(dialog.textContent).not.toContain('群組 2')
+    // 勾选刻意在搜索过滤下保留 — 名单（而非只有数字）才是防误删的关键，
+    // 标题行则让这串名字不会被读成「还剩下这些」之类的相反意思。
+    expect(dialog.textContent).toContain('将删除以下群组：')
+    expect(dialog.textContent).toContain('群组 0')
+    expect(dialog.textContent).toContain('群组 1')
+    expect(dialog.textContent).not.toContain('群组 2')
   })
 
-  it('typing 刪除 enables confirm; both groups deleted via deleteAssetGroup; job kind is group', async () => {
+  it('typing 删除 enables confirm; both groups deleted via deleteAssetGroup; job kind is group', async () => {
     await enterManageAndCheckTwo()
     const listCalls = vi.mocked(listAssetGroups).mock.calls.length
-    const modalInput = await screen.findByPlaceholderText('輸入「刪除」以確認')
-    fireEvent.change(modalInput, { target: { value: '刪除' } })
-    const confirm = screen.getByRole('button', { name: '永久刪除' })
+    const modalInput = await screen.findByPlaceholderText('输入「删除」以确认')
+    fireEvent.change(modalInput, { target: { value: '删除' } })
+    const confirm = screen.getByRole('button', { name: '永久删除' })
     expect((confirm as HTMLButtonElement).disabled).toBe(false)
     fireEvent.click(confirm)
     await waitFor(() => {
@@ -146,50 +146,50 @@ describe('batch group delete wiring', () => {
     expect(deletedIds.sort()).toEqual(['g-0', 'g-1'])
     expect(useAssetStore.getState().deleteJob?.kind).toBe('group')
     await settleBatch(listCalls)
-    // store 的 removeGroup 已把兩個群組移除；refreshGroups 回傳剩餘 1 個
+    // store 的 removeGroup 已把两个群组移除；refreshGroups 回传剩余 1 个
     expect(useAssetStore.getState().groups.map((g) => g.id)).toEqual(['g-2'])
-    // resolver 回到 sidebar：全數成功 → 清勾選並退出管理模式
+    // resolver 回到 sidebar：全数成功 → 清勾选并退出管理模式
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
   })
 
   it('an aborted batch keeps every still-undeleted group checked', async () => {
-    // 403 這類共因錯誤會讓 batchDelete 中止整批：failed[] 是空的，但一個群組
-    // 都沒刪掉 —「空 failed」不可被當成全部成功而清掉勾選、退出管理模式
-    //（素材版同樣把 aborted 排除在 clearChecked 之外）。
+    // 403 这类共因错误会让 batchDelete 中止整批：failed[] 是空的，但一个群组
+    // 都没删掉 —「空 failed」不可被当成全部成功而清掉勾选、退出管理模式
+    //（素材版同样把 aborted 排除在 clearChecked 之外）。
     vi.mocked(deleteAssetGroup).mockRejectedValueOnce(
       new HttpError(403, 'AccessDenied', 'AccessDenied'),
     )
     await enterManageAndCheckTwo()
     const listCalls = vi.mocked(listAssetGroups).mock.calls.length
-    fireEvent.change(await screen.findByPlaceholderText('輸入「刪除」以確認'), {
-      target: { value: '刪除' },
+    fireEvent.change(await screen.findByPlaceholderText('输入「删除」以确认'), {
+      target: { value: '删除' },
     })
-    fireEvent.click(screen.getByRole('button', { name: '永久刪除' }))
+    fireEvent.click(screen.getByRole('button', { name: '永久删除' }))
     await settleBatch(listCalls)
     expect(useAssetStore.getState().deleteJob?.status).toBe('aborted')
     expect(deletedIds).toEqual([])
     expect(
-      screen.getByRole('button', { name: /刪除選取 \(2\)/ }),
+      screen.getByRole('button', { name: /删除选择 \(2\)/ }),
     ).toBeInTheDocument()
   })
 
   it('refuses an asset batch delete while a group batch is running', async () => {
-    // 兩條刪除管線共用同一個 deleteJob slot，而群組批次一跑起來確認 Modal
-    // 就關了 — 底部的素材 pill bar 這時完全按得到。若讓它起跑：新 job 覆蓋
-    // slot、舊的群組批次繼續 patch 同一格 → 終態描述群組批次卻標成
-    // kind:'asset'，「重試失敗項」於是把群組 id 送進 DeleteAsset（全數 404，
-    // 而 404 被當成冪等成功）→ toast 報「已刪除」但群組還在。
+    // 两条删除管线共用同一个 deleteJob slot，而群组批次一跑起来确认 Modal
+    // 就关了 — 底部的素材 pill bar 这时完全按得到。若让它起跑：新 job 覆盖
+    // slot、旧的群组批次继续 patch 同一格 → 终态描述群组批次卻标成
+    // kind:'asset'，「重试失败项」于是把群组 id 送进 DeleteAsset（全数 404，
+    // 而 404 被当成幂等成功）→ toast 报「已删除」但群组还在。
     let release!: () => void
     deleteGate = new Promise<void>((r) => {
       release = r
     })
     await enterManageAndCheckTwo()
     const listCalls = vi.mocked(listAssetGroups).mock.calls.length
-    fireEvent.change(await screen.findByPlaceholderText('輸入「刪除」以確認'), {
-      target: { value: '刪除' },
+    fireEvent.change(await screen.findByPlaceholderText('输入「删除」以确认'), {
+      target: { value: '删除' },
     })
-    fireEvent.click(screen.getByRole('button', { name: '永久刪除' }))
-    // gate 讓批次停在第一筆之前 —— job 確實還在跑。
+    fireEvent.click(screen.getByRole('button', { name: '永久删除' }))
+    // gate 让批次停在第一笔之前 —— job 确实还在跑。
     expect(useAssetStore.getState().deleteJob).toMatchObject({
       status: 'running',
       kind: 'group',
@@ -201,15 +201,15 @@ describe('batch group delete wiring', () => {
     })
     fireEvent.click(
       within(screen.getByRole('toolbar')).getByRole('button', {
-        name: /刪除 1 個/,
+        name: /删除 1 个/,
       }),
     )
     expect(vi.mocked(toast.error)).toHaveBeenCalledWith(
-      '已有刪除工作進行中，請等待完成',
+      '已有删除工作进行中，请等待完成',
     )
-    // 素材確認 Modal 沒開（此刻畫面上不該有任何 dialog）
+    // 素材确认 Modal 没开（此刻画面上不该有任何 dialog）
     expect(screen.queryByRole('dialog')).toBeNull()
-    // group job 沒被覆蓋 — kind 錯了就是上面那條假成功路徑的起點
+    // group job 没被覆盖 — kind 错了就是上面那条假成功路径的起点
     expect(useAssetStore.getState().deleteJob).toMatchObject({
       status: 'running',
       kind: 'group',
@@ -224,11 +224,11 @@ describe('batch group delete wiring', () => {
   })
 
   it('a mixed batch leaves exactly the still-undeleted group checked', async () => {
-    // 3 個群組，最後派送的那個以 400（非暫時性）持續失敗 → 整批在它身上
-    // 中止，但前兩個已經刪掉了。sidebar 的留勾名單來自
-    // `ids.filter((id) => !removed.has(id))`：不能用 job.failed[]（中止時是
-    // 空的 → 會被誤判成全數成功而清掉勾選、退出管理模式），也不能整批留勾
-    //（已刪成的兩個會復活成待重試項）。先前只測了全成功／全中止兩個極端。
+    // 3 个群组，最后派送的那个以 400（非暂时性）持续失败 → 整批在它身上
+    // 中止，但前两个已经删掉了。sidebar 的留勾名单来自
+    // `ids.filter((id) => !removed.has(id))`：不能用 job.failed[]（中止时是
+    // 空的 → 会被误判成全数成功而清掉勾选、退出管理模式），也不能整批留勾
+    //（已删成的两个会复活成待重试项）。先前只测了全成功／全中止两个极端。
     failGroupIds.add('g-2')
     render(<AssetLibraryPage />)
     await waitFor(() =>
@@ -238,12 +238,12 @@ describe('batch group delete wiring', () => {
     fireEvent.click(screen.getByTestId('group-row-g-0'))
     fireEvent.click(screen.getByTestId('group-row-g-1'))
     fireEvent.click(screen.getByTestId('group-row-g-2'))
-    fireEvent.click(screen.getByRole('button', { name: /刪除選取 \(3\)/ }))
+    fireEvent.click(screen.getByRole('button', { name: /删除选择 \(3\)/ }))
     const listCalls = vi.mocked(listAssetGroups).mock.calls.length
-    fireEvent.change(await screen.findByPlaceholderText('輸入「刪除」以確認'), {
-      target: { value: '刪除' },
+    fireEvent.change(await screen.findByPlaceholderText('输入「删除」以确认'), {
+      target: { value: '删除' },
     })
-    fireEvent.click(screen.getByRole('button', { name: '永久刪除' }))
+    fireEvent.click(screen.getByRole('button', { name: '永久删除' }))
     await settleBatch(listCalls)
 
     expect(deletedIds.sort()).toEqual(['g-0', 'g-1'])
@@ -251,14 +251,14 @@ describe('batch group delete wiring', () => {
       status: 'aborted',
       succeeded: 2,
     })
-    // 中止批次的 failed[] 是空的 —— 留勾的判準不能是它。
+    // 中止批次的 failed[] 是空的 —— 留勾的判准不能是它。
     expect(useAssetStore.getState().deleteJob?.failed).toEqual([])
-    // 停在管理模式，只剩失敗的那一個被勾著
+    // 停在管理模式，只剩失败的那一个被勾著
     expect(
-      screen.getByRole('button', { name: /刪除選取 \(1\)/ }),
+      screen.getByRole('button', { name: /删除选择 \(1\)/ }),
     ).toBeInTheDocument()
     expect(
-      (screen.getByLabelText('選取 群組 2') as HTMLInputElement).checked,
+      (screen.getByLabelText('选择 群组 2') as HTMLInputElement).checked,
     ).toBe(true)
     expect(screen.queryByTestId('group-row-g-0')).toBeNull()
   })
@@ -268,33 +268,33 @@ describe('batch group delete wiring', () => {
     await waitFor(() =>
       expect(screen.getByTestId('group-row-g-0')).toBeInTheDocument(),
     )
-    // g-0 是自動選中的群組；使用者在它裡面勾了 2 個素材（listAssets 在這個檔案
-    // 回空清單，所以直接種進 store —— 要釘的是勾選的生命週期，不是卡片渲染）。
+    // g-0 是自动选中的群组；用户在它里面勾了 2 个素材（listAssets 在这个文件
+    // 回空清单，所以直接種进 store —— 要钉的是勾选的生命周期，不是卡片渲染）。
     act(() => {
       useAssetStore.setState({ checkedIds: new Set(['g-0-a1', 'g-0-a2']) })
     })
     expect(
       within(screen.getByRole('toolbar')).getByRole('button', {
-        name: /刪除 2 個/,
+        name: /删除 2 个/,
       }),
     ).toBeInTheDocument()
 
-    // 然後在管理模式裡把 g-0 自己批刪掉
+    // 然后在管理模式里把 g-0 自己批删掉
     fireEvent.click(screen.getByRole('button', { name: '管理' }))
     fireEvent.click(screen.getByTestId('group-row-g-0'))
-    fireEvent.click(screen.getByRole('button', { name: /刪除選取 \(1\)/ }))
+    fireEvent.click(screen.getByRole('button', { name: /删除选择 \(1\)/ }))
     const listCalls = vi.mocked(listAssetGroups).mock.calls.length
-    fireEvent.change(await screen.findByPlaceholderText('輸入「刪除」以確認'), {
-      target: { value: '刪除' },
+    fireEvent.change(await screen.findByPlaceholderText('输入「删除」以确认'), {
+      target: { value: '删除' },
     })
-    fireEvent.click(screen.getByRole('button', { name: '永久刪除' }))
+    fireEvent.click(screen.getByRole('button', { name: '永久删除' }))
     await settleBatch(listCalls)
 
     expect(deletedIds).toEqual(['g-0'])
-    // removeGroup 把選取改指 g-1。素材層的勾選若留著，那 2 個 id 指的是已經
-    // 連同群組一起被級聯刪掉的素材：浮動列照亮「刪除 2 個」、確認 Modal 對
-    // g-1 的素材解析成空白名單與泛型縮圖，按下去 DeleteAsset 全數 404 —— 而
-    // 404 在 batchDelete 裡算冪等成功，toast 於是報「已刪除 2 個」。假成功。
+    // removeGroup 把选择改指 g-1。素材层的勾选若留着，那 2 个 id 指的是已经
+    // 连同群组一起被级联删掉的素材：浮动列照亮「删除 2 个」、确认 Modal 对
+    // g-1 的素材解析成空白名单与泛型缩图，按下去 DeleteAsset 全数 404 —— 而
+    // 404 在 batchDelete 里算幂等成功，toast 于是报「已删除 2 个」。假成功。
     expect(useAssetStore.getState().selectedGroupId).toBe('g-1')
     expect(useAssetStore.getState().checkedIds.size).toBe(0)
     expect(screen.queryByRole('toolbar')).toBeNull()
@@ -305,8 +305,8 @@ describe('batch group delete wiring', () => {
     await waitFor(() =>
       expect(screen.getByTestId('group-row-g-0')).toBeInTheDocument(),
     )
-    // 直接種一個「已結束但有失敗項」的 group job：讓失敗真的發生要 5 次指數
-    // 退避重試（>7s），而這裡要釘的是重試的分流，不是重試機制本身。
+    // 直接種一个「已结束但有失败项」的 group job：让失败真的发生要 5 次指数
+    // 退避重试（>7s），而这里要钉的是重试的分流，不是重试机制本身。
     act(() => {
       useAssetStore.setState({
         deleteJob: {
@@ -314,18 +314,18 @@ describe('batch group delete wiring', () => {
           succeeded: 1,
           status: 'done',
           kind: 'group',
-          failed: [{ id: 'g-1', name: '群組 1', reason: 'HTTP 500' }],
+          failed: [{ id: 'g-1', name: '群组 1', reason: 'HTTP 500' }],
         },
       })
     })
-    // 進度 toast 被 mock 掉了，手動渲染它的內容才按得到「查看詳情」。
+    // 进度 toast 被 mock 掉了，手动渲染它的内容才按得到「查看详情」。
     const renderToast = vi.mocked(toast.custom).mock.calls.at(-1)?.[0] as
       | (() => ReactNode)
       | undefined
     render(<>{renderToast?.()}</>)
-    fireEvent.click(screen.getByRole('button', { name: '查看詳情' }))
-    fireEvent.click(await screen.findByRole('button', { name: '重試失敗項' }))
-    // 群組 id 打 DeleteAsset 只會全數 404 — 而 404 被當成功，失敗會被靜靜吞掉。
+    fireEvent.click(screen.getByRole('button', { name: '查看详情' }))
+    fireEvent.click(await screen.findByRole('button', { name: '重试失败项' }))
+    // 群组 id 打 DeleteAsset 只会全数 404 — 而 404 被当成功，失败会被静静吞掉。
     await waitFor(() =>
       expect(vi.mocked(deleteAssetGroup)).toHaveBeenCalledWith('g-1'),
     )
@@ -334,10 +334,10 @@ describe('batch group delete wiring', () => {
 
   it('cancelling the modal deletes nothing and keeps the checks', async () => {
     await enterManageAndCheckTwo()
-    await screen.findByRole('button', { name: '永久刪除' })
+    await screen.findByRole('button', { name: '永久删除' })
     fireEvent.click(screen.getByRole('button', { name: '取消' }))
     expect(vi.mocked(deleteAssetGroup)).not.toHaveBeenCalled()
-    // 勾選保留（刪除鈕仍顯示 2）
-    expect(screen.getByRole('button', { name: /刪除選取 \(2\)/ })).toBeInTheDocument()
+    // 勾选保留（删除钮仍显示 2）
+    expect(screen.getByRole('button', { name: /删除选择 \(2\)/ })).toBeInTheDocument()
   })
 })

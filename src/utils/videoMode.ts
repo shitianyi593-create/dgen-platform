@@ -27,8 +27,8 @@ export interface CompatibilityResult {
   canGenerate: boolean
 }
 
-/** 各模式素材上限。預設值 = Seedance 2.0 規格；2.5 呼叫端傳入自己的上限。
- *  // TODO(tech-debt): seedanceModels 能力表合併 */
+/** 各模式素材上限。默认值 = Seedance 2.0 规格；2.5 呼叫端传入自己的上限。
+ *  // TODO(tech-debt): seedanceModels 能力表合并 */
 export interface CompatibilityLimits {
   maxMultimodalImages?: number
 }

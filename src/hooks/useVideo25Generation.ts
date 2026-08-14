@@ -1,7 +1,7 @@
 // Seedance 2.5 生成 hook — copy-fork 自 useVideoGeneration.ts。
-// 差異：model = videoEndpoint25 || SEEDANCE_25_MODEL_ID（不要求 2.0 endpoint）、
-// 2.5 素材上限、frame 模式 ratio 強制 adaptive、prepare/submit 拆分以承接優化流程。
-// TODO(tech-debt): seedanceModels 能力表合併
+// 差异：model = videoEndpoint25 || SEEDANCE_25_MODEL_ID（不要求 2.0 endpoint）、
+// 2.5 素材上限、frame 模式 ratio 强制 adaptive、prepare/submit 拆分以承接优化流程。
+// TODO(tech-debt): seedanceModels 能力表合并
 import { useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { useVideo25Store } from '../stores/video25Store';
@@ -10,6 +10,7 @@ import { createVideoTask } from '../api/video';
 import { fileToBase64DataUri } from '../api/fileUtils';
 import { computeCompatibility } from '../utils/videoMode';
 import { SEEDANCE_25_MODEL_ID } from '../types';
+import { useOptionalI18n } from '../i18n/useOptionalI18n';
 import type {
   ContentItem,
   ImageUrlContent,
@@ -22,14 +23,14 @@ import type {
   VideoGenMode,
 } from '../types';
 
-/** Seedance 2.5 多模態圖片上限（官方 01 文件）。 */
+/** Seedance 2.5 多模态图片上限（官方 01 文件）。 */
 export const SD25_MAX_MULTIMODAL_IMAGES = 30;
 
 export interface PreparedSubmit {
   model: string;
   prompt: string;
-  /** 按下生成當下的生成模式。快照的一部分 — 呼叫端（優化流程重試）不得改讀 live store，
-   *  否則會用新 mode 搭配舊素材快照組出不存在的組合。 */
+  /** 按下生成当下的生成模式。快照的一部分 — 呼叫端（优化流程重试）不得改读 live store，
+   *  否则会用新 mode 搭配旧素材快照组出不存在的组合。 */
   mode: VideoGenMode;
   ratioToSend: string;
   duration: number;
@@ -46,15 +47,16 @@ export interface PreparedSubmit {
 }
 
 export interface SubmitOverrides {
-  /** 優化流程送出的原始提示詞（寫入 history.originalPrompt）。 */
+  /** 优化流程送出的原始提示词（写入 history.originalPrompt）。 */
   originalPrompt?: string;
-  /** 任務類型修正（computeParamFixes）覆蓋值。 */
+  /** 任务类型修正（computeParamFixes）覆盖值。 */
   duration?: number;
   ratio?: string;
 }
 
 export function useVideo25Generation() {
-  /** 前置驗證 + 參數快照。任何 block 條件以 toast 呈現並回傳 null。 */
+  const { t } = useOptionalI18n();
+  /** 前置验证 + 参数快照。任何 block 条件以 toast 呈现并返回 null。 */
   const prepare = useCallback((): PreparedSubmit | null => {
     const store = useVideo25Store.getState();
     const {
@@ -66,11 +68,11 @@ export function useVideo25Generation() {
     const { apiKey, videoEndpoint25 } = useAuthStore.getState();
 
     if (!apiKey) {
-      toast.error('請先輸入 API 金鑰');
+      toast.error(t('video.block.apiKey'));
       return null;
     }
     if (!prompt.trim()) {
-      toast.error('請輸入提示詞');
+      toast.error(t('video.block.prompt'));
       return null;
     }
 
@@ -80,19 +82,19 @@ export function useVideo25Generation() {
     const assetSnapshot = [...assetRefs];
 
     if ([...imgSnapshot, ...vidSnapshot, ...audSnapshot].some((m) => m.stale)) {
-      toast.error('部分參考檔案因頁面重整失效，請移除後重新上傳');
+      toast.error(t('video.toast.staleReferences'));
       return null;
     }
     if (vidSnapshot.some((m) => m.uploading) || audSnapshot.some((m) => m.uploading)) {
-      toast.error('參考影片/音訊仍在上傳中，請稍候');
+      toast.error(t('video.toast.referencesUploading'));
       return null;
     }
     if (vidSnapshot.some((m) => !m.uploadedUrl)) {
-      toast.error('參考影片尚未取得 URL，請重新上傳');
+      toast.error(t('video.toast.videoMissingUrl'));
       return null;
     }
     if (audSnapshot.some((m) => !m.uploadedUrl)) {
-      toast.error('參考音訊尚未取得 URL，請重新上傳');
+      toast.error(t('video.toast.audioMissingUrl'));
       return null;
     }
 
@@ -101,18 +103,18 @@ export function useVideo25Generation() {
       { maxMultimodalImages: SD25_MAX_MULTIMODAL_IMAGES },
     );
     if (!compat.canGenerate) {
-      let reason = '存在與目前模式不相容的項目';
-      if (!compat.imageCountOK) reason = '圖片數量與模式不符';
-      else if (!compat.roleSetOK) reason = '首尾幀模式需要恰好一張首幀與一張尾幀';
-      else if (compat.incompatibleImageIndexes.length) reason = '部分圖片 role 與模式不符';
-      else if (compat.incompatibleVideosFlag) reason = '此模式不允許參考影片';
-      else if (compat.incompatibleAudiosFlag) reason = '此模式不允許參考音訊';
-      else if (compat.incompatibleAssetRefIndexes.length) reason = '部分 asset 參考與模式不符';
+      let reason = t('video.block.incompatible');
+      if (!compat.imageCountOK) reason = t('video.block.imageCount');
+      else if (!compat.roleSetOK) reason = t('video.block.roleSet');
+      else if (compat.incompatibleImageIndexes.length) reason = t('video.block.imageRole');
+      else if (compat.incompatibleVideosFlag) reason = t('video.block.videoNotAllowed');
+      else if (compat.incompatibleAudiosFlag) reason = t('video.block.audioNotAllowed');
+      else if (compat.incompatibleAssetRefIndexes.length) reason = t('video.block.assetRef');
       toast.error(reason);
       return null;
     }
 
-    // 2.5：首幀 / 首尾幀任務 ratio 鎖 adaptive（官方 05 任務類型約束）
+    // 2.5：首帧 / 首尾帧任务 ratio 锁 adaptive（官方 05 任务类型约束）
     const ratioToSend = mode === 'multimodal' ? ratio : 'adaptive';
     const model = videoEndpoint25.trim() || SEEDANCE_25_MODEL_ID;
 
@@ -121,9 +123,9 @@ export function useVideo25Generation() {
       generateAudio, returnLastFrame, seed, executionExpiresAfter,
       imgSnapshot, vidSnapshot, audSnapshot, assetSnapshot,
     };
-  }, []);
+  }, [t]);
 
-  /** 建立任務。finalPrompt 為實際送出的提示詞（可能是優化/編輯後版本）。 */
+  /** 创建任务。finalPrompt 为实际送出的提示词（可能是优化/编辑后版本）。 */
   const submit = useCallback(async (
     prepared: PreparedSubmit,
     finalPrompt: string,
@@ -201,7 +203,7 @@ export function useVideo25Generation() {
         }
       }
 
-      toast('正在提交生成任務...');
+      toast(t('video.toast.submitting'));
       requestBody.content = contentItems;
 
       const { id: taskId } = await createVideoTask(requestBody);
@@ -224,7 +226,7 @@ export function useVideo25Generation() {
       };
       addHistory(historyItem);
 
-      toast.success(`任務已建立: ${taskId}`);
+      toast.success(t('video.toast.taskCreated', { taskId }));
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       const syntheticTaskId =
@@ -243,11 +245,11 @@ export function useVideo25Generation() {
         error: message,
       };
       useVideo25Store.getState().addHistory(failedItem);
-      toast.error(`錯誤: ${message}`);
+      toast.error(t('video.toast.error', { message }));
     }
-  }, []);
+  }, [t]);
 
-  /** 直送（開關 OFF 或 2.0 同型流程）。 */
+  /** 直送（开关 OFF 或 2.0 同型流程）。 */
   const generate = useCallback(async () => {
     const prepared = prepare();
     if (!prepared) return;

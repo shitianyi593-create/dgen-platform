@@ -1,11 +1,11 @@
 /**
  * StatusPill component test
  *
- * 涵蓋需求（handoff 全站共用改動 §2）：
- * - 統一膠囊樣式：radius 999、11px、bg/bd/fg 用語意 tokens
- * - kind → token 對照：success / running / danger / warning / muted
- * - running 帶 spinner（取代文字 ●）
- * - testId 透傳
+ * 涵盖需求（handoff 全站共用改动 §2）：
+ * - 统一胶囊样式：radius 999、11px、bg/bd/fg 用语意 tokens
+ * - kind → token 对照：success / running / danger / warning / muted
+ * - running 带 spinner（取代文字 ●）
+ * - testId 透传
  */
 import { describe, it, expect, afterEach } from 'vitest'
 import { render, screen, cleanup } from '@testing-library/react'

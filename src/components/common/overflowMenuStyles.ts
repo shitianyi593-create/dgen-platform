@@ -1,10 +1,10 @@
 import type { CSSProperties } from 'react'
 import { scaledFs } from '../../utils/panelScale'
 
-// OverflowMenu 的樣式常數獨立成檔 — react-refresh 規則要求元件檔
-// 只 export 元件（物件常數會破壞 HMR fast refresh）。
+// OverflowMenu 的样式常数独立成档 — react-refresh 规则要求组件档
+// 只 export 组件（对象常数会破坏 HMR fast refresh）。
 
-/** 選單項的統一樣式（handoff Interactions：項目 13px、刪除項 danger 色由呼叫端覆寫）。 */
+/** 选单项的统一样式（handoff Interactions：项目 13px、删除项 danger 色由呼叫端覆写）。 */
 export const overflowMenuItemStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
@@ -21,7 +21,7 @@ export const overflowMenuItemStyle: CSSProperties = {
   whiteSpace: 'nowrap',
 }
 
-/** 選單容器（絕對定位下拉）— 匯入小選單等同款下拉也可重用。 */
+/** 选单容器（绝对定位下拉）— 导入小选单等同款下拉也可重用。 */
 export const overflowMenuContainerStyle: CSSProperties = {
   position: 'absolute',
   right: 0,

@@ -20,7 +20,7 @@ const mockGet = vi.mocked(apiClient.get)
 const mockDelete = vi.mocked(apiClient.delete)
 const mockPostSse = vi.mocked(postSse)
 
-// 對照 Text-gen-api-reference/responses-api-create-model-response.md 的範例回應
+// 对照 Text-gen-api-reference/responses-api-create-model-response.md 的范例响应
 const API_RESPONSE = {
   id: 'resp_abc', model: 'seed-2-0-pro-260328', object: 'response',
   service_tier: 'default', status: 'completed', expire_at: 1761910597,
@@ -37,12 +37,12 @@ const API_RESPONSE = {
 }
 
 describe('buildResponsesRequestBody', () => {
-  it('第一輪：input 字串、無 previous_response_id', () => {
+  it('第一轮：input 字符串、无 previous_response_id', () => {
     expect(buildResponsesRequestBody('ep-x', DEFAULT_GEN_PARAMS, 'hello')).toEqual({
       model: 'ep-x', input: 'hello', stream: true,
     })
   })
-  it('多輪：帶 previous_response_id；參數映射到 Responses 欄位名', () => {
+  it('多轮：带 previous_response_id；参数映射到 Responses 栏位名', () => {
     const body = buildResponsesRequestBody('ep-x', {
       temperature: '0.3', topP: '0.9', maxTokens: '2048',
       thinkingType: 'auto', reasoningEffort: 'low', stream: false, serviceTier: '',
@@ -56,7 +56,7 @@ describe('buildResponsesRequestBody', () => {
       reasoning: { effort: 'low' },      // 注意：不是 reasoning_effort
     })
   })
-  it('非數字（NaN / 空白 / Infinity）不送，不會序列化成 null', () => {
+  it('非数字（NaN / 空白 / Infinity）不送，不会序列化成 null', () => {
     const body = buildResponsesRequestBody('ep-x', {
       ...DEFAULT_GEN_PARAMS,
       temperature: 'abc', topP: ' ', maxTokens: '1e999',
@@ -66,13 +66,13 @@ describe('buildResponsesRequestBody', () => {
     expect(body).not.toHaveProperty('max_output_tokens')
   })
 
-  it('空白系統提示 = 向後相容：input 維持純字串、不帶 instructions', () => {
+  it('空白系统提示 = 向后相容：input 维持纯字符串、不带 instructions', () => {
     const body = buildResponsesRequestBody('ep-x', DEFAULT_GEN_PARAMS, 'hi', undefined, '   ', 'system')
     expect(body.input).toBe('hi')
     expect(body).not.toHaveProperty('instructions')
   })
 
-  it('系統提示 mode=system 第一輪（無 prevId）：input 換成 [system, user] 訊息陣列', () => {
+  it('系统提示 mode=system 第一轮（无 prevId）：input 换成 [system, user] 消息阵列', () => {
     const body = buildResponsesRequestBody('ep-x', DEFAULT_GEN_PARAMS, 'hi', undefined, '你是助理', 'system')
     expect(body.input).toEqual([
       { type: 'message', role: 'system', content: '你是助理' },
@@ -81,14 +81,14 @@ describe('buildResponsesRequestBody', () => {
     expect(body).not.toHaveProperty('instructions')
   })
 
-  it('系統提示 mode=system 後續輪（有 prevId）：input 維持純字串（system 已在伺服器端串接中）', () => {
+  it('系统提示 mode=system 后续轮（有 prevId）：input 维持纯字符串（system 已在服务器端串接中）', () => {
     const body = buildResponsesRequestBody('ep-x', DEFAULT_GEN_PARAMS, 'again', 'resp_prev', '你是助理', 'system')
     expect(body.input).toBe('again')
     expect(body.previous_response_id).toBe('resp_prev')
     expect(body).not.toHaveProperty('instructions')
   })
 
-  it('系統提示 mode=instructions：每輪（含有 prevId）都送 instructions，input 維持純字串', () => {
+  it('系统提示 mode=instructions：每轮（含有 prevId）都送 instructions，input 维持纯字符串', () => {
     const first = buildResponsesRequestBody('ep-x', DEFAULT_GEN_PARAMS, 'hi', undefined, '你是助理', 'instructions')
     expect(first.input).toBe('hi')
     expect(first.instructions).toBe('你是助理')
@@ -97,14 +97,14 @@ describe('buildResponsesRequestBody', () => {
     expect(later.instructions).toBe('你是助理')
   })
 
-  it('Responses builder 從不帶 service_tier（該欄位僅 Chat API 有）', () => {
+  it('Responses builder 从不带 service_tier（该栏位仅 Chat API 有）', () => {
     const body = buildResponsesRequestBody('ep-x', { ...DEFAULT_GEN_PARAMS, serviceTier: 'fast' }, 'hi', undefined, '你是助理', 'system')
     expect(body).not.toHaveProperty('service_tier')
   })
 })
 
 describe('extractResponsesResult', () => {
-  it('組合 output 陣列、正規化 usage、meta 帶 responseId/expireAt', () => {
+  it('组合 output 阵列、正规化 usage、meta 带 responseId/expireAt', () => {
     const r = extractResponsesResult(API_RESPONSE)
     expect(r.content).toBe('Hi there!')
     expect(r.reasoning).toBe('thinking…')
@@ -115,8 +115,8 @@ describe('extractResponsesResult', () => {
     })
   })
 
-  it('reasoning 用 content[]/reasoning_text（無 summary）也能抽出思維鏈', () => {
-    // 對照 responses-api-the-response-object.md：reasoning item 可用 content[] 帶 reasoning_text
+  it('reasoning 用 content[]/reasoning_text（无 summary）也能抽出思维链', () => {
+    // 对照 responses-api-the-response-object.md：reasoning item 可用 content[] 带 reasoning_text
     const data = {
       id: 'resp_r', status: 'completed',
       output: [
@@ -129,7 +129,7 @@ describe('extractResponsesResult', () => {
     expect(r.content).toBe('答案')
   })
 
-  it('summary 與 content/reasoning_text 並存：只取 summary（不重複拼接）', () => {
+  it('summary 与 content/reasoning_text 并存：只取 summary（不重复拼接）', () => {
     const data = {
       id: 'resp_both', status: 'completed',
       output: [
@@ -146,9 +146,9 @@ describe('extractResponsesResult', () => {
   })
 })
 
-describe('createResponse（非串流）', () => {
+describe('createResponse（非流式）', () => {
   beforeEach(() => mockPost.mockReset())
-  it('POST 到 /api/v3/responses 並解析', async () => {
+  it('POST 到 /api/v3/responses 并解析', async () => {
     mockPost.mockResolvedValueOnce({ data: API_RESPONSE })
     const r = await createResponse({ model: 'ep-x', input: 'hi', stream: false })
     expect(mockPost).toHaveBeenCalledWith(RESPONSES_PATH, expect.anything(), expect.objectContaining({ timeout: 300_000 }))
@@ -157,10 +157,10 @@ describe('createResponse（非串流）', () => {
   })
 })
 
-describe('伺服器端輔助 API（retrieve / delete / input_items）', () => {
+describe('服务器端辅助 API（retrieve / delete / input_items）', () => {
   beforeEach(() => { mockGet.mockReset(); mockDelete.mockReset() })
 
-  it('retrieveResponse：GET /responses/{id}，回傳 res.data', async () => {
+  it('retrieveResponse：GET /responses/{id}，回传 res.data', async () => {
     mockGet.mockResolvedValueOnce({ data: { id: 'resp_x', status: 'completed' } })
     const r = await retrieveResponse('resp_x')
     expect(mockGet).toHaveBeenCalledWith(`${RESPONSES_PATH}/resp_x`)
@@ -174,14 +174,14 @@ describe('伺服器端輔助 API（retrieve / delete / input_items）', () => {
     expect(r).toEqual({ object: 'list', data: [] })
   })
 
-  it('deleteResponse：DELETE /responses/{id}，回傳 deleted 結果', async () => {
+  it('deleteResponse：DELETE /responses/{id}，回传 deleted 结果', async () => {
     mockDelete.mockResolvedValueOnce({ data: { id: 'resp_x', object: 'response', deleted: true } })
     const r = await deleteResponse('resp_x')
     expect(mockDelete).toHaveBeenCalledWith(`${RESPONSES_PATH}/resp_x`)
     expect(r).toEqual({ id: 'resp_x', object: 'response', deleted: true })
   })
 
-  it('responseId 會做 URL 編碼', async () => {
+  it('responseId 会做 URL 编码', async () => {
     mockGet.mockResolvedValueOnce({ data: {} })
     await retrieveResponse('resp a/b')
     expect(mockGet).toHaveBeenCalledWith(`${RESPONSES_PATH}/resp%20a%2Fb`)
@@ -215,13 +215,13 @@ describe('createResponseStream', () => {
     expect(r.usage?.cachedTokens).toBe(40)
     expect(r.meta.responseId).toBe('resp_abc')
     expect(r.meta.expireAt).toBe(1761910597)
-    expect(r.rawResponse).toStrictEqual(API_RESPONSE)   // rawResponse = completed 事件的 response 物件（feed 經 JSON 往返 → 深度相等而非同參考）
+    expect(r.rawResponse).toStrictEqual(API_RESPONSE)   // rawResponse = completed 事件的 response 对象（feed 经 JSON 往返 → 深度相等而非同参考）
     expect(onFirstToken).toHaveBeenCalledTimes(1)
     expect(onDelta).toHaveBeenLastCalledWith('Hi there!', 'think')
     expect(r.sseChunks).toHaveLength(6)
   })
 
-  it('response.incomplete 視為終結事件：帶入 usage / status incomplete / incomplete_details', async () => {
+  it('response.incomplete 视为终结事件：带入 usage / status incomplete / incomplete_details', async () => {
     const incompleteResponse = {
       id: 'resp_inc', model: 'seed-2-0-lite-260428', object: 'response',
       status: 'incomplete',
@@ -244,7 +244,7 @@ describe('createResponseStream', () => {
     expect(r.meta.incompleteReason).toBe('max_output_tokens')
   })
 
-  it('response.failed 事件 → 拋出含 body 的錯誤', async () => {
+  it('response.failed 事件 → 抛出含 body 的错误', async () => {
     mockPostSse.mockImplementationOnce(async (_p, _b, opts) => {
       opts.onEvent({ event: 'response.failed', data: JSON.stringify({ type: 'response.failed', response: { error: { message: 'quota exceeded' } } }) })
       return []
@@ -254,7 +254,7 @@ describe('createResponseStream', () => {
     ).rejects.toThrow('quota exceeded')
   })
 
-  it('沒收到 completed 也不炸：回傳累積內容、usage undefined', async () => {
+  it('没收到 completed 也不炸：回传累積内容、usage undefined', async () => {
     feed([
       { event: 'response.output_text.delta', data: JSON.stringify({ type: 'response.output_text.delta', delta: 'partial' }) },
     ])

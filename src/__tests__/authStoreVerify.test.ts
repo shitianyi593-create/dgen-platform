@@ -33,7 +33,7 @@ describe('authStore.verifyState', () => {
     const s = store.getState()
     expect(s.apiKey).toBe('too-short-not-a-uuid')
     expect(s.verifyState.inference.status).toBe('warn')
-    expect(s.verifyState.inference.message).toMatch(/API 金鑰/)
+    expect(s.verifyState.inference.message).toMatch(/API 密钥/)
   })
 
   it('setField (inference) with both fields blank → status pend', async () => {
@@ -95,7 +95,7 @@ describe('authStore.verifyState', () => {
     store.getState().setField('inference', 'endpoint', 'ep-20240101000000-aaaaa')
     await store.getState().verify('inference')
     expect(store.getState().verifyState.inference.status).toBe('warn')
-    expect(store.getState().verifyState.inference.message).toMatch(/API 金鑰/)
+    expect(store.getState().verifyState.inference.message).toMatch(/API 密钥/)
   })
 
   it('verify("inference") flips to warn when endpoint has wrong format', async () => {
@@ -105,7 +105,7 @@ describe('authStore.verifyState', () => {
     store.getState().setField('inference', 'endpoint', 'not-an-ep-format')
     await store.getState().verify('inference')
     expect(store.getState().verifyState.inference.status).toBe('warn')
-    expect(store.getState().verifyState.inference.message).toMatch(/接入點/)
+    expect(store.getState().verifyState.inference.message).toMatch(/接入点/)
   })
 
   it('verify("asset") on success writes ok with projectName as message', async () => {
@@ -132,7 +132,7 @@ describe('authStore.verifyState', () => {
     const p = store.getState().verify('asset')
     // After verify is called but before the inner promise resolves
     expect(store.getState().verifyState.asset.status).toBe('pend')
-    expect(store.getState().verifyState.asset.message).toBe('驗證中…')
+    expect(store.getState().verifyState.asset.message).toBe('验证中…')
     resolveFn!({ ok: true, projectName: 'p' })
     await p
     expect(store.getState().verifyState.asset.status).toBe('ok')

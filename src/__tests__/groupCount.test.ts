@@ -39,9 +39,9 @@ describe('refreshGroupCount (shared guard)', () => {
   })
 
   it('an older in-flight call for the same groupId cannot overwrite a fresher one', async () => {
-    // 這是唯一的實作，任何呼叫端（頁面的選取效果、單刪/批刪、上傳收尾）都
-    // 共用同一份模組層級的序號表——這裡直接呼叫兩次，模擬的是「不管是誰、
-    // 從哪裡發起」都會被同一道防線擋住，不只是同一個呼叫端內部的競態。
+    // 这是唯一的实作，任何呼叫端（页面的选择效果、单删/批删、上传收尾）都
+    // 共用同一份模块层级的序号表——这里直接呼叫两次，模擬的是「不管是谁、
+    // 从哪里发起」都会被同一道防线挡住，不只是同一个呼叫端内部的竞态。
     let resolveFirst!: (n: number) => void
     let resolveSecond!: (n: number) => void
     vi.mocked(countAssetsInGroup)
@@ -51,18 +51,18 @@ describe('refreshGroupCount (shared guard)', () => {
     const first = refreshGroupCount('g-1')
     const second = refreshGroupCount('g-1')
 
-    resolveSecond(99) // 較新那次先回來
+    resolveSecond(99) // 较新那次先回来
     await second
     expect(useAssetStore.getState().groupCounts['g-1']).toBe(99)
 
-    resolveFirst(1) // 較舊那次晚到——不得蓋掉 99
+    resolveFirst(1) // 较旧那次晚到——不得盖掉 99
     await first
     expect(useAssetStore.getState().groupCounts['g-1']).toBe(99)
   })
 
   it('calls for different groupIds do not interfere with each other', async () => {
-    // 用 Map 而非單一計數器的理由：不同 groupId 的序號要各自獨立，後一個
-    // groupId 的呼叫不能把前一個 groupId 仍在途的請求誤判為過期。
+    // 用 Map 而非单一计数器的理由：不同 groupId 的序号要各自独立，后一个
+    // groupId 的呼叫不能把前一个 groupId 仍在途的请求误判为过期。
     let resolveA!: (n: number) => void
     let resolveB!: (n: number) => void
     vi.mocked(countAssetsInGroup).mockImplementation((groupId: string) =>

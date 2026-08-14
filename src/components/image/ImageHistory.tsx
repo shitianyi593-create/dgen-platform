@@ -16,29 +16,34 @@ import OverflowMenu from '../common/OverflowMenu'
 import { overflowMenuItemStyle } from '../common/overflowMenuStyles'
 import { Icon } from '../common/icons'
 import { copyWithToast } from '../../utils/clipboard'
+import { useOptionalI18n } from '../../i18n/useOptionalI18n'
+import type { I18nContextValue } from '../../i18n/I18nContext'
 import type { ImageHistoryItem } from '../../types/image'
 
 export const IMAGE_HISTORY_DEFAULT_WIDTH = 300
 
-function fmtCountdown(msLeft: number): string {
+function fmtCountdown(msLeft: number, t: I18nContextValue['t']): string {
   const h = Math.floor(msLeft / 3600_000)
   const m = Math.floor((msLeft % 3600_000) / 60_000)
-  return h > 0 ? `${h} 小時 ${m} 分後過期` : `${m} 分後過期`
+  return h > 0
+    ? t('image.countdown.hoursMinutes', { hours: h, minutes: m })
+    : t('image.countdown.minutes', { minutes: m })
 }
 
 function isExpired(item: ImageHistoryItem, now: number): boolean {
   return !item.imported && item.expiresAt !== undefined && now > item.expiresAt
 }
 
-// 狀態 → StatusPill kind 對照（handoff §2；文字 label 維持不變）
+// 状态 → StatusPill kind 对照（handoff §2；文字 label 维持不变）
 function statusChip(
   item: ImageHistoryItem,
   expired: boolean,
+  t: I18nContextValue['t'],
 ): { label: string; kind: StatusPillKind } {
-  if (item.status === 'generating') return { label: '生成中', kind: 'running' }
-  if (item.status === 'failed') return { label: '失敗', kind: 'danger' }
-  if (expired) return { label: '已過期', kind: 'warning' }
-  return { label: '完成', kind: 'success' }
+  if (item.status === 'generating') return { label: t('image.history.status.generating'), kind: 'running' }
+  if (item.status === 'failed') return { label: t('image.history.status.failed'), kind: 'danger' }
+  if (expired) return { label: t('image.history.status.expired'), kind: 'warning' }
+  return { label: t('image.history.status.done'), kind: 'success' }
 }
 
 async function downloadImages(item: ImageHistoryItem): Promise<void> {
@@ -50,24 +55,25 @@ async function downloadImages(item: ImageHistoryItem): Promise<void> {
     const filename = `${item.id}-image-${i + 1}.${ext}`
     const blob = url.startsWith('blob:')
       ? await (await fetch(url)).blob()          // imported：blob 直接抓
-      : await downloadAssetBlob(url, filename)   // 線上：走 SSRF 允許清單代理
+      : await downloadAssetBlob(url, filename)   // 线上：走 SSRF 允许清单代理
     downloadBlob(blob, filename)
   }
 }
 
 export default function ImageHistory({ width }: { width: number }) {
+  const { t } = useOptionalI18n()
   const history = useImageStore((s) => s.history)
   const setCurrentEntry = useImageStore((s) => s.setCurrentEntry)
   const removeHistory = useImageStore((s) => s.removeHistory)
   const addHistory = useImageStore((s) => s.addHistory)
   const loadParams = useImageStore((s) => s.loadParamsFromHistory)
-  const now = useNow(60_000) // 到期倒數分鐘級即可
+  const now = useNow(60_000) // 到期倒数分钟级即可
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
-  // 進行中的非同步動作 key（'exportAll' | 'import' | `download:<id>` | `export:<id>`）。
-  // 對應按鈕在動作期間 disabled，防止連點重複觸發（同 VideoHistory 的
+  // 进行中的非同步动作 key（'exportAll' | 'import' | `download:<id>` | `export:<id>`）。
+  // 对应按钮在动作期间 disabled，防止连点重复触发（同 VideoHistory 的
   // exporting / downloading / batchExporting / importing 守衛）。
   const [busyKeys, setBusyKeys] = useState<ReadonlySet<string>>(new Set())
-  // 展開「除錯資訊」的卡片 id 集合（預設全部收合）。
+  // 展开「调试信息」的卡片 id 集合（默认全部收起）。
   const [expandedIds, setExpandedIds] = useState<ReadonlySet<string>>(new Set())
   const importInputRef = useRef<HTMLInputElement>(null)
 
@@ -97,7 +103,7 @@ export default function ImageHistory({ width }: { width: number }) {
       try {
         await downloadImages(item)
       } catch (e) {
-        toast.error(`下載失敗: ${e instanceof Error ? e.message : e}`)
+        toast.error(t('image.toast.downloadFailed', { message: e instanceof Error ? e.message : String(e) }))
       }
     })
 
@@ -106,26 +112,26 @@ export default function ImageHistory({ width }: { width: number }) {
       try {
         const { bytes, missing } = await buildImageBundleZip(item)
         downloadBlob(new Blob([bytes as BlobPart], { type: 'application/zip' }), `${item.id}.zip`)
-        if (missing.length) toast.error(`${missing.length} 張圖片下載失敗，未包含在 zip`)
+        if (missing.length) toast.error(t('image.toast.exportMissing', { count: missing.length }))
       } catch (e) {
-        toast.error(`匯出失敗: ${e instanceof Error ? e.message : e}`)
+        toast.error(t('image.toast.exportFailed', { message: e instanceof Error ? e.message : String(e) }))
       }
     })
 
   const onExportAll = () =>
     withBusy('exportAll', async () => {
-      // imported 項目排除：其 blob: URL 走不了下載代理（每張圖都會 missing），
-      // 且來源 zip 本來就在使用者手上，重匯出只會得到空殼。
+      // imported 项目排除：其 blob: URL 走不了下载代理（每张图都会 missing），
+      // 且来源 zip 本来就在用户手上，重导出只会得到空壳。
       const exportable = history.filter(
         (h) => h.status === 'succeeded' && !isExpired(h, now) && !h.imported,
       )
-      if (exportable.length === 0) { toast.error('沒有可匯出的紀錄'); return }
+      if (exportable.length === 0) { toast.error(t('image.toast.noExportable')); return }
       try {
         const { bytes, missing } = await buildImageBatchZip(exportable)
         downloadBlob(new Blob([bytes as BlobPart], { type: 'application/zip' }), 'image-history.zip')
-        if (missing.length) toast.error(`${missing.length} 張圖片下載失敗，未包含在 zip`)
+        if (missing.length) toast.error(t('image.toast.exportMissing', { count: missing.length }))
       } catch (e) {
-        toast.error(`匯出失敗: ${e instanceof Error ? e.message : e}`)
+        toast.error(t('image.toast.exportFailed', { message: e instanceof Error ? e.message : String(e) }))
       }
     })
 
@@ -134,9 +140,9 @@ export default function ImageHistory({ width }: { width: number }) {
       try {
         const items = await importImageBundleZip(file)
         for (const it of items) addHistory(it)
-        toast.success(`已匯入 ${items.length} 筆紀錄`)
+        toast.success(t('image.toast.imported', { count: items.length }))
       } catch (e) {
-        toast.error(`匯入失敗: ${e instanceof Error ? e.message : e}`)
+        toast.error(t('image.toast.importFailed', { message: e instanceof Error ? e.message : String(e) }))
       }
     })
 
@@ -149,9 +155,9 @@ export default function ImageHistory({ width }: { width: number }) {
         flexDirection: 'column',
       }}
     >
-      {/* Header — 欄標題 14px/600（handoff §4）；工具列按鈕加 SVG icon */}
+      {/* Header — 栏标题 14px/600（handoff §4）；工具列按钮加 SVG icon */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>生成紀錄</span>
+        <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{t('image.history.title')}</span>
         <div style={{ display: 'flex', gap: 6 }}>
           <button
             type="button"
@@ -160,7 +166,7 @@ export default function ImageHistory({ width }: { width: number }) {
             onClick={() => void onExportAll()}
           >
             <Icon name="download" size={11} />
-            {busyKeys.has('exportAll') ? '匯出中…' : '匯出全部'}
+            {busyKeys.has('exportAll') ? t('image.history.exporting') : t('image.history.exportAll')}
           </button>
           <button
             type="button"
@@ -169,13 +175,13 @@ export default function ImageHistory({ width }: { width: number }) {
             onClick={() => importInputRef.current?.click()}
           >
             <Icon name="upload" size={11} />
-            {busyKeys.has('import') ? '匯入中…' : '匯入'}
+            {busyKeys.has('import') ? t('image.history.importing') : t('image.history.import')}
           </button>
           <input
             ref={importInputRef}
             type="file"
             accept=".zip"
-            aria-label="匯入 zip"
+            aria-label={t('image.history.importZip')}
             style={{ display: 'none' }}
             onChange={(e) => {
               const f = e.target.files?.[0]
@@ -193,21 +199,21 @@ export default function ImageHistory({ width }: { width: number }) {
             <circle cx="8.5" cy="8.5" r="1.5" />
             <path d="M21 15l-5-5L5 21" />
           </svg>
-          <div>目前沒有生成紀錄</div>
-          <div style={{ marginTop: 8, fontSize: 11 }}>若有已匯出的 .zip，點「匯入」載入</div>
+          <div>{t('image.history.empty')}</div>
+          <div style={{ marginTop: 8, fontSize: 11 }}>{t('image.history.emptyHint')}</div>
         </div>
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {history.map((item) => {
           const expired = isExpired(item, now)
-          const chip = statusChip(item, expired)
-          const isCurrent = false // 保留掛點：如 store 之後暴露 currentEntryId 可高亮選中卡
-          // 可複製的線上 URL（blob: 是本頁限定的 objectURL，貼到別處無效）。
+          const chip = statusChip(item, expired, t)
+          const isCurrent = false // 保留挂点：如 store 之后暴露 currentEntryId 可高亮选中卡
+          // 可复制的线上 URL（blob: 是本页限定的 objectURL，贴到别处无效）。
           const copyableUrls = item.images
             .map((im) => im.url)
             .filter((u) => !u.startsWith('blob:'))
-          // 生成中的卡片還沒有任何可顯示欄位 → ⋯ 選單不渲染「除錯資訊」項。
+          // 生成中的卡片还没有任何可显示字段 → ⋯ 选单不渲染「调试信息」项。
           const hasDebug = Boolean(
             item.debug || item.images.length > 0 || item.usage || item.errorCode,
           )
@@ -229,7 +235,7 @@ export default function ImageHistory({ width }: { width: number }) {
               onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)' }}
               onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)' }}
             >
-              {/* 狀態列 — 統一 StatusPill（handoff §2；running 帶 spinner） */}
+              {/* 状态列 — 统一 StatusPill（handoff §2；running 带 spinner） */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <StatusPill kind={chip.kind} label={chip.label} />
@@ -238,8 +244,8 @@ export default function ImageHistory({ width }: { width: number }) {
                       fontSize: 10, padding: '2px 5px', borderRadius: 4,
                       background: 'var(--bg-input)', color: 'var(--text-muted)',
                       border: '1px solid var(--border)',
-                    }} title="此紀錄由本機 .zip 匯入">
-                      已匯入
+                    }} title={t('image.history.importedTitle')}>
+                      {t('image.preview.imported')}
                     </span>
                   )}
                 </div>
@@ -250,7 +256,7 @@ export default function ImageHistory({ width }: { width: number }) {
                 )}
               </div>
 
-              {/* 縮圖列 */}
+              {/* 缩图列 */}
               {item.status === 'succeeded' && !expired && item.images.length > 0 && (
                 <div style={{ display: 'flex', gap: 4, overflow: 'hidden' }}>
                   {item.images.slice(0, 4).map((img, i) => (
@@ -280,7 +286,7 @@ export default function ImageHistory({ width }: { width: number }) {
                 <span>{SEEDREAM_MODELS[item.modelKey].label}</span>
                 {item.params.size && <span>{item.params.size}</span>}
                 {item.status === 'succeeded' && !item.imported && item.expiresAt !== undefined && !expired && (
-                  <span style={{ color: 'var(--success)' }}>{fmtCountdown(item.expiresAt - now)}</span>
+                  <span style={{ color: 'var(--success)' }}>{fmtCountdown(item.expiresAt - now, t)}</span>
                 )}
               </div>
 
@@ -290,8 +296,8 @@ export default function ImageHistory({ width }: { width: number }) {
                 </div>
               )}
 
-              {/* 動作列 — 常駐「下載」「複製 URL」（過期卡另加「載入參數重生成」），
-                  其餘動作收進 ⋯ overflow 選單（handoff §C.2；預覽由卡片點擊承擔） */}
+              {/* 动作列 — 常驻「下载」「复制 URL」（过期卡另加「加载参数重生成」），
+                  其余动作收进 ⋯ overflow 选单（handoff §C.2；预览由卡片点击承擔） */}
               <div
                 style={{ display: 'flex', gap: 6, alignItems: 'center', position: 'relative' }}
                 onClick={(e) => e.stopPropagation()}
@@ -303,29 +309,29 @@ export default function ImageHistory({ width }: { width: number }) {
                   style={btnStyle}
                 >
                   <Icon name="download" size={11} />
-                  {busyKeys.has(`download:${item.id}`) ? '下載中…' : '下載'}
+                  {busyKeys.has(`download:${item.id}`) ? t('image.history.downloading') : t('image.history.download')}
                 </button>
-                {/* 高頻工作流：複製輸出 URL → 貼到影片分頁當參考圖。多張時以換行合併。 */}
+                {/* 高频工作流：复制输出 URL → 贴到视频分页当参考图。多张时以换行合并。 */}
                 <button
                   type="button"
                   disabled={item.status !== 'succeeded' || expired || item.imported || copyableUrls.length === 0}
                   onClick={() => void copyWithToast(
-                    copyableUrls.length > 1 ? `${copyableUrls.length} 個 URL` : 'URL',
+                    copyableUrls.length > 1 ? `${copyableUrls.length} 个 URL` : 'URL',
                     copyableUrls.join('\n'),
                   )}
                   style={btnStyle}
                 >
                   <Icon name="copy" size={11} />
-                  複製 URL
+                  {t('image.history.copyUrl')}
                 </button>
                 {expired && (
                   <button
                     type="button"
-                    onClick={() => { loadParams(item); toast.success('已載入參數') }}
+                    onClick={() => { loadParams(item); toast.success(t('image.toast.paramsLoaded')) }}
                     style={btnStyle}
                   >
                     <Icon name="refresh-cw" size={11} />
-                    載入參數重生成
+                    {t('image.history.loadParamsRegenerate')}
                   </button>
                 )}
                 <span style={{ flex: 1 }} />
@@ -338,27 +344,27 @@ export default function ImageHistory({ width }: { width: number }) {
                         onClick={() => { close(); void onExport(item) }}
                         style={overflowMenuItemStyle}
                       >
-                        {busyKeys.has(`export:${item.id}`) ? '匯出中…' : '匯出'}
+                        {busyKeys.has(`export:${item.id}`) ? t('image.history.exporting') : t('image.history.export')}
                       </button>
                       <button
                         type="button"
                         onClick={() => {
                           loadParams(item)
-                          toast.success('已載入參數')
+                          toast.success(t('image.toast.paramsLoaded'))
                           close()
                         }}
                         style={overflowMenuItemStyle}
                       >
-                        載入參數
+                        {t('image.history.loadParams')}
                       </button>
                       <button
                         type="button"
                         onClick={() => { setConfirmDeleteId(item.id); close() }}
                         style={{ ...overflowMenuItemStyle, color: 'var(--danger)' }}
                       >
-                        刪除
+                        {t('image.history.delete')}
                       </button>
-                      {/* 切換型項目：點擊不關閉選單，aria-expanded 反映展開態 */}
+                      {/* 切换型项目：点击不关闭选单，aria-expanded 反映展开态 */}
                       {hasDebug && (
                         <button
                           type="button"
@@ -366,7 +372,7 @@ export default function ImageHistory({ width }: { width: number }) {
                           onClick={() => toggleDebug(item.id)}
                           style={overflowMenuItemStyle}
                         >
-                          除錯資訊
+                          {t('image.history.debug')}
                         </button>
                       )}
                     </>
@@ -385,12 +391,12 @@ export default function ImageHistory({ width }: { width: number }) {
                   {item.debug?.requestId && (
                     <div style={{ display: 'flex', gap: 6, alignItems: 'baseline' }}>
                       <span style={{ flex: 1 }}>Request ID: {item.debug.requestId}</span>
-                      <button type="button" style={debugBtn} onClick={() => void copyWithToast('Request ID', item.debug?.requestId)}>複製</button>
+                      <button type="button" style={debugBtn} onClick={() => void copyWithToast('Request ID', item.debug?.requestId)}>{t('common.copy')}</button>
                     </div>
                   )}
-                  {item.debug?.responseModel && <div>模型: {item.debug.responseModel}</div>}
+                  {item.debug?.responseModel && <div>{t('image.history.model')}: {item.debug.responseModel}</div>}
                   {item.debug?.createdApi !== undefined && (
-                    <div>建立時間: {new Date(item.debug.createdApi * 1000).toLocaleString()}（{item.debug.createdApi}）</div>
+                    <div>{t('image.history.createdAt')}: {new Date(item.debug.createdApi * 1000).toLocaleString()}（{item.debug.createdApi}）</div>
                   )}
                   {item.images.map((img, i) => {
                     const urlActionable = !expired && !item.imported && !img.url.startsWith('blob:')
@@ -408,22 +414,28 @@ export default function ImageHistory({ width }: { width: number }) {
                             >
                               {img.url}
                             </span>
-                            <button type="button" style={debugBtn} onClick={() => void copyWithToast('URL', img.url)}>複製</button>
-                            <a href={img.url} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}>開啟</a>
+                            <button type="button" style={debugBtn} onClick={() => void copyWithToast('URL', img.url)}>{t('common.copy')}</button>
+                            <a href={img.url} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}>{t('common.open')}</a>
                           </>
                         )}
                       </div>
                     )
                   })}
                   {item.usage && (item.usage.total_tokens !== undefined || item.usage.outputTokens !== undefined) && (
-                    <div>Tokens: 輸出 {item.usage.outputTokens ?? item.usage.total_tokens ?? '—'}／共 {item.usage.total_tokens ?? '—'}</div>
+                    <div>{t('image.history.tokens', {
+                      output: item.usage.outputTokens ?? item.usage.total_tokens ?? '—',
+                      total: item.usage.total_tokens ?? '—',
+                    })}</div>
                   )}
                   {item.status === 'failed' && item.errorCode && (
-                    <div style={{ color: 'var(--danger)' }}>錯誤代碼: {item.errorCode}</div>
+                    <div style={{ color: 'var(--danger)' }}>{t('image.history.errorCode', { code: item.errorCode })}</div>
                   )}
                   {item.debug?.imageErrors?.map((e, i) => (
                     <div key={`err-${i}`} style={{ color: 'var(--danger)' }}>
-                      圖 {i + 1} 失敗: {e.code ?? ''} {e.message ?? ''}
+                      {t('image.history.imageError', {
+                        index: i + 1,
+                        message: `${e.code ?? ''} ${e.message ?? ''}`.trim(),
+                      })}
                     </div>
                   ))}
                 </div>
@@ -435,9 +447,9 @@ export default function ImageHistory({ width }: { width: number }) {
 
       <ConfirmModal
         open={confirmDeleteId !== null}
-        title="刪除這筆紀錄？"
-        subtitle="刪除後無法復原（已下載/匯出的檔案不受影響）。"
-        confirmLabel="確認"
+        title={t('image.history.deleteTitle')}
+        subtitle={t('image.history.deleteSubtitle')}
+        confirmLabel={t('common.confirm')}
         variant="danger"
         onConfirm={() => {
           if (confirmDeleteId) removeHistory(confirmDeleteId)
@@ -449,7 +461,7 @@ export default function ImageHistory({ width }: { width: number }) {
   )
 }
 
-// 次要按鈕 — 與 VideoHistory 卡片內按鈕同款（bg-input 底；handoff §5 radius 6 + icon）
+// 次要按钮 — 与 VideoHistory 卡片内按钮同款（bg-input 底；handoff §5 radius 6 + icon）
 const btnStyle: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 5,
   background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 6,
@@ -467,4 +479,3 @@ const debugBtn: React.CSSProperties = {
   background: 'transparent', border: '1px solid var(--border)', borderRadius: 6,
   color: 'var(--text-secondary)', cursor: 'pointer', padding: '0 6px', fontSize: 11,
 }
-

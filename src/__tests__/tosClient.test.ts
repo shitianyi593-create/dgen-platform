@@ -1,14 +1,14 @@
 /**
- * src/api/tos.ts 前端 client 測試
+ * src/api/tos.ts 前端 client 测试
  *
- * 涵蓋需求：
- * - signPutUrl / signGetUrl 呼叫正確 endpoint 並序列化 body
- * - 兩支 sign API 在 server 回 4xx/5xx 時拋出帶 error 訊息的例外
+ * 涵盖需求：
+ * - signPutUrl / signGetUrl 呼叫正确 endpoint 并序列化 body
+ * - 两支 sign API 在 server 回 4xx/5xx 时抛出带 error 消息的例外
  * - uploadToTos 完整流程：sign-put → PUT → sign-get
- * - PUT 失敗時拋錯且不再呼叫 sign-get
- * - 帶 expiresSec 時序列化進 sign-get body
- * - file.type 為空時 PUT 帶 application/octet-stream
- * - B6: 有 tosCreds 時 body 包含 creds 欄位；無時不含
+ * - PUT 失败时抛错且不再呼叫 sign-get
+ * - 带 expiresSec 时序列化进 sign-get body
+ * - file.type 为空时 PUT 带 application/octet-stream
+ * - B6: 有 tosCreds 时 body 包含 creds 栏位；无时不含
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { signPutUrl, signGetUrl, uploadToTos } from '../api/tos'

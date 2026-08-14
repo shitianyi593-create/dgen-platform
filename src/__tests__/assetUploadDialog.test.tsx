@@ -25,7 +25,7 @@ function fireFileInput(files: File[]) {
 }
 
 describe('AssetUploadDialog v2', () => {
-  it('renders group selector and "從電腦選擇" button', () => {
+  it('renders group selector and "从电脑选择" button', () => {
     render(
       <AssetUploadDialog
         groups={groups}
@@ -35,8 +35,8 @@ describe('AssetUploadDialog v2', () => {
       />,
     )
     expect(screen.getByDisplayValue('my-assets')).toBeInTheDocument()
-    expect(screen.getByText(/從電腦選擇/)).toBeInTheDocument()
-    expect(screen.getByText(/尚未選擇任何檔案/)).toBeInTheDocument()
+    expect(screen.getByText(/从电脑选择/)).toBeInTheDocument()
+    expect(screen.getByText(/尚未选择任何文件/)).toBeInTheDocument()
   })
 
   it('lists picked files with type chip + size', async () => {
@@ -56,7 +56,7 @@ describe('AssetUploadDialog v2', () => {
     expect(screen.getByText(/1\.0 MB/)).toBeInTheDocument()
   })
 
-  it('rejects oversize file with inline error and disables 開始上傳', async () => {
+  it('rejects oversize file with inline error and disables 开始上传', async () => {
     render(
       <AssetUploadDialog
         groups={groups}
@@ -72,8 +72,8 @@ describe('AssetUploadDialog v2', () => {
     await waitFor(() =>
       expect(screen.getByText(/⚠.*30 MB/)).toBeInTheDocument(),
     )
-    // Submit button label includes the count when valid > 0; when 0 it's just "開始上傳".
-    const submit = screen.getByRole('button', { name: /開始上傳/ })
+    // Submit button label includes the count when valid > 0; when 0 it's just "开始上传".
+    const submit = screen.getByRole('button', { name: /开始上传/ })
     expect(submit).toBeDisabled()
   })
 
@@ -87,7 +87,7 @@ describe('AssetUploadDialog v2', () => {
         onUpload={onUpload}
       />,
     )
-    fireEvent.click(screen.getByRole('button', { name: /開始上傳/ }))
+    fireEvent.click(screen.getByRole('button', { name: /开始上传/ }))
     expect(onUpload).not.toHaveBeenCalled()
   })
 
@@ -107,7 +107,7 @@ describe('AssetUploadDialog v2', () => {
       makeFile('b.png', 'image/png'),
     ])
     await waitFor(() => expect(screen.getByText('a.jpg')).toBeInTheDocument())
-    fireEvent.click(screen.getByRole('button', { name: /開始上傳/ }))
+    fireEvent.click(screen.getByRole('button', { name: /开始上传/ }))
 
     // Single call with the full batch (NOT per-file iteration).
     expect(onUpload).toHaveBeenCalledTimes(1)

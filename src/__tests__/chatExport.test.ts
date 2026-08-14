@@ -33,7 +33,7 @@ describe('buildChatExport', () => {
     expect(bundle.turns[0].requestBody).toEqual({ model: 'ep-x' })
     expect(bundle.totals.totalTokens).toBe(150)
     expect(bundle.totals.cacheHitRate).toBeCloseTo(0.6)
-    // 整包序列化不得出現 API key 欄位
+    // 整包序列化不得出现 API key 栏位
     expect(JSON.stringify(bundle)).not.toContain('apiKey')
   })
 })

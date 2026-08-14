@@ -168,9 +168,9 @@ export interface VideoHistoryItem {
   /** True when this item came from an imported JSON rather than a live
    *  generation in this session — bypasses the "recent 2 hours" UI filter. */
   imported?: boolean;
-  /** 實際送出的 model 字串（endpoint ID 或 Model ID）。2.5 頁寫入，匯出溯源用。 */
+  /** 实际送出的 model 字符串（endpoint ID 或 Model ID）。2.5 页写入，导出溯源用。 */
   model?: string;
-  /** 提示詞優化開啟時的使用者原文；`prompt` 一律是實際送出的版本。 */
+  /** 提示词优化打开时的用户原文；`prompt` 一律是实际送出的版本。 */
   originalPrompt?: string;
   /** The execution_expires_after value (seconds) sent at create time. */
   executionExpiresAfter?: number;
@@ -188,32 +188,32 @@ export const RESOLUTION_OPTIONS = [
   { value: '1080p', label: '1080p' },
 ] as const;
 
-/** Seedance 2.5 Model ID — `model` 欄位在 videoEndpoint25 留空時的 fallback。 */
+/** Seedance 2.5 Model ID — `model` 字段在 videoEndpoint25 留空时的 fallback。 */
 export const SEEDANCE_25_MODEL_ID = 'dreamina-seedance-2-5-260628';
 
-/** Seedance 2.5 只支援 480p / 720p（官方 01 文件）。
- *  // TODO(tech-debt): seedanceModels 能力表合併 */
+/** Seedance 2.5 只支持 480p / 720p（官方 01 文件）。
+ *  // TODO(tech-debt): seedanceModels 能力表合并 */
 export const RESOLUTION_OPTIONS_25 = [
   { value: '480p', label: '480p' },
   { value: '720p', label: '720p' },
 ] as const;
 
-/** Seedance 2.5 長度：-1 = Auto（官方預設），或 4–30 秒整數。 */
+/** Seedance 2.5 长度：-1 = Auto（官方默认），或 4–30 秒整数。 */
 export const DURATION_OPTIONS_25: ReadonlyArray<{ value: number; label: string }> = [
-  { value: -1, label: 'Auto（模型自選）' },
+  { value: -1, label: 'Auto（模型自选）' },
   ...Array.from({ length: 27 }, (_, i) => ({ value: i + 4, label: `${i + 4} 秒` })),
 ];
 
 /** Available aspect ratios — 'adaptive' is Seedance 2.0's default and lets
  *  the model auto-select the best ratio based on the inputs. */
 export const RATIO_OPTIONS = [
-  { value: 'adaptive', label: 'Adaptive（自動依輸入選擇）' },
-  { value: '16:9', label: '16:9 (橫向)' },
+  { value: 'adaptive', label: 'Adaptive（自动依输入选择）' },
+  { value: '16:9', label: '16:9 (横向)' },
   { value: '9:16', label: '9:16 (直向)' },
   { value: '1:1', label: '1:1 (方形)' },
   { value: '4:3', label: '4:3' },
   { value: '3:4', label: '3:4' },
-  { value: '21:9', label: '21:9 (超寬)' },
+  { value: '21:9', label: '21:9 (超宽)' },
 ] as const;
 
 /** Available duration options.
@@ -223,7 +223,7 @@ export const RATIO_OPTIONS = [
  *  legacy default is 5s; we keep that as the initial value but expose every
  *  valid option in the UI. */
 export const DURATION_OPTIONS = [
-  { value: -1, label: 'Auto（模型自選）' },
+  { value: -1, label: 'Auto（模型自选）' },
   { value: 4, label: '4 秒' },
   { value: 5, label: '5 秒' },
   { value: 6, label: '6 秒' },
@@ -241,13 +241,13 @@ export const DURATION_OPTIONS = [
 /** Task expiration threshold options. Values are seconds.
  *  ARK valid range: [3600, 259200] (1hr ~ 72hr). */
 export const EXECUTION_EXPIRES_OPTIONS = [
-  { value: 3600,   label: '1 小時 (預設)' },
-  { value: 7200,   label: '2 小時' },
-  { value: 14400,  label: '4 小時' },
-  { value: 28800,  label: '8 小時' },
-  { value: 86400,  label: '24 小時' },
-  { value: 172800, label: '48 小時' },
-  { value: 259200, label: '72 小時 (最長)' },
+  { value: 3600,   label: '1 小时 (默认)' },
+  { value: 7200,   label: '2 小时' },
+  { value: 14400,  label: '4 小时' },
+  { value: 28800,  label: '8 小时' },
+  { value: 86400,  label: '24 小时' },
+  { value: 172800, label: '48 小时' },
+  { value: 259200, label: '72 小时 (最长)' },
 ] as const;
 
 // ============================================================

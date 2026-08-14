@@ -3,7 +3,7 @@ import type { ImageHistoryItem } from '../types/image'
 import { downloadAssetBlob } from './local'
 import { normalizeForFflate } from './exportBundle'
 
-/** params.json 的形狀（zip 內的任務中繼資料）。 */
+/** params.json 的形状（zip 内的任务中继数据）。 */
 export interface ImageBundleJson {
   id: string
   status: string
@@ -25,7 +25,7 @@ export interface BuiltImageBundle {
   missing: string[]
 }
 
-/** 單筆歷史 → zip（images/image-N.ext + params.json）。下載失敗的圖列入 missing。 */
+/** 单笔历史 → zip（images/image-N.ext + params.json）。下载失败的图列入 missing。 */
 export async function buildImageBundleZip(item: ImageHistoryItem): Promise<BuiltImageBundle> {
   const files: Record<string, Uint8Array> = {}
   const missing: string[] = []
@@ -61,7 +61,7 @@ export async function buildImageBundleZip(item: ImageHistoryItem): Promise<Built
   return { bytes, missing }
 }
 
-/** 多筆 → 每筆一個資料夾（<id>/images/... + <id>/params.json）。 */
+/** 多笔 → 每笔一个数据夹（<id>/images/... + <id>/params.json）。 */
 export async function buildImageBatchZip(items: ImageHistoryItem[]): Promise<BuiltImageBundle> {
   const files: Record<string, Uint8Array> = {}
   const missing: string[] = []
@@ -86,8 +86,8 @@ const IMAGE_MIME_BY_EXT: Record<string, string> = {
 }
 
 /**
- * 匯入 zip → ImageHistoryItem[]。支援單筆（根層 params.json）與批次
- * （<folder>/params.json）。圖片轉 blob objectURL（僅存活於本頁，不持久化）。
+ * 导入 zip → ImageHistoryItem[]。支持单笔（根层 params.json）与批次
+ * （<folder>/params.json）。图片转 blob objectURL（仅存活于本页，不持久化）。
  */
 export async function importImageBundleZip(file: File): Promise<ImageHistoryItem[]> {
   const buf = new Uint8Array(await file.arrayBuffer())
@@ -96,11 +96,11 @@ export async function importImageBundleZip(file: File): Promise<ImageHistoryItem
   })
 
   const metaPaths = Object.keys(entries).filter((p) => p.endsWith('params.json'))
-  if (metaPaths.length === 0) throw new Error('zip 內找不到 params.json')
+  if (metaPaths.length === 0) throw new Error('zip 内找不到 params.json')
 
   const items: ImageHistoryItem[] = []
-  // 中途失敗（例如後面某個 params.json 壞掉）要先釋放已建立的 objectURL 再
-  // rethrow，否則部分匯入會洩漏 blob（同 VideoHistory.importFiles 的慣例）。
+  // 中途失败（例如后面某个 params.json 坏掉）要先释放已创建的 objectURL 再
+  // rethrow，否则部分导入会泄漏 blob（同 VideoHistory.importFiles 的惯例）。
   const createdUrls: string[] = []
   try {
     for (const metaPath of metaPaths) {
@@ -126,8 +126,8 @@ export async function importImageBundleZip(file: File): Promise<ImageHistoryItem
         createdAt: Date.parse(meta.created_at) || Date.now(),
         images,
         imported: true,
-        // 外部產生的 zip 可能沒有 params 欄位 — 給安全預設，避免歷史列表
-        // 讀 params.refFilenames 等欄位時直接 crash。
+        // 外部产生的 zip 可能没有 params 字段 — 给安全默认，避免历史列表
+        // 读 params.refFilenames 等字段时直接 crash。
         params: meta.params ?? {
           watermark: false, sequential: false, refFilenames: [], refUrls: [],
         },
@@ -135,7 +135,7 @@ export async function importImageBundleZip(file: File): Promise<ImageHistoryItem
     }
   } catch (e) {
     for (const url of createdUrls) {
-      try { URL.revokeObjectURL(url) } catch { /* test env 可能沒有 revoke */ }
+      try { URL.revokeObjectURL(url) } catch { /* test env 可能没有 revoke */ }
     }
     throw e
   }

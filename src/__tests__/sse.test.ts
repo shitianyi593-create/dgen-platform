@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createSseParser, postSse, SSE_DONE, type SseEvent } from '../api/sse'
 
 describe('createSseParser', () => {
-  it('解析單行 data 事件與 [DONE]', () => {
+  it('解析单行 data 事件与 [DONE]', () => {
     const p = createSseParser()
     const events = p.feed('data: {"a":1}\n\ndata: [DONE]\n\n')
     expect(events).toEqual([
@@ -11,30 +11,30 @@ describe('createSseParser', () => {
     ])
   })
 
-  it('跨 chunk 邊界的行要正確重組', () => {
+  it('跨 chunk 边界的行要正确重组', () => {
     const p = createSseParser()
     expect(p.feed('data: {"content":"he')).toEqual([])
     const events = p.feed('llo"}\n')
     expect(events).toEqual([{ event: undefined, data: '{"content":"hello"}' }])
   })
 
-  it('event: 行附掛到下一個 data 行（Responses API 格式）', () => {
+  it('event: 行附挂到下一个 data 行（Responses API 格式）', () => {
     const p = createSseParser()
     const events = p.feed('event: response.output_text.delta\ndata: {"delta":"x"}\n\n')
     expect(events).toEqual([
       { event: 'response.output_text.delta', data: '{"delta":"x"}' },
     ])
-    // event 名稱不能黏到下一個無 event 的事件上
+    // event 名称不能黏到下一个无 event 的事件上
     expect(p.feed('data: {"y":2}\n')).toEqual([{ event: undefined, data: '{"y":2}' }])
   })
 
-  it('忽略註解與其他欄位；容忍 \\r\\n', () => {
+  it('忽略注解与其他栏位；容忍 \\r\\n', () => {
     const p = createSseParser()
     const events = p.feed(': keep-alive\r\nid: 3\r\ndata: {"z":1}\r\n\r\n')
     expect(events).toEqual([{ event: undefined, data: '{"z":1}' }])
   })
 
-  it('flush 吐出殘留的未換行 data 行', () => {
+  it('flush 吐出残留的未换行 data 行', () => {
     const p = createSseParser()
     expect(p.feed('data: tail')).toEqual([])
     expect(p.flush()).toEqual([{ event: undefined, data: 'tail' }])
@@ -67,7 +67,7 @@ describe('postSse', () => {
   })
   afterEach(() => vi.unstubAllGlobals())
 
-  it('POST JSON、逐事件回呼、回傳原始 chunk log', async () => {
+  it('POST JSON、逐事件回呼、回传原始 chunk log', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       sseResponse(['data: {"n":1}\n\n', 'data: {"n":2}\n\ndata: [DONE]\n\n']),
     )
@@ -83,11 +83,11 @@ describe('postSse', () => {
     expect(JSON.parse(init!.body as string)).toEqual({ model: 'ep-x' })
   })
 
-  it('多位元組字元跨 chunk（位元組層級）：UTF-8 串流解碼要正確重組', async () => {
-    // 「世」在 UTF-8 佔 3 bytes；把它從中間切開，強迫走
-    // decoder.decode(value, { stream: true }) 的跨 chunk 重組路徑。
+  it('多字节字符跨 chunk（字节层级）：UTF-8 流式解码要正确重组', async () => {
+    // 「世」在 UTF-8 占 3 bytes；把它从中间切开，强迫走
+    // decoder.decode(value, { stream: true }) 的跨 chunk 重组路径。
     const bytes = new TextEncoder().encode('data: {"c":"世"}\n\n')
-    const splitAt = bytes.indexOf(0xe4) + 1 // 0xe4 = 「世」的第一個 byte
+    const splitAt = bytes.indexOf(0xe4) + 1 // 0xe4 = 「世」的第一个 byte
     expect(splitAt).toBeGreaterThan(0)
     const stream = new ReadableStream<Uint8Array>({
       start(controller) {
@@ -104,7 +104,7 @@ describe('postSse', () => {
     expect(seen).toEqual([{ event: undefined, data: '{"c":"世"}' }])
   })
 
-  it('非 2xx：抛出帶 status 與 body 的正規化錯誤', async () => {
+  it('非 2xx：抛出带 status 与 body 的正规化错误', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       sseResponse([], { status: 401, body: '{"error":{"message":"bad key"}}' }),
     )
@@ -113,14 +113,14 @@ describe('postSse', () => {
     ).rejects.toMatchObject({ message: 'bad key', status: 401 })
   })
 
-  it('onEvent 拋錯會中斷並外傳（Responses 的 error 事件用）', async () => {
+  it('onEvent 抛错会中断并外传（Responses 的 error 事件用）', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(sseResponse(['data: {"bad":1}\n\n']))
     await expect(
       postSse('/api/v3/responses', {}, { onEvent: () => { throw new Error('stream fail') } }),
     ).rejects.toThrow('stream fail')
   })
 
-  it('串流途中拋錯：外傳的錯誤帶上已收到的 chunk log（供保留部分內容）', async () => {
+  it('流式途中抛错：外传的错误带上已收到的 chunk log（供保留部分内容）', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       sseResponse(['data: {"n":1}\n\ndata: {"n":2}\n\ndata: {"n":3}\n\n']),
     )

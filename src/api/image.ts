@@ -5,14 +5,14 @@ export const IMAGES_PATH = '/api/v3/images/generations'
 
 export interface GenerateImagesResult {
   response: ImageGenerationResponse
-  /** ARK 回應標頭的 x-request-id（若有）— 同步 API 沒有 task id，這是最接近的除錯識別碼。 */
+  /** ARK 响应标头的 x-request-id（若有）— 同步 API 没有 task id，这是最接近的调试识别码。 */
   requestId?: string
 }
 
 /**
- * Seedream 圖片生成 — 同步 API：回應直接帶圖片 URL（24h 失效），沒有 task id、
- * 不需要輪詢。組圖 + 4K 可能跑超過預設 30s，逾時放寬到 3 分鐘。
- * 額外回傳 x-request-id 標頭（若有）作為除錯識別碼。
+ * Seedream 图片生成 — 同步 API：响应直接带图片 URL（24h 失效），没有 task id、
+ * 不需要轮询。组图 + 4K 可能跑超过默认 30s，逾时放宽到 3 分钟。
+ * 额外返回 x-request-id 标头（若有）作为调试识别码。
  */
 export async function generateImages(
   body: ImageGenerationRequest,

@@ -1,12 +1,12 @@
 /**
- * useReferenceUpload / addReferenceWithUpload 測試
+ * useReferenceUpload / addReferenceWithUpload 测试
  *
- * 涵蓋需求：
- * - 加入後立刻 uploading=true，且帶到自動產生的 id
- * - 上傳成功 → 寫回 uploadedUrl + tosKey + uploading=false
- * - 上傳失敗 → 寫回 error + uploading=false，不會留下 stale uploadedUrl
- * - 上傳中使用者移除該項目 → 不應寫回（避免污染後續加入的項目）
- * - video / audio 路徑互不干擾
+ * 涵盖需求：
+ * - 加入后立刻 uploading=true，且带到自动产生的 id
+ * - 上传成功 → 写回 uploadedUrl + tosKey + uploading=false
+ * - 上传失败 → 写回 error + uploading=false，不会留下 stale uploadedUrl
+ * - 上传中用户移除该项目 → 不应写回（避免污染后续加入的项目）
+ * - video / audio 路径互不干扰
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useVideoStore } from '../stores/videoStore'

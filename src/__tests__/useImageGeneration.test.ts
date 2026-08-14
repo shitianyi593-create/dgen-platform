@@ -141,20 +141,20 @@ describe('buildImageRequest', () => {
 describe('computeImageBlockReason', () => {
   it('orders: key → image ep → prompt → stale → bad url → ref cap → custom size', () => {
     useAuthStore.setState({ apiKey: '', imageEndpoint: '' })
-    expect(computeImageBlockReason()).toContain('API 金鑰')
+    expect(computeImageBlockReason()).toContain('API 密钥')
 
     useAuthStore.setState({ apiKey: VALID_KEY })
-    expect(computeImageBlockReason()).toContain('圖片生成接入點')
+    expect(computeImageBlockReason()).toContain('图片生成接入点')
 
     useAuthStore.setState({ imageEndpoint: IMG_EP })
     useImageStore.getState().setPrompt('')
-    expect(computeImageBlockReason()).toContain('提示詞')
+    expect(computeImageBlockReason()).toContain('提示词')
 
     useImageStore.getState().setPrompt('a cat')
     useImageStore.setState({
       refImages: [{ id: 'r1', preview: '', filename: 'x.png', stale: true }],
     })
-    expect(computeImageBlockReason()).toContain('重新上傳')
+    expect(computeImageBlockReason()).toContain('重新上传')
 
     useImageStore.setState({ refImages: [] })
     useImageStore.setState({ refUrls: ['not-a-url'] })
@@ -163,13 +163,13 @@ describe('computeImageBlockReason', () => {
     useImageStore.setState({
       refUrls: Array.from({ length: 11 }, (_, i) => `https://a/${i}.png`),
     })
-    expect(computeImageBlockReason()).toContain('參考圖') // 5-0-pro cap = 10
+    expect(computeImageBlockReason()).toContain('参考图') // 5-0-pro cap = 10
 
     useImageStore.setState({ refUrls: [] })
     useImageStore.getState().setSizeMode('custom')
     useImageStore.getState().setCustomWidth(100)
     useImageStore.getState().setCustomHeight(100)
-    expect(computeImageBlockReason()).toContain('總像素')
+    expect(computeImageBlockReason()).toContain('总像素')
 
     useImageStore.getState().setCustomWidth(2048)
     useImageStore.getState().setCustomHeight(2048)
@@ -201,11 +201,11 @@ describe('useImageGeneration.generate', () => {
     expect(entry.expiresAt! - entry.completedAt!).toBe(24 * 3600 * 1000)
     expect(s.currentEntryId).toBe(entry.id)
     expect(toast.success).toHaveBeenCalled()
-    // 除錯資訊
+    // 调试信息
     expect(entry.debug?.requestId).toBe('req-abc')
     expect(entry.debug?.responseModel).toBe('dola-seedream-5-0-pro-260628')
     expect(entry.debug?.createdApi).toBe(1757323224)
-    // 擴充的 usage 欄位
+    // 擴充的 usage 栏位
     expect(entry.usage?.outputTokens).toBe(16280)
     expect(entry.usage?.inputImages).toBe(2)
     expect(entry.usage?.total_tokens).toBe(16280)
@@ -213,7 +213,7 @@ describe('useImageGeneration.generate', () => {
 
   it('empty data with error.code sets errorCode on the failed entry', async () => {
     mockGenerate.mockResolvedValueOnce({
-      response: { data: [], error: { code: 'InputImageSensitiveContentDetected', message: '內容不合規' } },
+      response: { data: [], error: { code: 'InputImageSensitiveContentDetected', message: '内容不合规' } },
     })
     const { result } = renderHook(() => useImageGeneration())
     await act(() => result.current.generate())
@@ -221,7 +221,7 @@ describe('useImageGeneration.generate', () => {
     const entry = useImageStore.getState().history[0]
     expect(entry.status).toBe('failed')
     expect(entry.errorCode).toBe('InputImageSensitiveContentDetected')
-    expect(entry.error).toContain('內容不合規')
+    expect(entry.error).toContain('内容不合规')
   })
 
   it('converts uploaded files to base64 data URIs before sending', async () => {
@@ -257,7 +257,7 @@ describe('useImageGeneration.generate', () => {
     const { result } = renderHook(() => useImageGeneration())
     await act(() => result.current.generate())
     expect(mockGenerate).not.toHaveBeenCalled()
-    expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('圖片生成接入點'))
+    expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('图片生成接入点'))
   })
 
   it('concurrent generates create independent history entries', async () => {

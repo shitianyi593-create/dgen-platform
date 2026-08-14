@@ -12,7 +12,7 @@ describe('authStore textEndpoint', () => {
     localStorage.clear()
   })
 
-  it('v6 → v7 migration：補上空 textEndpoint、保留其他欄位', async () => {
+  it('v6 → v7 migration：补上空 textEndpoint、保留其他栏位', async () => {
     sessionStorage.setItem('byteplus-ai-gen-platform-auth', JSON.stringify({
       version: 6,
       state: { apiKey: 'k', endpoint: 'e', imageEndpoint: 'img' },
@@ -24,21 +24,21 @@ describe('authStore textEndpoint', () => {
     expect(s.textEndpoint).toBe('')
   })
 
-  it('setTextEndpoint 更新值並觸發 inference 格式驗證', async () => {
+  it('setTextEndpoint 更新值并触发 inference 格式验证', async () => {
     const mod = await freshStore()
     mod.useAuthStore.getState().setApiKey(VALID_KEY)
     mod.useAuthStore.getState().setTextEndpoint(VALID_EP)
     const s = mod.useAuthStore.getState()
     expect(s.textEndpoint).toBe(VALID_EP)
-    expect(s.verifyState.inference.status).toBe('ok')  // 只填文字 ep 也算「至少一個接入點」
+    expect(s.verifyState.inference.status).toBe('ok')  // 只填文字 ep 也算「至少一个接入点」
   })
 
-  it('textEndpoint 格式錯誤 → warn', async () => {
+  it('textEndpoint 格式错误 → warn', async () => {
     const mod = await freshStore()
     mod.useAuthStore.getState().setApiKey(VALID_KEY)
     mod.useAuthStore.getState().setTextEndpoint('not-an-ep')
     expect(mod.useAuthStore.getState().verifyState.inference.status).toBe('warn')
-    expect(mod.useAuthStore.getState().verifyState.inference.message).toContain('文字生成接入點')
+    expect(mod.useAuthStore.getState().verifyState.inference.message).toContain('文字生成接入点')
   })
 
   it('setField("inference","textEndpoint",…) 分派到 setTextEndpoint', async () => {
@@ -47,7 +47,7 @@ describe('authStore textEndpoint', () => {
     expect(mod.useAuthStore.getState().textEndpoint).toBe(VALID_EP)
   })
 
-  it('applyImportedEnv 帶入 textEndpoint', async () => {
+  it('applyImportedEnv 带入 textEndpoint', async () => {
     const mod = await freshStore()
     mod.useAuthStore.getState().applyImportedEnv({
       inference: { apiKey: VALID_KEY, textEndpoint: VALID_EP },

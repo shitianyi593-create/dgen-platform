@@ -93,9 +93,9 @@ export function mapToCreds(kv: Record<string, string>): EnvCredsPartial {
     if (k) inf.endpoint = norm[k]
   }
   if (!inf.textEndpoint) {
-    // 找 "SEED_"（SEED 後接底線）出現在名稱任一處，而非只看開頭 —— 實際使用的
-    // TEXT_LLM_SEED_ENDPOINT 就把 SEED_ 夾在中間。底線本身即排除 SEEDANCE_* /
-    // SEEDREAM_*（它們是 SEED 後接 A / R，不含 "SEED_"）。
+    // 找 "SEED_"（SEED 后接底线）出现在名称任一处，而非只看开头 —— 实际使用的
+    // TEXT_LLM_SEED_ENDPOINT 就把 SEED_ 夹在中间。底线本身即排除 SEEDANCE_* /
+    // SEEDREAM_*（它们是 SEED 后接 A / R，不含 "SEED_"）。
     const k = keys.find((n) => n.includes('SEED_') && n.includes('ENDPOINT') && norm[n])
     if (k) inf.textEndpoint = norm[k]
   }

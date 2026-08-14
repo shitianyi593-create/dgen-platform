@@ -19,7 +19,7 @@ describe('HeaderStatusPills', () => {
       verifyState: {
         inference: { status: 'ok', message: 'ok' },
         asset: { status: 'warn', message: 'bad keys' },
-        tos: { status: 'pend', message: '尚未驗證' },
+        tos: { status: 'pend', message: '尚未验证' },
       },
     })
   })

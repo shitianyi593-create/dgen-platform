@@ -1,12 +1,12 @@
 /**
- * video API 層測試
+ * video API 层测试
  *
- * 涵蓋需求：
- * - 建立影片生成任務 (createVideoTask)
- * - 取得任務狀態 (getVideoTask)
- * - 任務輪詢直到完成 (pollTaskUntilDone)
- * - 輪詢逾時處理
- * - onProgress 回呼在每次輪詢時被觸發
+ * 涵盖需求：
+ * - 创建视频生成任务 (createVideoTask)
+ * - 获取任务状态 (getVideoTask)
+ * - 任务轮询直到完成 (pollTaskUntilDone)
+ * - 轮询逾时处理
+ * - onProgress 回呼在每次轮询时被触发
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'

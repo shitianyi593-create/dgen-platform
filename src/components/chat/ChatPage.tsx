@@ -1,5 +1,5 @@
 // src/components/chat/ChatPage.tsx
-// 兩欄：ChatParams | (ChatToolbar / MessageList / ChatComposer)
+// 两栏：ChatParams | (ChatToolbar / MessageList / ChatComposer)
 import ChatParams, { CHAT_PARAMS_DEFAULT_WIDTH } from './ChatParams'
 import ChatToolbar from './ChatToolbar'
 import MessageList from './MessageList'
@@ -25,7 +25,7 @@ export default function ChatPage() {
       <ChatParams width={paramsWidth} />
       <ResizeHandle
         side="left"
-        ariaLabel="拖曳調整參數欄寬度"
+        ariaLabel="拖拽调整参数栏宽度"
         getCurrentWidth={() => paramsWidth}
         onResize={setParamsWidth}
         resetWidth={CHAT_PARAMS_DEFAULT_WIDTH}

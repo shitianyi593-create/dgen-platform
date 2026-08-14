@@ -12,9 +12,9 @@ describe('authStore imageEndpoint', () => {
       endpoint: '',
       imageEndpoint: '',
       verifyState: {
-        inference: { status: 'pend', message: '尚未驗證' },
-        asset: { status: 'pend', message: '尚未驗證' },
-        tos: { status: 'pend', message: '尚未驗證' },
+        inference: { status: 'pend', message: '尚未验证' },
+        asset: { status: 'pend', message: '尚未验证' },
+        tos: { status: 'pend', message: '尚未验证' },
       },
     })
   })
@@ -49,7 +49,7 @@ describe('authStore imageEndpoint', () => {
     useAuthStore.getState().setImageEndpoint('not-an-ep')
     const inf = useAuthStore.getState().verifyState.inference
     expect(inf.status).toBe('warn')
-    expect(inf.message).toContain('圖片')
+    expect(inf.message).toContain('图片')
   })
 
   it('setField routes imageEndpoint under the inference cred', () => {

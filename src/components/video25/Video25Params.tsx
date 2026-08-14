@@ -1,11 +1,11 @@
-// Seedance 2.5 參數面板 — copy-fork 自 VideoParams.tsx（spec rev3 §4）。
-// TODO(tech-debt): seedanceModels 能力表合併 — 差異僅在選項/上限/標籤格式/優化流程，
-// 終局應與 VideoParams 合併為能力表驅動的單一元件。
-// TODO(tech-debt): 優化流程（optFlow / runOptimize / cancelOptimize / optFixes）應抽成
-// useVideo25OptimizeFlow hook，讓本元件回到純渲染；目前刻意留在檔內以縮小 review 面。
-// TODO(tech-debt): OptFlowState 應改為 discriminated union（idle | loading | ready | error），
-// 現有的 result/error/prepared 可選欄位允許了幾種實際到不了的組合（例如 result 與 error
-// 同時存在）。今天所有 setOptFlow 呼叫點都只產生合法組合，故僅列為債務。
+// Seedance 2.5 参数面板 — copy-fork 自 VideoParams.tsx（spec rev3 §4）。
+// TODO(tech-debt): seedanceModels 能力表合并 — 差异仅在选项/上限/标签格式/优化流程，
+// 终局应与 VideoParams 合并为能力表驱动的单一组件。
+// TODO(tech-debt): 优化流程（optFlow / runOptimize / cancelOptimize / optFixes）应抽成
+// useVideo25OptimizeFlow hook，让本组件回到纯渲染；目前刻意留在档内以缩小 review 面。
+// TODO(tech-debt): OptFlowState 应改为 discriminated union（idle | loading | ready | error），
+// 现有的 result/error/prepared 可选字段允许了几種实际到不了的组合（例如 result 与 error
+// 同时存在）。今天所有 setOptFlow 呼叫点都只产生合法组合，故仅列为债务。
 import type { CSSProperties } from 'react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
@@ -27,8 +27,10 @@ import type { ImageRole } from '../../types'
 import { computeContentLabels } from '../../utils/contentLabels'
 import { computeCompatibility } from '../../utils/videoMode'
 import { computePanelScale, scaledFs } from '../../utils/panelScale'
+import { useOptionalI18n } from '../../i18n/useOptionalI18n'
+import type { Locale, MessageKey } from '../../i18n/locales'
 import {
-  optimizePrompt, computeParamFixes, describeParamFixes,
+  optimizePrompt, computeParamFixes,
   type Sd25OptimizeResult, type ParamFixes,
 } from '../../utils/sd25PromptOptimizer'
 /** Default width when no parent overrides — used as the scale=1 baseline. */
@@ -62,8 +64,43 @@ const ROLE_BADGE: Record<ImageRole, string> = {
   reference_image: 'REF',
 }
 
-/** 優化流程狀態（spec §6.3）。`prepared` 是按下生成當下的參數快照，
- *  Modal 確認時據此送出，避免使用者在 Modal 開啟期間改動參數造成不一致。 */
+function ratioLabel(value: string, locale: Locale) {
+  const zh = locale === 'zh-CN'
+  switch (value) {
+    case 'adaptive': return zh ? 'Adaptive（自动依输入选择）' : 'Adaptive (based on input)'
+    case '16:9': return zh ? '16:9 (横向)' : '16:9 (landscape)'
+    case '9:16': return zh ? '9:16 (竖向)' : '9:16 (portrait)'
+    case '1:1': return zh ? '1:1 (方形)' : '1:1 (square)'
+    case '21:9': return zh ? '21:9 (超宽)' : '21:9 (ultrawide)'
+    default: return value
+  }
+}
+
+function durationLabel(value: number, locale: Locale) {
+  if (value === -1) return locale === 'zh-CN' ? 'Auto（模型自选）' : 'Auto (model decides)'
+  return locale === 'zh-CN' ? `${value} 秒` : `${value}s`
+}
+
+function executionExpiresLabel(value: number, locale: Locale) {
+  const zh = locale === 'zh-CN'
+  const hours = value / 3600
+  if (hours === 1) return zh ? '1 小时 (默认)' : '1 hour (default)'
+  if (hours === 72) return zh ? '72 小时 (最长)' : '72 hours (max)'
+  return zh ? `${hours} 小时` : `${hours} hours`
+}
+
+function promptOptimizeFixNote(
+  fixes: ParamFixes,
+  t: (key: MessageKey, params?: Record<string, string | number>) => string,
+) {
+  const parts: string[] = []
+  if (fixes.duration !== undefined) parts.push(t('video25.optimize.fixDuration'))
+  if (fixes.ratio !== undefined) parts.push(t('video25.optimize.fixRatio'))
+  return parts.length > 0 ? parts.join(t('common.listSeparator')) : null
+}
+
+/** 优化流程状态（spec §6.3）。`prepared` 是按下生成当下的参数快照，
+ *  Modal 确认时据此送出，避免用户在 Modal 打开期间改动参数造成不一致。 */
 interface OptFlowState {
   open: boolean
   loading: boolean
@@ -73,6 +110,7 @@ interface OptFlowState {
 }
 
 export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: Video25ParamsProps) {
+  const { locale, t } = useOptionalI18n()
   const {
     apiKey, textEndpoint,
   } = useAuthStore()
@@ -140,22 +178,22 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
 
   const [showClearConfirm, setShowClearConfirm] = useState(false)
 
-  // 進階設定折疊（Seed / 任務最長等待時間 / 浮水印）— 預設收合。
+  // 高级设置折叠（Seed / 任务最长等待时间 / 水印）— 默认收起。
   const [advancedOpen, setAdvancedOpen] = useState(false)
 
   const { prepare, submit } = useVideo25Generation()
 
   const [optFlow, setOptFlow] = useState<OptFlowState>({ open: false, loading: false })
-  // 進行中的 optimizePrompt 請求。取消（取消鍵 / Escape / 遮罩）必須 abort，
-  // 否則晚回來的回應會把已關閉的 Modal 重新打開（PromptOptimizeModal onCancel 契約）。
+  // 进行中的 optimizePrompt 请求。取消（取消键 / Escape / 遮罩）必须 abort，
+  // 否则晚回来的响应会把已关闭的 Modal 重新打开（PromptOptimizeModal onCancel 契约）。
   const optAbortRef = useRef<AbortController | null>(null)
-  // 卸載時收掉在途請求：離開頁面後回應已無處可去，讓 LLM 呼叫繼續跑只是浪費配額，
-  // 且回呼會對已卸載的元件 setState。
+  // 卸载时收掉在途请求：离开页面后响应已无处可去，让 LLM 呼叫继续跑只是浪费配额，
+  // 且回呼会对已卸载的组件 setState。
   useEffect(() => () => optAbortRef.current?.abort(), [])
 
-  // 送出中旗標 — 用來擋住重複點擊。submit() 全程 async（base64 編碼 + 建立任務），
-  // 期間按鈕若仍可按，兩次快點就會建出兩個任務。Modal 確認時也走同一支，
-  // 因為 onConfirm 先關 Modal、submit 還在跑，那段空窗同樣可再按一次生成。
+  // 送出中旗标 — 用来挡住重复点击。submit() 全程 async（base64 编码 + 创建任务），
+  // 期间按钮若仍可按，两次快点就会建出两个任务。Modal 确认时也走同一支，
+  // 因为 onConfirm 先关 Modal、submit 还在跑，那段空窗同样可再按一次生成。
   const [submitting, setSubmitting] = useState(false)
   const runSubmit = useCallback(async (
     prepared: PreparedSubmit,
@@ -170,26 +208,26 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
     }
   }, [submit])
 
-  // 任務類型修正回寫 store（spec §3）：edit/extend 對這些值的要求是硬約束，
-  // 只改請求不改面板會讓 toast 說「已改為 Auto」而面板還顯示 10 秒，
-  // 且下一次生成又會靜默送回錯的值。
+  // 任务类型修正回写 store（spec §3）：edit/extend 对这些值的要求是硬约束，
+  // 只改请求不改面板会让 toast 说「已改为 Auto」而面板还显示 10 秒，
+  // 且下一次生成又会静默送回错的值。
   const applyFixesToStore = useCallback((fixes: ParamFixes) => {
     if (fixes.duration !== undefined) setDuration(fixes.duration)
     if (fixes.ratio !== undefined) setRatio(fixes.ratio)
   }, [setDuration, setRatio])
 
   const runOptimize = useCallback(async (prepared: PreparedSubmit) => {
-    // 重試時先收掉上一輪（若仍在途），避免兩個回應競寫同一份 state。
+    // 重试时先收掉上一轮（若仍在途），避免两个响应競写同一份 state。
     optAbortRef.current?.abort()
     const controller = new AbortController()
     optAbortRef.current = controller
     setOptFlow({ open: true, loading: true, prepared })
     try {
-      // 素材一律取自 prepared 快照（按下生成當下的事實），標籤依同一份快照
-      // 重算 — Modal 開啟期間使用者增刪素材不會污染重試的 context。
-      // 「+ 新增」但沒填 id 的空列必須先濾掉：submit() 會略過它們（`if (!trimmed) continue`），
-      // 若這裡仍計入編號，LLM 拿到的 @ImageN 會比實際送出的素材多一個，
-      // 之後每個標籤都指向錯的素材。編號口徑必須與 submit() 完全一致。
+      // 素材一律取自 prepared 快照（按下生成当下的事实），标签依同一份快照
+      // 重算 — Modal 打开期间用户增删素材不会污染重试的 context。
+      // 「+ 新增」但没填 id 的空列必须先滤掉：submit() 会略过它们（`if (!trimmed) continue`），
+      // 若这里仍计入编号，LLM 拿到的 @ImageN 会比实际送出的素材多一个，
+      // 之后每个标签都指向错的素材。编号口径必须与 submit() 完全一致。
       const sentAssets = prepared.assetSnapshot.filter((r) => r.id.trim() !== '')
       const snapLabels = computeContentLabels({
         imageCount: prepared.imgSnapshot.length,
@@ -222,8 +260,8 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
       if (controller.signal.aborted) return
       setOptFlow({ open: true, loading: false, result, prepared })
     } catch (err) {
-      // 使用者取消造成的 rejection（AbortError）不是優化失敗 — 靜默收場，
-      // Modal 已由 cancelOptimize 關閉，不要把它重新打開成錯誤態。
+      // 用户取消造成的 rejection（AbortError）不是优化失败 — 静默收场，
+      // Modal 已由 cancelOptimize 关闭，不要把它重新打开成错误态。
       if (controller.signal.aborted) return
       const message = err instanceof Error ? err.message : String(err)
       setOptFlow({ open: true, loading: false, error: message, prepared })
@@ -252,7 +290,7 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
         ratio: optFlow.prepared?.ratioToSend ?? 'adaptive',
       })
     : {}
-  const optFixNote = describeParamFixes(optFixes)
+  const optFixNote = promptOptimizeFixNote(optFixes, t)
 
   // Local display string for the seed input — avoids a controlled-input re-render
   // problem where typing "42" into a field showing "-1" produces "-142".
@@ -267,7 +305,7 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
   // insert button blurs the textarea BEFORE the click lands, so reading
   // selectionStart at click time (or gating on document.activeElement)
   // always degrades to append-at-end — this ref is what preserves the
-  // caret across that blur. External prompt rewrites (載入參數 / 新任務)
+  // caret across that blur. External prompt rewrites (加载参数 / 新任务)
   // can leave the offsets stale, but slice() and setSelectionRange() both
   // clamp out-of-range values, so the worst case is an end-of-string insert.
   const selectionRef = useRef<{ start: number; end: number } | null>(null)
@@ -296,8 +334,8 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
   }, [setPrompt])
 
   const activeCount = activeTaskIds.length
-  // 2.5 的影片接入點可留空（fallback 到官方 model id），但開啟提示詞優化
-  // 就必須有文字生成接入點才能呼叫 LLM。
+  // 2.5 的视频接入点可留空（fallback 到官方 model id），但打开提示词优化
+  // 就必须有文字生成接入点才能呼叫 LLM。
   const optimizeBlocked = promptOptimize && !textEndpoint.trim()
   const credsOK = !!apiKey && !!prompt.trim() && !optimizeBlocked
   const canGenerate = credsOK && compat.canGenerate
@@ -306,15 +344,15 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
   // useVideo25Generation prepare() so the inline hint matches the toast users
   // would see if they somehow clicked through.
   const generateBlockReason: string | null =
-    !apiKey ? '請輸入 API 金鑰'
-    : !prompt.trim() ? '請輸入提示詞'
-    : optimizeBlocked ? '提示詞優化需要文字生成接入點'
-    : !compat.imageCountOK ? '圖片數量與模式不符'
-    : !compat.roleSetOK ? '首尾幀模式需要恰好一張首幀與一張尾幀'
-    : compat.incompatibleImageIndexes.length ? '部分圖片 role 與模式不符'
-    : compat.incompatibleVideosFlag ? '此模式不允許參考影片'
-    : compat.incompatibleAudiosFlag ? '此模式不允許參考音訊'
-    : compat.incompatibleAssetRefIndexes.length ? '部分 asset 參考與模式不符'
+    !apiKey ? t('video.block.apiKey')
+    : !prompt.trim() ? t('video.block.prompt')
+    : optimizeBlocked ? t('video25.block.textEndpoint')
+    : !compat.imageCountOK ? t('video.block.imageCount')
+    : !compat.roleSetOK ? t('video.block.roleSet')
+    : compat.incompatibleImageIndexes.length ? t('video.block.imageRole')
+    : compat.incompatibleVideosFlag ? t('video.block.videoNotAllowed')
+    : compat.incompatibleAudiosFlag ? t('video.block.audioNotAllowed')
+    : compat.incompatibleAssetRefIndexes.length ? t('video.block.assetRef')
     : null
 
   // T25 / I1: trigger the incompatibility banner for ALL canGenerate failure
@@ -331,8 +369,8 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
   )
 
   const panelScale = computePanelScale(width, VIDEO25_PARAMS_DEFAULT_WIDTH)
-  // 捲動內容 + sticky footer（handoff §B1）：外層鎖 overflow，
-  // 內容區獨立捲動，CTA / 提示 / 任務進行中固定在 footer。
+  // 滚动内容 + sticky footer（handoff §B1）：外层锁 overflow，
+  // 内容区独立滚动，CTA / 提示 / 任务进行中固定在 footer。
   const panelStyle: CSSProperties = {
     width,
     flexShrink: 0,
@@ -351,7 +389,7 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
       <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
       {/* Model */}
       <div style={{ marginBottom: 16 }}>
-        <label className="label">模型</label>
+        <label className="label">{t('video.model')}</label>
         <select className="select-field" disabled>
           <option>Seedance 2.5</option>
         </select>
@@ -365,11 +403,11 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
           justifyContent: 'space-between',
           marginBottom: 6,
         }}>
-          <label className="label" style={{ margin: 0 }}>提示詞</label>
+          <label className="label" style={{ margin: 0 }}>{t('video.prompt')}</label>
           <button
             type="button"
             onClick={() => resetForNewTask()}
-            title="清除提示詞與所有參考素材，開始新任務"
+            title={t('video.newTaskTitle')}
             style={{
               background: 'none',
               border: 'none',
@@ -380,13 +418,13 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
               padding: 0,
             }}
           >
-            新任務
+            {t('video.newTask')}
           </button>
         </div>
         <textarea
           ref={promptRef}
           className="input-field"
-          placeholder="描述您想要生成的影片內容..."
+          placeholder={t('video.promptPlaceholder')}
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           onSelect={(e) => captureSelection(e.currentTarget)}
@@ -395,25 +433,25 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
           style={{ resize: 'vertical', minHeight: 80 }}
         />
         <div className="hint" style={{ marginTop: 4 }}>
-          可用 <code>@Image1</code> / <code>@Video1</code> / <code>@Audio1</code> 引用素材；各項目右下角會顯示對應編號。
+          {t('video25.promptHint')}
         </div>
-        {/* 提示詞優化開關（spec §6.1）— 2.5 頁常駐 */}
+        {/* 提示词优化开关（spec §6.1）— 2.5 页常驻 */}
         <div style={{ marginTop: 10 }}>
           <label
             htmlFor="video25-prompt-optimize"
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
           >
             <div>
-              <span style={{ fontSize: scaledFs(14) }}>提示詞優化</span>
+              <span style={{ fontSize: scaledFs(14) }}>{t('video25.optimize.toggle')}</span>
               <div className="hint" style={{ marginTop: 2 }}>
-                生成前先依 Seedance 2.5 提示詞指南以 LLM 優化，優化結果會先讓你確認
+                {t('video25.optimize.toggleHint')}
               </div>
             </div>
             <input
               id="video25-prompt-optimize"
               className="sr-only"
               type="checkbox"
-              aria-label="提示詞優化"
+              aria-label={t('video25.optimize.toggle')}
               checked={promptOptimize}
               onChange={(e) => setPromptOptimize(e.target.checked)}
             />
@@ -429,7 +467,7 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
 
       {/* Mode tabs */}
       <div style={{ marginBottom: 12 }}>
-        <label className="label">影片生成模式</label>
+        <label className="label">{t('video.mode')}</label>
         <div style={{
           display: 'flex', gap: 2,
           background: 'var(--bg-input)',
@@ -437,9 +475,9 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
           padding: 3,
         }}>
           {([
-            { v: 'first_frame', label: '首幀' },
-            { v: 'first_last_frame', label: '首+尾' },
-            { v: 'multimodal', label: '多模態' },
+            { v: 'first_frame', label: t('video.mode.firstFrame') },
+            { v: 'first_last_frame', label: t('video.mode.firstLastFrame') },
+            { v: 'multimodal', label: t('video.mode.multimodal') },
           ] as const).map((m) => (
             <button
               key={m.v}
@@ -464,9 +502,9 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
           ))}
         </div>
         <div className="hint" style={{ marginTop: 6 }}>
-          {mode === 'first_frame' && '用單張首幀圖生影片；可串接尾幀做長片'}
-          {mode === 'first_last_frame' && '首尾畫面嚴格鎖定為指定圖片'}
-          {mode === 'multimodal' && '圖 + 影 + 音 多模態參考，0-30 張圖；編輯/延長任務比例請用 Adaptive；編輯任務長度請用 Auto'}
+          {mode === 'first_frame' && t('video.modeHint.firstFrame')}
+          {mode === 'first_last_frame' && t('video.modeHint.firstLastFrame')}
+          {mode === 'multimodal' && t('video25.modeHint.multimodal')}
         </div>
       </div>
 
@@ -487,10 +525,10 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
         }}>
           <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
             {incompatCount > 0
-              ? `${incompatCount} 個項目不相容`
-              : '參數與目前模式不符'}
+              ? t('video.incompat.count', { count: incompatCount })
+              : t('video.incompat.params')}
           </div>
-          <div style={{ marginTop: 2 }}>{generateBlockReason ?? '切換模式後部分項目不符合 API 規則'}</div>
+          <div style={{ marginTop: 2 }}>{generateBlockReason ?? t('video.incompat.defaultHint')}</div>
           {incompatCount > 0 && (
             <button
               type="button"
@@ -507,7 +545,7 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
                 cursor: 'pointer',
               }}
             >
-              清掉不相容項目
+              {t('video.incompat.clear')}
             </button>
           )}
         </div>
@@ -518,7 +556,7 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
       <div style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
           <span className="label" style={{ margin: 0 }}>
-            Asset 參考 <span style={{ color: 'var(--text-muted)' }}>({assetRefs.length})</span>
+            {t('video.assetReference')} <span style={{ color: 'var(--text-muted)' }}>({assetRefs.length})</span>
           </span>
           <button
             type="button"
@@ -533,7 +571,7 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
               padding: 0,
             }}
           >
-            + 新增
+            {t('video.add')}
           </button>
         </div>
         {assetRefs.map((ref, idx) => {
@@ -564,9 +602,9 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
               onChange={(e) => updateAssetRef(idx, { type: e.target.value as 'image' | 'video' | 'audio' })}
               style={{ width: 72, flexShrink: 0 }}
             >
-              <option value="image">圖片</option>
-              <option value="video">影片</option>
-              <option value="audio">音訊</option>
+              <option value="image">{t('video.type.image')}</option>
+              <option value="video">{t('video.type.video')}</option>
+              <option value="audio">{t('video.type.audio')}</option>
             </select>
             <input
               className="input-field"
@@ -590,8 +628,8 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
                   flexShrink: 0,
                 }}
               >
-                <option value="first_frame">首幀</option>
-                <option value="last_frame">尾幀</option>
+                <option value="first_frame">{t('video.role.firstFrame')}</option>
+                <option value="last_frame">{t('video.role.lastFrame')}</option>
               </select>
             )}
             {(() => {
@@ -603,18 +641,18 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
                   data-testid="asset-label"
                   aria-label={
                     insertable
-                      ? `插入 ${labelText} 到提示詞`
-                      : '請先填入有效的 asset id / URI / URL'
+                      ? t('video.insertAssetLabel', { label: labelText })
+                      : t('video.invalidAssetLabel')
                   }
                   title={
                     insertable
-                      ? '點擊將此標籤插入到提示詞'
-                      : '請先填入 asset id（asset-… / asset://… / http(s)://…）'
+                      ? t('video.insertAssetTitle')
+                      : t('video.invalidAssetTitle')
                   }
                   disabled={!insertable}
                   onClick={() => insertIntoPrompt(labelText)}
                   style={{
-                    // Ghost 樣式（handoff §B5）：降權的插入標籤鈕。
+                    // Ghost 样式（handoff §B5）：降权的插入标签钮。
                     // Disabled state mirrors `.input-field` chrome so the
                     // button reads as part of the same input strip until the
                     // user types something insertable.
@@ -654,7 +692,7 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
             <button
               type="button"
               className="icon-btn danger"
-              aria-label="移除 asset 參考"
+              aria-label={t('video.removeAssetReference')}
               onClick={() => removeAssetRef(idx)}
               style={{ width: 26, height: 26, flexShrink: 0 }}
             >
@@ -664,7 +702,7 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
           )
         })}
         <div className="hint">
-          輸入 asset ID（如 asset-20260224213258-pnqkh）以 asset:// URI 送出；或直接貼上 https URL（例如前一段任務的 video_url / last_frame_url）作為串接輸入。
+          {t('video.assetHint')}
         </div>
       </div>
 
@@ -672,10 +710,10 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
       <MediaUploader
         label={
           mode === 'first_frame'
-            ? '首幀圖片'
+            ? t('video.referenceImages.firstFrame')
             : mode === 'first_last_frame'
-              ? '首尾幀圖片'
-              : '參考圖片'
+              ? t('video.referenceImages.firstLastFrame')
+              : t('video.referenceImages.default')
         }
         accept={{ 'image/*': ['.png', '.jpg', '.jpeg', '.webp'] }}
         items={referenceImages}
@@ -684,7 +722,7 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
         onRemove={removeReferenceImage}
         hint={
           mode === 'multimodal'
-            ? '0–30 張；多張大圖請留意總請求 ≤64MB（圖片以 base64 送出）'
+            ? t('video25.referenceImages.hint')
             : undefined
         }
         labels={labels.imageLabels}
@@ -698,41 +736,41 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
 
       {/* Reference Videos */}
       <MediaUploader
-        label="參考影片"
+        label={t('video.referenceVideo')}
         accept={{ 'video/*': ['.mp4', '.mov'] }}
         items={referenceVideos}
         maxItems={10}
         onAdd={addReferenceVideo}
         onRemove={removeReferenceVideo}
-        hint="0–10 段，單段 2–30 秒、總長 ≤ 30 秒（mp4 / mov）"
+        hint={t('video25.referenceVideo.hint')}
         labels={labels.videoLabels}
         onLabelClick={insertIntoPrompt}
         disabled={!tosReady}
-        disabledHint="請先設定物件儲存憑證"
+        disabledHint={t('video.objectStorageRequired')}
         locked={mode !== 'multimodal'}
-        lockedHint="此模式不支援，需多模態模式才能使用"
+        lockedHint={t('video.modeRequiresMultimodal')}
       />
 
-      {/* Reference Audio — accept 依官方 01 文件收斂為 wav / mp3（與下方 hint 一致）。
-          放行 .aac / .m4a 只會讓使用者白傳一次 TOS 再被 API 退件。 */}
+      {/* Reference Audio — accept 依官方 01 文件收敛为 wav / mp3（与下方 hint 一致）。
+          放行 .aac / .m4a 只会让用户白传一次 TOS 再被 API 退件。 */}
       <MediaUploader
-        label="參考音訊"
+        label={t('video.referenceAudio')}
         accept={{ 'audio/*': ['.mp3', '.wav'] }}
         items={referenceAudios}
         maxItems={10}
         onAdd={addReferenceAudio}
         onRemove={removeReferenceAudio}
-        hint="0–10 段，單段 2–30 秒、總長 ≤ 30 秒（wav / mp3）"
+        hint={t('video25.referenceAudio.hint')}
         labels={labels.audioLabels}
         onLabelClick={insertIntoPrompt}
         disabled={!tosReady}
-        disabledHint="請先設定物件儲存憑證"
+        disabledHint={t('video.objectStorageRequired')}
         locked={mode !== 'multimodal'}
-        lockedHint="此模式不支援"
+        lockedHint={t('video.modeUnsupported')}
       />
 
-      {/* 基本參數 — 解析度 / 畫面比例 / 影片長度 3 欄 grid（handoff §B3）。
-          DOM 順序維持 解析度 → 畫面比例 → 影片長度。 */}
+      {/* 基本参数 — 分辨率 / 画面比例 / 视频长度 3 栏 grid（handoff §B3）。
+          DOM 顺序维持 分辨率 → 画面比例 → 视频长度。 */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr 1fr',
@@ -740,49 +778,49 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
         marginBottom: 16,
       }}>
         <div>
-          <label className="label" style={{ fontSize: scaledFs(11), color: 'var(--text-muted)', marginBottom: 4 }}>解析度</label>
+          <label className="label" style={{ fontSize: scaledFs(11), color: 'var(--text-muted)', marginBottom: 4 }}>{t('video.resolution')}</label>
           <select
             className="select-field"
             value={resolution}
             onChange={(e) => setResolution(e.target.value)}
           >
             {RESOLUTION_OPTIONS_25.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <option key={o.value} value={o.value}>{o.value}</option>
             ))}
           </select>
         </div>
         <div>
-          <label className="label" htmlFor="video25-ratio-select" style={{ fontSize: scaledFs(11), color: 'var(--text-muted)', marginBottom: 4 }}>畫面比例</label>
+          <label className="label" htmlFor="video25-ratio-select" style={{ fontSize: scaledFs(11), color: 'var(--text-muted)', marginBottom: 4 }}>{t('video.aspectRatio')}</label>
           <select
             id="video25-ratio-select"
-            aria-label="畫面比例"
+            aria-label={t('video.aspectRatio')}
             className="select-field"
             value={mode === 'multimodal' ? ratio : 'adaptive'}
             disabled={mode !== 'multimodal'}
-            title={mode !== 'multimodal' ? '首幀/首尾幀任務自動跟隨首幀圖比例（官方鎖定 adaptive）' : undefined}
+            title={mode !== 'multimodal' ? t('video25.ratioLockedTitle') : undefined}
             onChange={(e) => setRatio(e.target.value)}
           >
             {RATIO_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <option key={o.value} value={o.value}>{ratioLabel(o.value, locale)}</option>
             ))}
           </select>
         </div>
         <div>
-          <label className="label" style={{ fontSize: scaledFs(11), color: 'var(--text-muted)', marginBottom: 4 }}>影片長度</label>
+          <label className="label" style={{ fontSize: scaledFs(11), color: 'var(--text-muted)', marginBottom: 4 }}>{t('video.duration')}</label>
           <select
             className="select-field"
             value={duration}
             onChange={(e) => setDuration(Number(e.target.value))}
           >
             {DURATION_OPTIONS_25.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <option key={o.value} value={o.value}>{durationLabel(o.value, locale)}</option>
             ))}
           </select>
         </div>
       </div>
 
       {/* Toggle: Return Last Frame — sr-only checkbox + label（a11y，§B4）。
-          視覺 span 保留 toggle 類與 data-testid。 */}
+          视觉 span 保留 toggle 类与 data-testid。 */}
       <div style={{ marginBottom: 12 }}>
         <label
           htmlFor="video-return-last-frame"
@@ -794,14 +832,14 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
           }}
         >
           <div>
-            <span style={{ fontSize: scaledFs(14) }}>回傳尾幀</span>
-            <div className="hint" style={{ marginTop: 2 }}>方便將前段尾幀作為下段首幀串接出長片</div>
+            <span style={{ fontSize: scaledFs(14) }}>{t('video.returnLastFrame')}</span>
+            <div className="hint" style={{ marginTop: 2 }}>{t('video.returnLastFrameHint')}</div>
           </div>
           <input
             id="video-return-last-frame"
             className="sr-only"
             type="checkbox"
-            aria-label="回傳尾幀"
+            aria-label={t('video.returnLastFrame')}
             checked={returnLastFrame}
             onChange={(e) => setReturnLastFrame(e.target.checked)}
           />
@@ -825,12 +863,12 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
             cursor: 'pointer',
           }}
         >
-          <span style={{ fontSize: scaledFs(14) }}>生成音訊</span>
+          <span style={{ fontSize: scaledFs(14) }}>{t('video.generateAudio')}</span>
           <input
             id="video-generate-audio"
             className="sr-only"
             type="checkbox"
-            aria-label="生成音訊"
+            aria-label={t('video.generateAudio')}
             checked={generateAudio}
             onChange={(e) => setGenerateAudio(e.target.checked)}
           />
@@ -842,8 +880,8 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
         </label>
       </div>
 
-      {/* 進階設定折疊（handoff §B2）— Seed / 任務最長等待時間 / 浮水印。
-          預設收合；內容條件渲染。 */}
+      {/* 高级设置折叠（handoff §B2）— Seed / 任务最长等待时间 / 水印。
+          默认收起；内容条件渲染。 */}
       <div style={{ border: '1px solid var(--border)', borderRadius: 8, marginBottom: 16 }}>
         <button
           type="button"
@@ -872,14 +910,14 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
               transition: 'transform 0.15s',
             }}
           />
-          <span style={{ flex: 1, fontSize: scaledFs(13), fontWeight: 500 }}>進階設定</span>
-          <span style={{ fontSize: scaledFs(11), color: 'var(--text-muted)' }}>Seed · 等待時間 · 浮水印</span>
+          <span style={{ flex: 1, fontSize: scaledFs(13), fontWeight: 500 }}>{t('video.advanced')}</span>
+          <span style={{ fontSize: scaledFs(11), color: 'var(--text-muted)' }}>{t('video.advancedSummary')}</span>
         </button>
         {advancedOpen && (
           <div style={{ padding: '12px 12px 4px', borderTop: '1px solid var(--border)' }}>
             {/* Seed */}
             <div style={{ marginBottom: 16 }}>
-              <label className="label" htmlFor="video-seed-input">隨機種子 (Seed)</label>
+              <label className="label" htmlFor="video-seed-input">{t('video.seed')}</label>
               <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                 <input
                   id="video-seed-input"
@@ -899,8 +937,8 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
                 />
                 <button
                   type="button"
-                  aria-label="隨機 seed"
-                  title="產生隨機 seed（可重現的固定值）"
+                  aria-label={t('video.randomSeed')}
+                  title={t('video.randomSeedTitle')}
                   onClick={() => {
                     const n = Math.floor(Math.random() * 4294967296)
                     setSeed(n)
@@ -917,17 +955,17 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
                     flexShrink: 0,
                   }}
                 >
-                  隨機
+                  {t('video.random')}
                 </button>
               </div>
               <div className="hint" style={{ marginTop: 4 }}>
-                <code>-1</code> 代表每次隨機；指定整數可在相同提示詞下取得相似輸出。
+                {t('video.seedHint')}
               </div>
             </div>
 
             {/* Execution expires after — task TTL, sent to ARK as execution_expires_after */}
             <div style={{ marginBottom: 16 }}>
-              <label className="label" htmlFor="video-exec-expires">任務最長等待時間</label>
+              <label className="label" htmlFor="video-exec-expires">{t('video.executionExpires')}</label>
               <select
                 id="video-exec-expires"
                 className="input-field"
@@ -935,11 +973,11 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
                 onChange={(e) => setExecutionExpiresAfter(Number(e.target.value))}
               >
                 {EXECUTION_EXPIRES_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
+                  <option key={o.value} value={o.value}>{executionExpiresLabel(o.value, locale)}</option>
                 ))}
               </select>
               <div className="hint" style={{ marginTop: 4 }}>
-                達到時間且任務仍未完成（含排隊）會被自動標記為 expired。
+                {t('video.executionExpiresHint')}
               </div>
             </div>
 
@@ -955,14 +993,14 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
                 }}
               >
                 <div>
-                  <span style={{ fontSize: scaledFs(14) }}>浮水印</span>
-                  <div className="hint" style={{ marginTop: 2 }}>在輸出中加入浮水印</div>
+                  <span style={{ fontSize: scaledFs(14) }}>{t('video.watermark')}</span>
+                  <div className="hint" style={{ marginTop: 2 }}>{t('video.watermarkHint')}</div>
                 </div>
                 <input
                   id="video-watermark"
                   className="sr-only"
                   type="checkbox"
-                  aria-label="浮水印"
+                  aria-label={t('video.watermark')}
                   checked={watermark}
                   onChange={(e) => setWatermark(e.target.checked)}
                 />
@@ -1001,10 +1039,10 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
           }}
         >
           <Icon name="play" size={14} />
-          {optFlow.open && optFlow.loading ? '優化中…' : '生成影片'}
+          {optFlow.open && optFlow.loading ? t('video25.optimize.optimizingShort') : t('video.generate')}
         </button>
-        {/* credsOK 會被 optimizeBlocked 拉成 false，改以 apiKey 為門檻，
-            否則「提示詞優化需要文字生成接入點」永遠顯示不出來。 */}
+        {/* credsOK 会被 optimizeBlocked 拉成 false，改以 apiKey 为门槛，
+            否则「提示词优化需要文字生成接入点」永远显示不出来。 */}
         {generateBlockReason && !!apiKey && (
           <div className="hint" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
             {generateBlockReason}
@@ -1025,7 +1063,7 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
             gap: 6,
           }}>
             <span className="spinner" style={{ width: 12, height: 12 }} />
-            {activeCount} 個任務進行中
+            {t('video.activeTasks', { count: activeCount })}
           </div>
         )}
       </div>
@@ -1035,9 +1073,9 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
           the video / audio bulk removals walk from the end. */}
       <ConfirmModal
         open={showClearConfirm}
-        title={`清掉 ${incompatCount} 個不相容項目？`}
-        subtitle="保留與目前模式相容的部分。"
-        confirmLabel="清掉"
+        title={t('video.incompat.confirmTitle', { count: incompatCount })}
+        subtitle={t('video.incompat.confirmSubtitle')}
+        confirmLabel={t('video.incompat.confirmLabel')}
         variant="danger"
         onConfirm={() => {
           const s = useVideo25Store.getState()
@@ -1064,13 +1102,13 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
         onCancel={() => setShowClearConfirm(false)}
       />
 
-      {/* 條件渲染（而非只切 open prop）：每次優化都讓 Modal 全新 mount，
-          編輯區狀態隨卸載歸零。
-          注意這是防禦縱深，不是唯一機制：「編輯過 → 重試 → LLM 回傳位元組完全相同的
-          結果」這條路徑其實已被 Modal 內部的 props-diff 同步接住（重試會先經過
-          loading + optimizedPrompt:''，該次變動就會重設編輯區）。留著條件渲染是結構性
-          保險——往後若有人改動重試路徑而不再經過 optimizedPrompt:''，殘留編輯內容
-          被當成本次結果送出的 bug 不會回歸。 */}
+      {/* 条件渲染（而非只切 open prop）：每次优化都让 Modal 全新 mount，
+          编辑区状态随卸载归零。
+          注意这是防御纵深，不是唯一机制：「编辑过 → 重试 → LLM 返回字节完全相同的
+          结果」这条路径其实已被 Modal 内部的 props-diff 同步接住（重试会先经过
+          loading + optimizedPrompt:''，该次变动就会重设编辑区）。留着条件渲染是结构性
+          保险——往后若有人改动重试路径而不再经过 optimizedPrompt:''，残留编辑内容
+          被当成本次结果送出的 bug 不会回归。 */}
       {optFlow.open && (
         <PromptOptimizeModal
           open={optFlow.open}
@@ -1097,12 +1135,12 @@ export default function Video25Params({ width = VIDEO25_PARAMS_DEFAULT_WIDTH }: 
             if (!prepared) return
             optAbortRef.current = null
             setOptFlow({ open: false, loading: false })
-            // 參數修正必須照樣套用。API 是依 content.role + 提示詞觸發詞判定任務類型，
-            // 不是依我們送哪一份提示詞字串——兩條路徑的 role 與使用者意圖完全相同，
-            // 而 taskType 本來就是從「原文」推導出來的（runOptimize 送的是 prepared.prompt），
-            // 所以用原文生成被判成 edit 的機率只高不低。少了這行就會送出 duration:10
-            // 換來非同步的 InvalidParameter.TaskTypeConstraint 失敗。
-            // 刻意不帶 originalPrompt：使用者否決了改寫，history 的「已優化」徽章不該亮。
+            // 参数修正必须照样套用。API 是依 content.role + 提示词触发词判定任务类型，
+            // 不是依我们送哪一份提示词字符串——两条路径的 role 与用户意图完全相同，
+            // 而 taskType 本来就是从「原文」推导出来的（runOptimize 送的是 prepared.prompt），
+            // 所以用原文生成被判成 edit 的概率只高不低。少了这行就会送出 duration:10
+            // 换来非同步的 InvalidParameter.TaskTypeConstraint 失败。
+            // 刻意不带 originalPrompt：用户否决了改写，history 的「已优化」徽章不该亮。
             if (optFixNote) toast(optFixNote)
             applyFixesToStore(optFixes)
             void runSubmit(prepared, prepared.prompt, { ...optFixes })

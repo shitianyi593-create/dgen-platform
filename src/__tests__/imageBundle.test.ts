@@ -106,7 +106,7 @@ describe('importImageBundleZip', () => {
         model_key: 'seedream-4-0',
         created_at: '2023-11-14T22:13:20.000Z',
         image_count: 1,
-        // 注意：刻意沒有 params 欄位（外部工具產生的 zip）
+        // 注意：刻意没有 params 栏位（外部工具产生的 zip）
       }))),
       'images/image-1.png': new Uint8Array([1]),
     })

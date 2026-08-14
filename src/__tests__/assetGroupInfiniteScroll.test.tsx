@@ -35,13 +35,13 @@ function makeProps(
   }
 }
 
-/** 捲動容器 = `aside` 本身（唯一 overflowY:auto 的層）。 */
+/** 滚动容器 = `aside` 本身（唯一 overflowY:auto 的层）。 */
 const scroller = () => screen.getByRole('complementary')
 
 /**
- * jsdom 不做版面，三個幾何屬性恆為 0（`0 - 0 - 0 < 200` 會讓每個 scroll 事件
- * 都看起來像「到底了」）。全部自己定義，閾值兩側才測得出差別。
- * 預設 scrollHeight 1000 / clientHeight 400 → 底部在 scrollTop 600。
+ * jsdom 不做版面，三个几何属性恒为 0（`0 - 0 - 0 < 200` 会让每个 scroll 事件
+ * 都看起来像「到底了」）。全部自己定义，閾值两侧才测得出差别。
+ * 默认 scrollHeight 1000 / clientHeight 400 → 底部在 scrollTop 600。
  */
 function setScrollGeometry(
   el: HTMLElement,
@@ -57,7 +57,7 @@ function setScrollGeometry(
   }
 }
 
-/** 捲到距底 100px（< 200 閾值）。 */
+/** 滚到距底 100px（< 200 閾值）。 */
 function scrollNearBottom() {
   const el = scroller()
   setScrollGeometry(el, { scrollTop: 500 })
@@ -76,15 +76,15 @@ describe('AssetGroupSidebar infinite scroll', () => {
     const props = makeProps()
     render(<AssetGroupSidebar {...props} />)
     const el = scroller()
-    // 1000 - 100 - 400 = 500px 距底 —— 還早得很
+    // 1000 - 100 - 400 = 500px 距底 —— 还早得很
     setScrollGeometry(el, { scrollTop: 100 })
     fireEvent.scroll(el)
     expect(props.onLoadMore).not.toHaveBeenCalled()
   })
 
   it('does not fire while a page is already in flight', () => {
-    // 頁面的 ref guard 讓重覆呼叫無害，但 sidebar 不該在下一頁回來前
-    // 對每一個 scroll 事件（捲動中每幀都來一發）都叫一次。
+    // 页面的 ref guard 让重覆呼叫无害，但 sidebar 不该在下一页回来前
+    // 对每一个 scroll 事件（滚动中每帧都来一发）都叫一次。
     const props = makeProps({ loadingMore: true })
     render(<AssetGroupSidebar {...props} />)
     scrollNearBottom()
@@ -99,30 +99,30 @@ describe('AssetGroupSidebar infinite scroll', () => {
   })
 
   it('stops auto-firing after a failure — retry is the retry row, not the scrollbar', () => {
-    // 失敗後若照樣自動重試，使用者停在底部就會變成無限重打同一個壞請求。
-    const props = makeProps({ loadMoreError: '第 2 頁爆了' })
+    // 失败后若照样自动重试，用户停在底部就会变成无限重打同一个坏请求。
+    const props = makeProps({ loadMoreError: '第 2 页爆了' })
     render(<AssetGroupSidebar {...props} />)
     scrollNearBottom()
     expect(props.onLoadMore).not.toHaveBeenCalled()
 
-    fireEvent.click(screen.getByRole('button', { name: '載入更多失敗，點擊重試' }))
+    fireEvent.click(screen.getByRole('button', { name: '加载更多失败，点击重试' }))
     expect(props.onLoadMore).toHaveBeenCalledTimes(1)
   })
 
-  it('footer shows 已載入 N / M while more remain', () => {
+  it('footer shows 已加载 N / M while more remain', () => {
     const { container } = render(<AssetGroupSidebar {...makeProps()} />)
-    expect(screen.getByText('已載入 3 / 10')).toBeInTheDocument()
+    expect(screen.getByText('已加载 3 / 10')).toBeInTheDocument()
     expect(container.querySelector('.spinner')).toBeNull()
     expect(
-      screen.queryByRole('button', { name: '載入更多失敗，點擊重試' }),
+      screen.queryByRole('button', { name: '加载更多失败，点击重试' }),
     ).toBeNull()
   })
 
   it('footer progress row is announced to screen readers (role=status, parity with the spinner row)', () => {
     render(<AssetGroupSidebar {...makeProps()} />)
-    // 沒有這個屬性的話，捲動接上新一頁對螢幕報讀器使用者是完全無聲的 ——
-    // 載入中的 spinner 列有 role="status"，進度列不能少一等。
-    expect(screen.getByRole('status')).toHaveTextContent('已載入 3 / 10')
+    // 没有这个属性的话，滚动接上新一页对螢幕报读器用户是完全无声的 ——
+    // 加载中的 spinner 列有 role="status"，进度列不能少一等。
+    expect(screen.getByRole('status')).toHaveTextContent('已加载 3 / 10')
   })
 
   it('footer shows a spinner row while loading more', () => {
@@ -130,17 +130,17 @@ describe('AssetGroupSidebar infinite scroll', () => {
       <AssetGroupSidebar {...makeProps({ loadingMore: true })} />,
     )
     expect(container.querySelector('.spinner')).not.toBeNull()
-    expect(screen.queryByText('已載入 3 / 10')).toBeNull()
+    expect(screen.queryByText('已加载 3 / 10')).toBeNull()
   })
 
   it('footer shows the retry row on failure, replacing the progress text', () => {
     const { container } = render(
-      <AssetGroupSidebar {...makeProps({ loadMoreError: '第 2 頁爆了' })} />,
+      <AssetGroupSidebar {...makeProps({ loadMoreError: '第 2 页爆了' })} />,
     )
     expect(
-      screen.getByRole('button', { name: '載入更多失敗，點擊重試' }),
+      screen.getByRole('button', { name: '加载更多失败，点击重试' }),
     ).toBeInTheDocument()
-    expect(screen.queryByText('已載入 3 / 10')).toBeNull()
+    expect(screen.queryByText('已加载 3 / 10')).toBeNull()
     expect(container.querySelector('.spinner')).toBeNull()
   })
 
@@ -148,20 +148,20 @@ describe('AssetGroupSidebar infinite scroll', () => {
     const { container } = render(
       <AssetGroupSidebar {...makeProps({ hasMore: false, totalCount: 3 })} />,
     )
-    expect(screen.queryByText(/^已載入/)).toBeNull()
+    expect(screen.queryByText(/^已加载/)).toBeNull()
     expect(container.querySelector('.spinner')).toBeNull()
     expect(
-      screen.queryByRole('button', { name: '載入更多失敗，點擊重試' }),
+      screen.queryByRole('button', { name: '加载更多失败，点击重试' }),
     ).toBeNull()
   })
 
   it('footer stays visible in manage mode, above the sticky action bar', () => {
     render(<AssetGroupSidebar {...makeProps()} />)
     fireEvent.click(screen.getByRole('button', { name: '管理' }))
-    const footer = screen.getByText('已載入 3 / 10')
-    // 操作列 sticky 貼底，footer 不 sticky —— DOM 順序上 footer 必須在它之前，
-    // 否則進度字會被壓在操作列底下（或跑到操作列下方）。
-    const bar = screen.getByRole('button', { name: '全選' })
+    const footer = screen.getByText('已加载 3 / 10')
+    // 操作列 sticky 贴底，footer 不 sticky —— DOM 顺序上 footer 必须在它之前，
+    // 否则进度字会被压在操作列底下（或跑到操作列下方）。
+    const bar = screen.getByRole('button', { name: '全选' })
     expect(
       footer.compareDocumentPosition(bar) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
@@ -177,10 +177,10 @@ describe('AssetGroupSidebar infinite scroll', () => {
 
   it('rows carry no per-group count badge', () => {
     render(<AssetGroupSidebar {...makeProps()} />)
-    // count 扇出已刪除，徽章連同 `counts` prop 一起移除 —— 舊實作在沒有
-    // count 時渲染 '—'，它的存在就是徽章復活的信號。
+    // count 扇出已删除，徽章连同 `counts` prop 一起移除 —— 旧实作在没有
+    // count 时渲染 '—'，它的存在就是徽章复活的信号。
     expect(screen.queryByText('—')).toBeNull()
-    // 列上只剩名稱（資料夾 icon 與 ⋯ 觸發鈕都沒有文字內容）
+    // 列上只剩名称（数据夹 icon 与 ⋯ 触发钮都没有文字内容）
     expect(screen.getByTestId('group-row-a').textContent).toBe('甲')
   })
 })

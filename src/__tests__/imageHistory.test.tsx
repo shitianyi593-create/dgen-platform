@@ -48,38 +48,38 @@ describe('ImageHistory', () => {
     render(<ImageHistory width={300} />)
     expect(screen.getByText(/a very nice cat/)).toBeInTheDocument()
     expect(screen.getByText(/Seedream 5.0 Pro/)).toBeInTheDocument()
-    expect(screen.getByText(/後過期/)).toBeInTheDocument()
+    expect(screen.getByText(/后过期/)).toBeInTheDocument()
   })
-  it('expired entry shows 已過期 and disables download', () => {
+  it('expired entry shows 已过期 and disables download', () => {
     useImageStore.setState({ history: [item({ expiresAt: Date.now() - 1000 })] })
     render(<ImageHistory width={300} />)
-    expect(screen.getByText('已過期')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /下載/ })).toBeDisabled()
+    expect(screen.getByText('已过期')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /下载/ })).toBeDisabled()
   })
-  it('載入參數 via ⋯ 選單 refills the form', () => {
+  it('加载参数 via ⋯ 选单 refills the form', () => {
     useImageStore.setState({ history: [item({ prompt: 'reload me' })] })
     render(<ImageHistory width={300} />)
-    fireEvent.click(screen.getByRole('button', { name: '更多動作' }))
-    fireEvent.click(screen.getByRole('button', { name: '載入參數' }))
+    fireEvent.click(screen.getByRole('button', { name: '更多动作' }))
+    fireEvent.click(screen.getByRole('button', { name: '加载参数' }))
     expect(useImageStore.getState().prompt).toBe('reload me')
   })
-  it('expired card shows persistent 載入參數重生成 that refills the form', () => {
+  it('expired card shows persistent 加载参数重新生成 that refills the form', () => {
     useImageStore.setState({
       history: [item({ prompt: 'regen me', expiresAt: Date.now() - 1000 })],
     })
     render(<ImageHistory width={300} />)
-    fireEvent.click(screen.getByRole('button', { name: '載入參數重生成' }))
+    fireEvent.click(screen.getByRole('button', { name: '加载参数重新生成' }))
     expect(useImageStore.getState().prompt).toBe('regen me')
   })
-  it('刪除 via ⋯ 選單 asks for confirmation then removes', () => {
+  it('删除 via ⋯ 选单 asks for confirmation then removes', () => {
     useImageStore.setState({ history: [item()] })
     render(<ImageHistory width={300} />)
-    fireEvent.click(screen.getByRole('button', { name: '更多動作' }))
-    fireEvent.click(screen.getByRole('button', { name: '刪除' }))
-    fireEvent.click(screen.getByRole('button', { name: '確認' }))
+    fireEvent.click(screen.getByRole('button', { name: '更多动作' }))
+    fireEvent.click(screen.getByRole('button', { name: '删除' }))
+    fireEvent.click(screen.getByRole('button', { name: '确认' }))
     expect(useImageStore.getState().history).toHaveLength(0)
   })
-  it('匯出全部 excludes imported entries from the batch', async () => {
+  it('导出全部 excludes imported entries from the batch', async () => {
     useImageStore.setState({
       history: [
         item(),
@@ -90,7 +90,7 @@ describe('ImageHistory', () => {
       ],
     })
     render(<ImageHistory width={300} />)
-    fireEvent.click(screen.getByRole('button', { name: /匯出全部/ }))
+    fireEvent.click(screen.getByRole('button', { name: /导出全部/ }))
     await waitFor(() => expect(vi.mocked(buildImageBatchZip)).toHaveBeenCalledTimes(1))
     expect(vi.mocked(buildImageBatchZip)).toHaveBeenCalledWith([
       expect.objectContaining({ id: 'h1' }),
@@ -102,7 +102,7 @@ describe('ImageHistory', () => {
     expect(screen.getByText(/quota/)).toBeInTheDocument()
   })
 
-  it('除錯資訊 collapsed by default; expands to show requestId / model / URL row', () => {
+  it('调试信息 collapsed by default; expands to show requestId / model / URL row', () => {
     useImageStore.setState({
       history: [item({
         images: [{ url: 'https://x/a.png', size: '2048x2048', outputFormat: 'png' }],
@@ -110,26 +110,26 @@ describe('ImageHistory', () => {
       })],
     })
     render(<ImageHistory width={300} />)
-    // 收合：內容不可見
+    // 收起：内容不可见
     expect(screen.queryByText(/req-xyz/)).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: '更多動作' }))
-    fireEvent.click(screen.getByRole('button', { name: /除錯資訊/ }))
+    fireEvent.click(screen.getByRole('button', { name: '更多动作' }))
+    fireEvent.click(screen.getByRole('button', { name: /调试信息/ }))
     expect(screen.getByText(/req-xyz/)).toBeInTheDocument()
     expect(screen.getByText(/dola-seedream-5-0-pro/)).toBeInTheDocument()
     expect(screen.getByText(/#1 2048x2048 png/)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '開啟' })).toHaveAttribute('href', 'https://x/a.png')
+    expect(screen.getByRole('link', { name: '打开' })).toHaveAttribute('href', 'https://x/a.png')
   })
 
-  it('複製 button in debug section calls the copy helper with the request id', async () => {
+  it('复制 button in debug section calls the copy helper with the request id', async () => {
     const { copyWithToast } = await import('../utils/clipboard')
     useImageStore.setState({
       history: [item({ debug: { requestId: 'req-xyz' } })],
     })
     render(<ImageHistory width={300} />)
-    fireEvent.click(screen.getByRole('button', { name: '更多動作' }))
-    fireEvent.click(screen.getByRole('button', { name: /除錯資訊/ }))
-    // Request ID 列的複製鈕（第一顆）
-    fireEvent.click(screen.getAllByRole('button', { name: '複製' })[0])
+    fireEvent.click(screen.getByRole('button', { name: '更多动作' }))
+    fireEvent.click(screen.getByRole('button', { name: /调试信息/ }))
+    // Request ID 列的复制钮（第一颗）
+    fireEvent.click(screen.getAllByRole('button', { name: '复制' })[0])
     await waitFor(() =>
       expect(vi.mocked(copyWithToast)).toHaveBeenCalledWith('Request ID', 'req-xyz'),
     )
@@ -140,37 +140,37 @@ describe('ImageHistory', () => {
       history: [item({ images: [{ url: 'https://x/a.png', size: '2048x2048' }] })],
     })
     render(<ImageHistory width={300} />)
-    fireEvent.click(screen.getByRole('button', { name: '更多動作' }))
-    fireEvent.click(screen.getByRole('button', { name: /除錯資訊/ }))
+    fireEvent.click(screen.getByRole('button', { name: '更多动作' }))
+    fireEvent.click(screen.getByRole('button', { name: /调试信息/ }))
     expect(screen.getByText('https://x/a.png')).toHaveAttribute('title', 'https://x/a.png')
   })
 
-  it('card-level 複製 URL copies a single image URL', async () => {
+  it('card-level 复制 URL copies a single image URL', async () => {
     const { copyWithToast } = await import('../utils/clipboard')
     useImageStore.setState({ history: [item()] })
     render(<ImageHistory width={300} />)
-    fireEvent.click(screen.getByRole('button', { name: '複製 URL' }))
+    fireEvent.click(screen.getByRole('button', { name: '复制 URL' }))
     await waitFor(() =>
       expect(vi.mocked(copyWithToast)).toHaveBeenCalledWith('URL', 'https://x/a.png'),
     )
   })
 
-  it('card-level 複製 URL joins multiple image URLs with newlines', async () => {
+  it('card-level 复制 URL joins multiple image URLs with newlines', async () => {
     const { copyWithToast } = await import('../utils/clipboard')
     useImageStore.setState({
       history: [item({ images: [{ url: 'https://x/a.png' }, { url: 'https://x/b.png' }] })],
     })
     render(<ImageHistory width={300} />)
-    fireEvent.click(screen.getByRole('button', { name: '複製 URL' }))
+    fireEvent.click(screen.getByRole('button', { name: '复制 URL' }))
     await waitFor(() =>
       expect(vi.mocked(copyWithToast)).toHaveBeenCalledWith(
-        '2 個 URL',
+        '2 个 URL',
         'https://x/a.png\nhttps://x/b.png',
       ),
     )
   })
 
-  it('card-level 複製 URL disabled for expired and imported entries', () => {
+  it('card-level 复制 URL disabled for expired and imported entries', () => {
     useImageStore.setState({
       history: [
         item({ id: 'exp1', expiresAt: Date.now() - 1000 }),
@@ -181,7 +181,7 @@ describe('ImageHistory', () => {
       ],
     })
     render(<ImageHistory width={300} />)
-    const btns = screen.getAllByRole('button', { name: '複製 URL' })
+    const btns = screen.getAllByRole('button', { name: '复制 URL' })
     expect(btns).toHaveLength(2)
     for (const b of btns) expect(b).toBeDisabled()
   })
@@ -191,12 +191,12 @@ describe('ImageHistory', () => {
       history: [item({ status: 'failed', error: 'blocked', images: [], errorCode: 'InputImageSensitiveContentDetected' })],
     })
     render(<ImageHistory width={300} />)
-    fireEvent.click(screen.getByRole('button', { name: '更多動作' }))
-    fireEvent.click(screen.getByRole('button', { name: /除錯資訊/ }))
+    fireEvent.click(screen.getByRole('button', { name: '更多动作' }))
+    fireEvent.click(screen.getByRole('button', { name: /调试信息/ }))
     expect(screen.getByText(/InputImageSensitiveContentDetected/)).toBeInTheDocument()
   })
 
-  it('generating card with nothing to show has no 除錯資訊 item in the ⋯ menu', () => {
+  it('generating card with nothing to show has no 调试信息 item in the ⋯ menu', () => {
     useImageStore.setState({
       history: [item({
         status: 'generating', images: [], completedAt: undefined,
@@ -204,15 +204,15 @@ describe('ImageHistory', () => {
       })],
     })
     render(<ImageHistory width={300} />)
-    fireEvent.click(screen.getByRole('button', { name: '更多動作' }))
-    expect(screen.queryByRole('button', { name: /除錯資訊/ })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '更多动作' }))
+    expect(screen.queryByRole('button', { name: /调试信息/ })).not.toBeInTheDocument()
   })
 
   it('debug menu item exposes aria-expanded state', () => {
     useImageStore.setState({ history: [item({ debug: { requestId: 'req-xyz' } })] })
     render(<ImageHistory width={300} />)
-    fireEvent.click(screen.getByRole('button', { name: '更多動作' }))
-    const toggle = screen.getByRole('button', { name: /除錯資訊/ })
+    fireEvent.click(screen.getByRole('button', { name: '更多动作' }))
+    const toggle = screen.getByRole('button', { name: /调试信息/ })
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
     fireEvent.click(toggle)
     expect(toggle).toHaveAttribute('aria-expanded', 'true')

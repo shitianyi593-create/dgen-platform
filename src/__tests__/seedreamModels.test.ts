@@ -77,7 +77,7 @@ describe('validateCustomSize', () => {
   it('rejects totals below min / above max with a reason', () => {
     const low = validateCustomSize('seedream-5-0-pro', 100, 100)
     expect(low.ok).toBe(false)
-    expect(low.error).toContain('總像素')
+    expect(low.error).toContain('总像素')
 
     const high = validateCustomSize('seedream-5-0-pro', 4096, 4096) // > 2048*2048
     expect(high.ok).toBe(false)
@@ -87,7 +87,7 @@ describe('validateCustomSize', () => {
   })
 
   it('rejects aspect ratios outside [1/16, 16]', () => {
-    // 每邊合法、總像素落在 4-0 範圍內，但比例 17:1 超標
+    // 每边合法、总像素落在 4-0 范围内，但比例 17:1 超标
     const wide = validateCustomSize('seedream-4-0', 5100, 300)
     expect(wide.ok).toBe(false)
     expect(wide.error).toContain('比例')

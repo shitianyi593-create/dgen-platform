@@ -1,11 +1,11 @@
 /**
- * scripts/tos-bootstrap 測試
+ * scripts/tos-bootstrap 测试
  *
- * 涵蓋需求：
- * - 缺少必要 env 時應拋錯且 SDK 完全不被呼叫
- * - 預設套用 PUT/GET/HEAD CORS rule，origins 來自 TOS_CORS_ORIGINS
+ * 涵盖需求：
+ * - 缺少必要 env 时应抛错且 SDK 完全不被呼叫
+ * - 默认套用 PUT/GET/HEAD CORS rule，origins 来自 TOS_CORS_ORIGINS
  * - showOnly 模式只 get 不 put
- * - 無 TOS_REGION/TOS_ENDPOINT 時走 fallback
+ * - 无 TOS_REGION/TOS_ENDPOINT 时走 fallback
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { runBootstrap, type BootstrapClient } from '../../scripts/tos-bootstrap'

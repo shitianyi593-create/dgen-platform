@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import AssetTypeFilterChips from '../components/assets/AssetTypeFilterChips'
 
 describe('AssetTypeFilterChips', () => {
-  it('renders 全部 / 圖片 / 影片 / 音訊 with the supplied counts', () => {
+  it('renders 全部 / 图片 / 视频 / 音频 with the supplied counts', () => {
     render(
       <AssetTypeFilterChips
         counts={{ all: 86, Image: 42, Video: 31, Audio: 13 }}
@@ -14,9 +14,9 @@ describe('AssetTypeFilterChips', () => {
     // Read the parent <button>'s textContent, since label and count live in
     // sibling spans inside the chip.
     expect(screen.getByText(/全部/).closest('button')!.textContent).toMatch(/86/)
-    expect(screen.getByText(/圖片/).closest('button')!.textContent).toMatch(/42/)
-    expect(screen.getByText(/影片/).closest('button')!.textContent).toMatch(/31/)
-    expect(screen.getByText(/音訊/).closest('button')!.textContent).toMatch(/13/)
+    expect(screen.getByText(/图片/).closest('button')!.textContent).toMatch(/42/)
+    expect(screen.getByText(/视频/).closest('button')!.textContent).toMatch(/31/)
+    expect(screen.getByText(/音频/).closest('button')!.textContent).toMatch(/13/)
   })
 
   it('renders a type icon inside each typed chip', () => {
@@ -27,7 +27,7 @@ describe('AssetTypeFilterChips', () => {
         onChange={vi.fn()}
       />,
     )
-    for (const label of ['圖片', '影片', '音訊']) {
+    for (const label of ['图片', '视频', '音频']) {
       expect(
         screen.getByText(label).closest('button')!.querySelector('svg'),
       ).toBeTruthy()
@@ -43,7 +43,7 @@ describe('AssetTypeFilterChips', () => {
         onChange={onChange}
       />,
     )
-    fireEvent.click(screen.getByText(/圖片/))
+    fireEvent.click(screen.getByText(/图片/))
     expect(onChange).toHaveBeenCalledWith('Image')
   })
 
@@ -55,11 +55,11 @@ describe('AssetTypeFilterChips', () => {
         onChange={vi.fn()}
       />,
     )
-    expect(screen.getByText(/音訊/).closest('button')).toHaveAttribute(
+    expect(screen.getByText(/音频/).closest('button')).toHaveAttribute(
       'aria-pressed',
       'true',
     )
-    expect(screen.getByText(/圖片/).closest('button')).toHaveAttribute(
+    expect(screen.getByText(/图片/).closest('button')).toHaveAttribute(
       'aria-pressed',
       'false',
     )

@@ -27,16 +27,16 @@ describe('Header tabs', () => {
 })
 
 describe('ChatPage', () => {
-  it('掛載參數面板、工具列、訊息區、輸入框', () => {
+  it('挂载参数面板、工具列、消息区、输入框', () => {
     render(<MemoryRouter initialEntries={['/chat']}><ChatPage /></MemoryRouter>)
     expect(screen.getByText('API 模式')).toBeInTheDocument()                  // ChatParams
     expect(screen.getByText('上下文')).toBeInTheDocument()                    // ChatToolbar
-    expect(screen.getByText(/開始對話以測試模型/)).toBeInTheDocument()         // MessageList 空狀態
-    expect(screen.getByPlaceholderText(/輸入訊息/)).toBeInTheDocument()        // ChatComposer
-    expect(screen.getByPlaceholderText('預設 1')).toBeInTheDocument()          // temperature 顯示實際預設值
+    expect(screen.getByText(/开始对话以测试模型/)).toBeInTheDocument()         // MessageList 空状态
+    expect(screen.getByPlaceholderText(/输入消息/)).toBeInTheDocument()        // ChatComposer
+    expect(screen.getByPlaceholderText('默认 1')).toBeInTheDocument()          // temperature 显示实际默认值
   })
 
-  it('對話進行中 API 模式鎖定（radio disabled）', () => {
+  it('对话进行中 API 模式锁定（radio disabled）', () => {
     useChatStore.setState({
       turns: [{
         id: 'a', apiMode: 'chat', userText: 'q', assistant: { content: 'a' },
@@ -45,8 +45,8 @@ describe('ChatPage', () => {
     })
     render(<MemoryRouter initialEntries={['/chat']}><ChatPage /></MemoryRouter>)
     expect(screen.getByRole('radio', { name: /Chat API/ })).toBeDisabled()
-    // 鎖定提示出現在 API 模式與系統提示兩個欄位（兩者同屬 cache prefix，一併鎖定）。
-    // handoff §6：鎖定提示縮短為「🔒 對話進行中鎖定」。
-    expect(screen.getAllByText(/對話進行中鎖定/).length).toBeGreaterThanOrEqual(1)
+    // 锁定提示出现在 API 模式与系统提示两个栏位（两者同属 cache prefix，一并锁定）。
+    // handoff §6：锁定提示缩短为「🔒 对话进行中锁定」。
+    expect(screen.getAllByText(/对话进行中锁定/).length).toBeGreaterThanOrEqual(1)
   })
 })

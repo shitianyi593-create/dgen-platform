@@ -11,9 +11,9 @@ const TYPE_META: Record<
   Asset['assetType'],
   { label: string; icon: IconName; color: string }
 > = {
-  Image: { label: '圖片', icon: 'image', color: 'var(--type-image)' },
-  Video: { label: '影片', icon: 'video', color: 'var(--border-focus)' },
-  Audio: { label: '音訊', icon: 'music', color: 'var(--success)' },
+  Image: { label: '图片', icon: 'image', color: 'var(--type-image)' },
+  Video: { label: '视频', icon: 'video', color: 'var(--border-focus)' },
+  Audio: { label: '音频', icon: 'music', color: 'var(--success)' },
 }
 
 const STATUS_KIND: Record<Asset['status'], StatusPillKind> = {
@@ -154,12 +154,12 @@ export default function AssetPreviewDrawer({
             color: 'var(--text-primary)',
           }}
         >
-          素材詳細資料
+          素材详细数据
         </span>
         <button
           type="button"
           className="icon-btn"
-          aria-label="關閉"
+          aria-label="关闭"
           onClick={onClose}
           style={{ width: 28, height: 28 }}
         >
@@ -195,9 +195,9 @@ export default function AssetPreviewDrawer({
               }}
             >
               <Icon name="alert-triangle" size={32} />
-              <span style={{ fontSize: 14, fontWeight: 600 }}>處理失敗</span>
+              <span style={{ fontSize: 14, fontWeight: 600 }}>处理失败</span>
               <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                {asset.error?.message ?? '請刪除後重新上傳'}
+                {asset.error?.message ?? '请删除后重新上传'}
               </span>
             </div>
           ) : asset.status === 'Processing' ? (
@@ -212,7 +212,7 @@ export default function AssetPreviewDrawer({
             >
               <span className="spinner" />
               <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                處理中…
+                处理中…
               </span>
             </div>
           ) : (
@@ -291,7 +291,7 @@ export default function AssetPreviewDrawer({
                   fontSize: scaledFs(13),
                 }}
               >
-                儲存
+                存储
               </button>
               <button
                 type="button"
@@ -320,7 +320,7 @@ export default function AssetPreviewDrawer({
                   wordBreak: 'break-all',
                 }}
               >
-                {asset.name || '(無名稱)'}
+                {asset.name || '(无名称)'}
               </h3>
               <button
                 type="button"
@@ -338,8 +338,8 @@ export default function AssetPreviewDrawer({
               <button
                 type="button"
                 className="icon-btn"
-                aria-label="重新整理 URL"
-                title="重新整理 URL"
+                aria-label="刷新 URL"
+                title="刷新 URL"
                 onClick={() => onRefreshUrl(asset)}
                 style={iconBtnStyle}
               >
@@ -373,7 +373,7 @@ export default function AssetPreviewDrawer({
           <div style={dynamicSectionLabel}>
             asset:// URI{' '}
             <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>
-              — 複製後貼回影片生成引用
+              — 复制后贴回视频生成引用
             </span>
           </div>
           <div
@@ -400,8 +400,8 @@ export default function AssetPreviewDrawer({
             </code>
             <button
               type="button"
-              aria-label="複製"
-              title="複製到剪貼簿"
+              aria-label="复制"
+              title="复制到剪贴簿"
               onClick={() => onCopyUri(formatAssetUri(asset.id))}
               style={{
                 display: 'inline-flex',
@@ -419,26 +419,26 @@ export default function AssetPreviewDrawer({
               }}
             >
               <Icon name="copy" size={12} />
-              複製
+              复制
             </button>
           </div>
         </section>
 
         {/* basic info */}
         <section>
-          <div style={dynamicSectionLabel}>基本資訊</div>
+          <div style={dynamicSectionLabel}>基本信息</div>
           <dl style={{ margin: 0, fontSize: scaledFs(13), lineHeight: 1.8 }}>
             <Row label="素材 ID" value={asset.id} mono />
             <Row
-              label="類型"
+              label="类型"
               value={`${TYPE_META[asset.assetType].label} / ${fileExt(asset.name) || '—'}`}
             />
-            <Row label="建立時間" value={fmtCreateTime(asset.createTime)} />
-            <Row label="群組" value={groupName ?? '—'} />
-            <Row label="群組 ID" value={asset.groupId} mono />
+            <Row label="创建时间" value={fmtCreateTime(asset.createTime)} />
+            <Row label="群组" value={groupName ?? '—'} />
+            <Row label="群组 ID" value={asset.groupId} mono />
             {asset.error && (
               <Row
-                label="錯誤"
+                label="错误"
                 value={`${asset.error.code ?? ''}: ${asset.error.message ?? ''}`}
                 valueStyle={{ color: 'var(--danger)' }}
               />
@@ -467,17 +467,17 @@ export default function AssetPreviewDrawer({
           }}
         >
           {downloading ? (
-            '下載中…'
+            '下载中…'
           ) : (
             <>
               <Icon name="download" size={14} />
-              下載
+              下载
             </>
           )}
         </button>
         <button
           type="button"
-          aria-label="刪除素材"
+          aria-label="删除素材"
           onClick={() => onDelete(asset)}
           onMouseEnter={() => setDeleteHover(true)}
           onMouseLeave={() => setDeleteHover(false)}
@@ -490,7 +490,7 @@ export default function AssetPreviewDrawer({
           }}
         >
           <Icon name="trash" size={14} />
-          刪除
+          删除
         </button>
       </footer>
     </aside>
@@ -553,7 +553,7 @@ const chipStyle: CSSProperties = {
 
 /** Static base — actual fontSize is overridden per-instance via
  *  dynamicSectionLabel inside the component so it picks up the panel scale.
- *  小節標籤規格（handoff §4）：12px/600 --text-secondary、無 uppercase。 */
+ *  小節标签规格（handoff §4）：12px/600 --text-secondary、无 uppercase。 */
 const sectionLabel: CSSProperties = {
   fontSize: 12,
   fontWeight: 600,

@@ -17,7 +17,7 @@ describe('MediaUploader pre-flight validation (Seedance)', () => {
     const onAdd = vi.fn()
     const { container } = render(
       <MediaUploader
-        label="圖片"
+        label="图片"
         accept={ACCEPT}
         items={[]}
         maxItems={9}
@@ -38,7 +38,7 @@ describe('MediaUploader pre-flight validation (Seedance)', () => {
     const onAdd = vi.fn()
     const { container } = render(
       <MediaUploader
-        label="圖片"
+        label="图片"
         accept={ACCEPT}
         items={[]}
         maxItems={9}
@@ -70,7 +70,7 @@ describe('MediaUploader — onLabelClick', () => {
         labels={['[Image 1]']}
       />,
     )
-    expect(screen.queryByRole('button', { name: /插入到提示詞/ })).toBeNull()
+    expect(screen.queryByRole('button', { name: /插入到提示词/ })).toBeNull()
     expect(screen.getByTestId('media-label-badge')).toBeInTheDocument()
   })
 
@@ -94,7 +94,7 @@ describe('MediaUploader — onLabelClick', () => {
         onLabelClick={onLabelClick}
       />,
     )
-    const btn = screen.getByRole('button', { name: /插入到提示詞/ })
+    const btn = screen.getByRole('button', { name: /插入到提示词/ })
     await user.click(btn)
     expect(onLabelClick).toHaveBeenCalledWith('[Image 1]')
   })
@@ -112,7 +112,7 @@ describe('stale rehydrated items', () => {
   it('renders filename and 已失效 hint when stale', () => {
     render(
       <MediaUploader
-        label="參考圖"
+        label="参考图"
         accept={{ 'image/*': [] }}
         items={[staleItem]}
         maxItems={4}
@@ -196,10 +196,10 @@ describe('MediaUploader — locked overlay (T19)', () => {
         label="x" accept={{}} items={[]} maxItems={3}
         onAdd={vi.fn()} onRemove={vi.fn()}
         locked
-        lockedHint="此模式不支援"
+        lockedHint="此模式不支持"
       />,
     )
-    expect(screen.getByText(/此模式不支援/)).toBeInTheDocument()
+    expect(screen.getByText(/此模式不支持/)).toBeInTheDocument()
     expect(screen.getByTestId('lock-overlay')).toBeInTheDocument()
   })
 })

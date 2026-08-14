@@ -39,8 +39,8 @@ const PREFIX: Record<AssetType, string> = {
   audio: 'Audio',
 }
 
-/** 標籤格式：2.0 頁沿用 `[Image 1]`；2.5 官方文件一律 `@Image1`。
- *  // TODO(tech-debt): seedanceModels 能力表合併 — 格式應由模型能力表決定 */
+/** 标签格式：2.0 页沿用 `[Image 1]`；2.5 官方文件一律 `@Image1`。
+ *  // TODO(tech-debt): seedanceModels 能力表合并 — 格式应由模型能力表决定 */
 export type LabelFormat = 'bracket' | 'at'
 
 /** Build a label like `[Image 1]`（bracket）或 `@Image1`（at）for the given type and 1-based index. */

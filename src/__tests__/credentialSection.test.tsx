@@ -32,9 +32,9 @@ describe('CredentialSection', () => {
         bucket: '',
       },
       verifyState: {
-        inference: { status: 'pend', message: '尚未驗證' },
-        asset: { status: 'pend', message: '尚未驗證' },
-        tos: { status: 'pend', message: '尚未驗證' },
+        inference: { status: 'pend', message: '尚未验证' },
+        asset: { status: 'pend', message: '尚未验证' },
+        tos: { status: 'pend', message: '尚未验证' },
       },
     })
   })
@@ -67,7 +67,7 @@ describe('CredentialSection', () => {
     expect(screen.getByLabelText('Project Name')).toBeInTheDocument()
   })
 
-  it('clicking 測試連線 calls store.verify and shows ok pill on success', async () => {
+  it('clicking 测试连接 calls store.verify and shows ok pill on success', async () => {
     useAuthStore.setState({
       assetCreds: { accessKeyId: 'AK', accessKeySecret: 'SK', projectName: 'p' },
     })
@@ -87,15 +87,15 @@ describe('CredentialSection', () => {
     expect(container.querySelector('.cred-section.target')).toBeInTheDocument()
   })
 
-  it('shows 驗證中… and disables the button while a test is in flight', () => {
+  it('shows 验证中… and disables the button while a test is in flight', () => {
     useAuthStore.setState({
       verifyState: {
         ...useAuthStore.getState().verifyState,
-        asset: { status: 'pend', message: '驗證中…' },
+        asset: { status: 'pend', message: '验证中…' },
       },
     })
     renderSection({ credKey: 'asset', expanded: true, onToggle: () => {} })
-    const btn = screen.getByRole('button', { name: /驗證中…/ }) as HTMLButtonElement
+    const btn = screen.getByRole('button', { name: /验证中…/ }) as HTMLButtonElement
     expect(btn).toBeDisabled()
   })
 
@@ -117,13 +117,13 @@ describe('CredentialSection', () => {
     expect(screen.getByLabelText('Access Key ID')).not.toHaveFocus()
   })
 
-  it('inference section does NOT render the 測試連線 button (live-validation)', () => {
+  it('inference section does NOT render the 测试连接 button (live-validation)', () => {
     renderSection({ credKey: 'inference', expanded: true, onToggle: () => {} })
     expect(screen.queryByRole('button', { name: /测试连接/ })).toBeNull()
-    expect(screen.queryByRole('button', { name: /驗證中/ })).toBeNull()
+    expect(screen.queryByRole('button', { name: /验证中/ })).toBeNull()
   })
 
-  it('asset section still renders the 測試連線 button', () => {
+  it('asset section still renders the 测试连接 button', () => {
     renderSection({ credKey: 'asset', expanded: true, onToggle: () => {} })
     expect(screen.getByRole('button', { name: /测试连接/ })).toBeInTheDocument()
   })

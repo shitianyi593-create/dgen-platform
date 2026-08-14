@@ -1,5 +1,5 @@
 // src/components/chat/MessageList.tsx
-// 訊息卷軸區。新訊息 / 串流累積時自動捲到底（使用者已捲離底部時不打擾）。
+// 消息卷轴区。新消息 / 流式累積时自动滚到底（用户已滚离底部时不打扰）。
 import { useEffect, useRef } from 'react'
 import MessageBubble from './MessageBubble'
 import { useChatStore } from '../../stores/chatStore'
@@ -43,9 +43,9 @@ export default function MessageList({ onResendLast }: Props) {
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--border)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
-            <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>開始對話以測試模型</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>开始对话以测试模型</div>
             <div style={{ fontSize: 13, color: 'var(--text-secondary)', maxWidth: 360, lineHeight: 1.6 }}>
-              每輪回應附完整 debug 資訊，點訊息下方膠囊可展開 token、延遲與 raw payload。
+              每轮响应附完整 debug 信息，点消息下方胶囊可展开 token、延迟与 raw payload。
             </div>
           </div>
         ) : (

@@ -26,9 +26,9 @@ describe('CredentialForm', () => {
         bucket: '',
       },
       verifyState: {
-        inference: { status: 'pend', message: '尚未驗證' },
-        asset: { status: 'pend', message: '尚未驗證' },
-        tos: { status: 'pend', message: '尚未驗證' },
+        inference: { status: 'pend', message: '尚未验证' },
+        asset: { status: 'pend', message: '尚未验证' },
+        tos: { status: 'pend', message: '尚未验证' },
       },
     })
   })
@@ -76,7 +76,7 @@ describe('CredentialForm', () => {
     useAuthStore.setState({
       verifyState: {
         ...useAuthStore.getState().verifyState,
-        inference: { status: 'ok', message: '格式檢查通過' },
+        inference: { status: 'ok', message: '格式检查通过' },
       },
     })
     renderForm('inference')
@@ -156,7 +156,7 @@ describe('CredentialForm — tos region select', () => {
     expect(optionValues).toContain('ap-southeast-1')
     expect(optionValues).toContain('ap-southeast-3')
     expect(optionValues).not.toContain('us-east-1')
-    // 6 regions + possibly the disabled "請選擇…" placeholder when value is ''
+    // 6 regions + possibly the disabled "请选择…" placeholder when value is ''
     expect(optionValues.length).toBeGreaterThanOrEqual(6)
   })
 
@@ -199,14 +199,14 @@ describe('CredentialForm — tos region select', () => {
  * guards the other half of the round-trip (setField's per-key dispatch): if the
  * store never receives the value, the rendered value stays empty too.
  */
-describe('CredentialForm — 每個 schema 欄位都真的能輸入', () => {
+describe('CredentialForm — 每个 schema 栏位都真的能输入', () => {
   const typableFields = CREDENTIALS.flatMap((def) =>
     def.fields
       .filter((f) => !('kind' in f && f.kind === 'select'))
       .map((f) => ({ credKey: def.key, label: messages['zh-CN'][f.labelKey] })),
   )
 
-  it.each(typableFields)('$credKey / $label 打進去的字留得住', ({ credKey, label }) => {
+  it.each(typableFields)('$credKey / $label 打进去的字留得住', ({ credKey, label }) => {
     renderForm(credKey)
     const input = screen.getByLabelText(label) as HTMLInputElement
     fireEvent.change(input, { target: { value: 'ep-20260101000000-abcde' } })

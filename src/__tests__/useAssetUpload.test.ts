@@ -280,7 +280,7 @@ describe('capAssetName', () => {
   })
 
   it('preserves unicode (Chinese filenames)', () => {
-    expect(capAssetName('封面圖_v3.png')).toBe('封面圖_v3.png')
+    expect(capAssetName('封面图_v3.png')).toBe('封面图_v3.png')
   })
 })
 

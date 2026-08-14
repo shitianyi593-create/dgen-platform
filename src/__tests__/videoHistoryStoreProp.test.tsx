@@ -13,8 +13,8 @@ function seed25HistoryItem() {
   useVideo25Store.getState().addHistory({
     taskId: 'cgt-25-demo',
     status: 'succeeded',
-    prompt: '優化後的提示詞內容',
-    originalPrompt: '原始提示詞',
+    prompt: '优化后的提示词内容',
+    originalPrompt: '原始提示词',
     model: 'dreamina-seedance-2-5-260628',
     createdAt: Date.now() / 1000,
     videoUrl: 'https://example.com/v.mp4',
@@ -27,17 +27,17 @@ describe('VideoHistory / VideoPreview with injected 2.5 store', () => {
     useVideo25Store.setState(useVideo25Store.getInitialState())
   })
 
-  it('renders items from the injected store and shows the 已優化 badge', () => {
+  it('renders items from the injected store and shows the 已优化 badge', () => {
     seed25HistoryItem()
     render(<VideoHistory useStore={useVideo25Store} />)
-    expect(screen.getByText('優化後的提示詞內容')).toBeInTheDocument()
+    expect(screen.getByText('优化后的提示词内容')).toBeInTheDocument()
     expect(screen.getByTestId('optimized-tag')).toBeInTheDocument()
   })
 
   it('default store does NOT show items from the 2.5 store', () => {
     seed25HistoryItem()
     render(<VideoHistory />)
-    expect(screen.queryByText('優化後的提示詞內容')).not.toBeInTheDocument()
+    expect(screen.queryByText('优化后的提示词内容')).not.toBeInTheDocument()
   })
 
   it('no badge when originalPrompt is absent (2.0 items unaffected)', () => {

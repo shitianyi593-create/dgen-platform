@@ -18,25 +18,27 @@ import {
   overflowMenuContainerStyle,
 } from '../common/overflowMenuStyles'
 import { Icon } from '../common/icons'
+import { useOptionalI18n } from '../../i18n/useOptionalI18n'
+import type { MessageKey } from '../../i18n/locales'
 
 /** Default width when no parent overrides — used as the scale=1 baseline. */
 export const VIDEO_HISTORY_DEFAULT_WIDTH = 280
 
 // ── Helpers ──
 
-function statusLabel(status: TaskStatus) {
+function statusLabel(status: TaskStatus, t: (key: MessageKey, params?: Record<string, string | number>) => string) {
   switch (status) {
-    case 'queued': return '排隊中'
-    case 'running': return '處理中'
-    case 'succeeded': return '完成'
-    case 'failed': return '失敗'
-    case 'cancelled': return '已取消'
-    case 'expired': return '已過期'
+    case 'queued': return t('video.history.status.queued')
+    case 'running': return t('video.history.status.running')
+    case 'succeeded': return t('video.history.status.succeeded')
+    case 'failed': return t('video.history.status.failed')
+    case 'cancelled': return t('video.history.status.cancelled')
+    case 'expired': return t('video.history.status.expired')
     default: return status
   }
 }
 
-/** 狀態 → StatusPill kind（handoff §2；expired 不再與 queued 共用色）。 */
+/** 状态 → StatusPill kind（handoff §2；expired 不再与 queued 共用色）。 */
 function statusKind(status: TaskStatus): StatusPillKind {
   switch (status) {
     case 'succeeded': return 'success'
@@ -49,7 +51,7 @@ function statusKind(status: TaskStatus): StatusPillKind {
   }
 }
 
-/** 次要小按鈕（handoff §5）— 紀錄卡與工具列共用。 */
+/** 次要小按钮（handoff §5）— 记录卡与工具列共用。 */
 const smallBtnStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
@@ -74,16 +76,17 @@ function formatDuration(seconds: number): string {
 // ── Per-task card ──
 
 function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: VideoStoreHook }) {
+  const { t } = useOptionalI18n()
   const { setCurrentTask, setCurrentVideoUrl } = useStore()
   const [exporting, setExporting] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const [downloadingFrame, setDownloadingFrame] = useState(false)
-  // window.confirm → ConfirmModal（與圖片頁刪除紀錄一致）
+  // window.confirm → ConfirmModal（与图片页删除记录一致）
   const [confirmDelete, setConfirmDelete] = useState(false)
-  // 「詳情」展開：預設收合，點開才顯示完整 prompt 與全部參數，避免列表過長。
+  // 「详情」展开：默认收起，点开才显示完整 prompt 与全部参数，避免列表过长。
   const [showDetails, setShowDetails] = useState(false)
 
-  // 參數優先讀 item 攤平欄位，缺的再回填 requestContent（匯入任務常只有後者）。
+  // 参数优先读 item 摊平字段，缺的再回填 requestContent（导入任务常只有后者）。
   const rc = item.requestContent
   const paramRows: Array<[string, string]> = []
   const pushParam = (key: string, value: string | number | undefined) => {
@@ -116,16 +119,16 @@ function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: Vid
       const { bytes, missing } = await buildBundleZip(item)
       downloadBlob(new Blob([new Uint8Array(bytes) as BlobPart], { type: 'application/zip' }), `${item.taskId}.zip`)
       if (missing.length > 0) {
-        toast.success(`已匯出 ${item.taskId}.zip（${missing.length} 個素材已過期，略過）`)
+        toast.success(t('video.toast.exportedZipMissing', { taskId: item.taskId, count: missing.length }))
       } else {
-        toast.success(`已匯出: ${item.taskId}.zip`)
+        toast.success(t('video.toast.exportedZip', { taskId: item.taskId }))
       }
     } catch (err) {
-      toast.error(`匯出失敗: ${(err as Error).message}`)
+      toast.error(t('video.toast.exportFailed', { message: (err as Error).message }))
     } finally {
       setExporting(false)
     }
-  }, [item])
+  }, [item, t])
 
   const handleDownloadMp4 = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -134,13 +137,13 @@ function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: Vid
     try {
       const blob = await downloadAssetBlob(item.videoUrl, `${item.taskId}.mp4`)
       downloadBlob(blob, `${item.taskId}.mp4`)
-      toast.success(`已下載: ${item.taskId}.mp4`)
+      toast.success(t('video.toast.downloadedMp4', { taskId: item.taskId }))
     } catch (err) {
-      toast.error(`下載失敗: ${(err as Error).message}`)
+      toast.error(t('video.toast.downloadFailed', { message: (err as Error).message }))
     } finally {
       setDownloading(false)
     }
-  }, [item])
+  }, [item, t])
 
   const handleDownloadFrame = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -149,13 +152,13 @@ function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: Vid
     try {
       const blob = await downloadAssetBlob(item.lastFrameUrl, `${item.taskId}.png`)
       downloadBlob(blob, `${item.taskId}.png`)
-      toast.success(`已下載: ${item.taskId}.png`)
+      toast.success(t('video.toast.downloadedFrame', { taskId: item.taskId }))
     } catch (err) {
-      toast.error(`下載尾幀失敗: ${(err as Error).message}`)
+      toast.error(t('video.toast.downloadFrameFailed', { message: (err as Error).message }))
     } finally {
       setDownloadingFrame(false)
     }
-  }, [item])
+  }, [item, t])
 
   return (
     <div
@@ -179,7 +182,7 @@ function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: Vid
       {/* Status row */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <StatusPill kind={statusKind(item.status)} label={statusLabel(item.status)} />
+          <StatusPill kind={statusKind(item.status)} label={statusLabel(item.status, t)} />
           {(isLive || (elapsed > 0 && item.status === 'succeeded')) && (
             <span style={{ fontSize: scaledFs(11), color: 'var(--text-muted)' }}>
               {formatDuration(elapsed)}
@@ -196,9 +199,9 @@ function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: Vid
                 color: 'var(--warning)',
                 border: '1px solid var(--warning)',
               }}
-              title="此任務由其他金鑰建立，無法查詢"
+              title={t('video.history.orphanedTitle')}
             >
-              無法查詢
+              {t('video.history.orphaned')}
             </span>
           )}
           {item.imported && (
@@ -212,15 +215,15 @@ function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: Vid
                 color: 'var(--text-muted)',
                 border: '1px solid var(--border)',
               }}
-              title="此任務由本機 .zip / 資料夾匯入"
+              title={t('video.history.importedTitle')}
             >
-              已匯入
+              {t('video.history.imported')}
             </span>
           )}
           {item.originalPrompt && (
             <span
               data-testid="optimized-tag"
-              title={`原始提示詞：${item.originalPrompt}`}
+              title={t('video.history.optimizedTitle', { prompt: item.originalPrompt })}
               style={{
                 fontSize: scaledFs(10),
                 padding: '2px 5px',
@@ -230,7 +233,7 @@ function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: Vid
                 border: '1px solid var(--accent)',
               }}
             >
-              已優化
+              {t('video.history.optimized')}
             </span>
           )}
         </div>
@@ -256,7 +259,7 @@ function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: Vid
           {item.objectUrl && (
             <span style={{ color: 'var(--success)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--success)' }} />
-              本地
+              {t('video.preview.local')}
             </span>
           )}
         </div>
@@ -272,8 +275,8 @@ function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: Vid
         </div>
       )}
 
-      {/* 詳情面板：完整 prompt、優化前原文、以及全部送出的參數。
-          stopPropagation 讓面板內的點擊不會誤觸卡片選取。 */}
+      {/* 详情面板：完整 prompt、优化前原文、以及全部送出的参数。
+          stopPropagation 让面板内的点击不会误触卡片选择。 */}
       {showDetails && (
         <div
           data-testid="task-details"
@@ -299,7 +302,7 @@ function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: Vid
 
           {item.originalPrompt && (
             <div>
-              <div style={{ fontSize: scaledFs(10), color: 'var(--text-muted)', marginBottom: 2 }}>原始 Prompt</div>
+              <div style={{ fontSize: scaledFs(10), color: 'var(--text-muted)', marginBottom: 2 }}>{t('video.history.originalPrompt')}</div>
               <div style={{ fontSize: scaledFs(12), color: 'var(--text-secondary)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                 {item.originalPrompt}
               </div>
@@ -308,7 +311,7 @@ function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: Vid
 
           {paramRows.length > 0 && (
             <div>
-              <div style={{ fontSize: scaledFs(10), color: 'var(--text-muted)', marginBottom: 2 }}>參數</div>
+              <div style={{ fontSize: scaledFs(10), color: 'var(--text-muted)', marginBottom: 2 }}>{t('video.history.params')}</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', columnGap: 8, rowGap: 2 }}>
                 {paramRows.map(([k, v]) => (
                   <Fragment key={k}>
@@ -328,13 +331,13 @@ function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: Vid
             style={{ ...smallBtnStyle, alignSelf: 'flex-start' }}
           >
             <Icon name="copy" size={11} />
-            複製 Prompt
+            {t('video.history.copyPrompt')}
           </button>
         </div>
       )}
 
-      {/* 動作列（handoff §B6）：詳情展開；succeeded 常駐 下載 mp4 / 複製 URL；
-          queued 常駐 取消任務；其餘動作收進 ⋯ 選單。 */}
+      {/* 动作列（handoff §B6）：详情展开；succeeded 常驻 下载 mp4 / 复制 URL；
+          queued 常驻 取消任务；其余动作收进 ⋯ 选单。 */}
       <div style={{ display: 'flex', gap: 6, marginTop: 8, alignItems: 'center' }}>
         <button
           onClick={(e) => {
@@ -345,7 +348,7 @@ function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: Vid
           style={smallBtnStyle}
         >
           <Icon name={showDetails ? 'chevron-down' : 'chevron-right'} size={11} />
-          詳情
+          {t('video.history.details')}
         </button>
         {item.status === 'succeeded' && item.videoUrl && (
           <>
@@ -355,17 +358,17 @@ function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: Vid
               style={{ ...smallBtnStyle, cursor: downloading ? 'wait' : 'pointer' }}
             >
               <Icon name="download" size={11} />
-              {downloading ? '下載中…' : '下載 mp4'}
+              {downloading ? t('video.history.downloading') : t('video.history.downloadMp4')}
             </button>
             <button
               onClick={(e) => {
                 e.stopPropagation()
-                void copyWithToast('影片 URL', item.videoUrl)
+                void copyWithToast(t('video.preview.videoUrl'), item.videoUrl)
               }}
               style={smallBtnStyle}
             >
               <Icon name="copy" size={11} />
-              複製 URL
+              {t('video.history.copyUrl')}
             </button>
           </>
         )}
@@ -379,15 +382,15 @@ function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: Vid
                 const { removeActiveTask, updateHistory } = useStore.getState()
                 removeActiveTask(item.taskId)
                 updateHistory(item.taskId, { status: 'cancelled', updatedAt: Date.now() / 1000 })
-                toast.success('已送出取消指令')
+                toast.success(t('video.toast.cancelSent'))
               } catch (err) {
-                toast.error(`取消失敗: ${(err as Error).message}`)
+                toast.error(t('video.toast.cancelFailed', { message: (err as Error).message }))
               }
             }}
-            aria-label="取消任務"
+            aria-label={t('video.history.cancelTask')}
             style={{ ...smallBtnStyle, color: 'var(--warning)' }}
           >
-            取消任務
+            {t('video.history.cancelTask')}
           </button>
         )}
 
@@ -397,8 +400,8 @@ function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: Vid
           <OverflowMenu>
             {(close) => (
               <>
-                {/* 所有非 queued 狀態都可匯出 — task.json 保留參數，失敗/過期
-                    任務靠它留檔回填（buildBundleZip 容忍素材缺失）。 */}
+                {/* 所有非 queued 状态都可导出 — task.json 保留参数，失败/过期
+                    任务靠它留档回填（buildBundleZip 容忍素材缺失）。 */}
                 <button
                   onClick={(e) => {
                     close()
@@ -407,7 +410,7 @@ function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: Vid
                   disabled={exporting}
                   style={overflowMenuItemStyle}
                 >
-                  {exporting ? '匯出中…' : '匯出 .zip'}
+                  {exporting ? t('video.history.exporting') : t('video.history.exportZip')}
                 </button>
                 {item.status === 'succeeded' && item.lastFrameUrl && (
                   <button
@@ -419,7 +422,7 @@ function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: Vid
                     disabled={downloadingFrame}
                     style={overflowMenuItemStyle}
                   >
-                    {downloadingFrame ? '下載中…' : '下載尾幀'}
+                    {downloadingFrame ? t('video.history.downloading') : t('video.history.downloadFrame')}
                   </button>
                 )}
                 <button
@@ -430,7 +433,7 @@ function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: Vid
                   }}
                   style={overflowMenuItemStyle}
                 >
-                  複製 Task ID
+                  {t('video.history.copyTaskId')}
                 </button>
                 <button
                   onClick={(e) => {
@@ -438,10 +441,10 @@ function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: Vid
                     close()
                     setConfirmDelete(true)
                   }}
-                  aria-label="刪除記錄"
+                  aria-label={t('video.history.deleteRecord')}
                   style={{ ...overflowMenuItemStyle, color: 'var(--danger)' }}
                 >
-                  刪除記錄
+                  {t('video.history.deleteRecord')}
                 </button>
               </>
             )}
@@ -449,12 +452,12 @@ function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: Vid
         )}
       </div>
 
-      {/* 刪除確認 — 與圖片頁一致改用 ConfirmModal（原為 window.confirm） */}
+      {/* 删除确认 — 与图片页一致改用 ConfirmModal（原为 window.confirm） */}
       <ConfirmModal
         open={confirmDelete}
-        title="刪除此任務記錄？"
-        subtitle={`${item.taskId}（已下載/匯出的檔案不受影響）`}
-        confirmLabel="刪除"
+        title={t('video.history.deleteTitle')}
+        subtitle={t('video.history.deleteSubtitle', { taskId: item.taskId })}
+        confirmLabel={t('video.history.deleteConfirm')}
         variant="danger"
         onConfirm={() => {
           useStore.getState().removeHistory(item.taskId)
@@ -471,7 +474,7 @@ function HistoryCard({ item, useStore }: { item: VideoHistoryItem; useStore: Vid
 interface VideoHistoryProps {
   /** Optional override; falls back to VIDEO_HISTORY_DEFAULT_WIDTH. */
   width?: number
-  /** 讀寫來源 store；預設 2.0 的 useVideoStore（既有行為不變）。 */
+  /** 读写来源 store；默认 2.0 的 useVideoStore（既有行为不变）。 */
   useStore?: VideoStoreHook
 }
 
@@ -514,6 +517,7 @@ function ImportDropZone({
   onImport: (files: File[]) => Promise<void>
   disabled: boolean
 }) {
+  const { t } = useOptionalI18n()
   const [hover, setHover] = useState(false)
 
   const onDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
@@ -561,12 +565,13 @@ function ImportDropZone({
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
       </svg>
-      拖曳任務資料夾或 .zip 到此處（可多個）
+      {t('video.history.dropzone')}
     </div>
   )
 }
 
 export default function VideoHistory({ width = VIDEO_HISTORY_DEFAULT_WIDTH, useStore = useVideoStore }: VideoHistoryProps = {}) {
+  const { t } = useOptionalI18n()
   const { history, addHistory } = useStore()
   const [importing, setImporting] = useState(false)
   const [batchExporting, setBatchExporting] = useState(false)
@@ -578,12 +583,12 @@ export default function VideoHistory({ width = VIDEO_HISTORY_DEFAULT_WIDTH, useS
   const zipInputRef = useRef<HTMLInputElement>(null)
 
   // Show every history item regardless of age — the previous "近期生成
-  // (2 小時內)" cap created confusion when imported tasks fell outside it.
+  // (2 小时内)" cap created confusion when imported tasks fell outside it.
   const succeededItems = history.filter((h) => h.status === 'succeeded')
 
   const handleBatchExport = useCallback(async () => {
     if (succeededItems.length === 0) {
-      toast.error('沒有已完成的任務可以匯出')
+      toast.error(t('video.toast.noCompletedTasks'))
       return
     }
     setBatchExporting(true)
@@ -597,16 +602,19 @@ export default function VideoHistory({ width = VIDEO_HISTORY_DEFAULT_WIDTH, useS
       const sharedMissing = missing.length
       const taskMissingCount = Object.values(perTaskMissing).reduce((sum, arr) => sum + arr.length, 0)
       if (sharedMissing + taskMissingCount > 0) {
-        toast.success(`已匯出 ${succeededItems.length} 個任務（${sharedMissing + taskMissingCount} 個素材已過期，略過）`)
+        toast.success(t('video.toast.batchExportedMissing', {
+          count: succeededItems.length,
+          missing: sharedMissing + taskMissingCount,
+        }))
       } else {
-        toast.success(`已匯出 ${succeededItems.length} 個任務`)
+        toast.success(t('video.toast.batchExported', { count: succeededItems.length }))
       }
     } catch (err) {
-      toast.error(`批次匯出失敗: ${(err as Error).message}`)
+      toast.error(t('video.toast.batchExportFailed', { message: (err as Error).message }))
     } finally {
       setBatchExporting(false)
     }
-  }, [succeededItems])
+  }, [succeededItems, t])
 
   // Shared pipeline: accept a flat File[] (from webkitdirectory or drop) and
   // add resulting tasks to history. Each task's binaries become object URLs.
@@ -634,7 +642,7 @@ export default function VideoHistory({ width = VIDEO_HISTORY_DEFAULT_WIDTH, useS
           // The blobs created by toHistoryItem are unreachable now — free them
           // before the item is dropped on the floor.
           revokeImportedUrls(item)
-          toast.error('無效的 task.json（缺少 task_id）')
+          toast.error(t('video.toast.invalidTaskJson'))
           continue
         }
         if (existingIds.has(item.taskId)) {
@@ -657,16 +665,16 @@ export default function VideoHistory({ width = VIDEO_HISTORY_DEFAULT_WIDTH, useS
       }
 
       const parts: string[] = []
-      if (imported > 0) parts.push(`已匯入 ${imported} 個任務`)
-      if (skipped > 0) parts.push(`跳過 ${skipped} 個重複`)
-      if (parts.length > 0) toast.success(parts.join('，'))
-      else toast('未匯入任何任務')
+      if (imported > 0) parts.push(t('video.toast.importedCount', { count: imported }))
+      if (skipped > 0) parts.push(t('video.toast.skippedCount', { count: skipped }))
+      if (parts.length > 0) toast.success(parts.join(t('common.listSeparator')))
+      else toast(t('video.toast.importNone'))
     } catch (err) {
-      toast.error(`匯入失敗: ${(err as Error).message}`)
+      toast.error(t('video.toast.importFailed', { message: (err as Error).message }))
     } finally {
       setImporting(false)
     }
-  }, [addHistory, useStore])
+  }, [addHistory, t, useStore])
 
   const handleFolderImportClick = useCallback(() => {
     folderInputRef.current?.click()
@@ -704,9 +712,9 @@ export default function VideoHistory({ width = VIDEO_HISTORY_DEFAULT_WIDTH, useS
 
   return (
     <div className="resizable-panel" style={panelStyle}>
-      {/* Header — 欄標題兩級制（handoff §4）：14px/600 text-primary */}
+      {/* Header — 栏标题两级制（handoff §4）：14px/600 text-primary */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12, fontSize: scaledFs(14), fontWeight: 600, color: 'var(--text-primary)' }}>
-        任務紀錄
+        {t('video.history.title')}
       </div>
 
       {/* Hidden folder picker. Browsers select one folder per click; the
@@ -740,7 +748,7 @@ export default function VideoHistory({ width = VIDEO_HISTORY_DEFAULT_WIDTH, useS
        *  webkitGetAsEntry. */}
       <ImportDropZone onImport={importFiles} disabled={importing} />
 
-      {/* Batch action buttons — 匯出全部 + 匯入（小選單：資料夾 / .zip） */}
+      {/* Batch action buttons — 导出全部 + 导入（小选单：数据夹 / .zip） */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
         <button
           onClick={handleBatchExport}
@@ -748,7 +756,7 @@ export default function VideoHistory({ width = VIDEO_HISTORY_DEFAULT_WIDTH, useS
           style={{ ...smallBtnStyle, flex: 1, justifyContent: 'center', padding: '6px 8px' }}
         >
           <Icon name="download" size={11} />
-          {batchExporting ? '匯出中…' : `匯出全部 (${succeededItems.length})`}
+          {batchExporting ? t('video.history.exporting') : t('video.history.exportAll', { count: succeededItems.length })}
         </button>
         <div
           style={{ position: 'relative', flex: 1 }}
@@ -761,7 +769,7 @@ export default function VideoHistory({ width = VIDEO_HISTORY_DEFAULT_WIDTH, useS
             style={{ ...smallBtnStyle, width: '100%', justifyContent: 'center', padding: '6px 8px' }}
           >
             <Icon name="upload" size={11} />
-            {importing ? '匯入中…' : '匯入'}
+            {importing ? t('video.history.importing') : t('video.history.import')}
           </button>
           {importMenuOpen && (
             <div style={{ ...overflowMenuContainerStyle, left: 0, right: 0, minWidth: 0 }}>
@@ -772,7 +780,7 @@ export default function VideoHistory({ width = VIDEO_HISTORY_DEFAULT_WIDTH, useS
                 }}
                 style={overflowMenuItemStyle}
               >
-                資料夾
+                {t('video.history.folder')}
               </button>
               <button
                 onClick={() => {
@@ -795,8 +803,8 @@ export default function VideoHistory({ width = VIDEO_HISTORY_DEFAULT_WIDTH, useS
             <rect x="2" y="2" width="20" height="20" rx="2" />
             <path d="M10 8l6 4-6 4V8z" />
           </svg>
-          <div>目前沒有生成紀錄</div>
-          <div style={{ marginTop: 8, fontSize: scaledFs(11) }}>若有已匯出的資料夾或 .zip，點擊對應按鈕載入</div>
+          <div>{t('video.history.empty')}</div>
+          <div style={{ marginTop: 8, fontSize: scaledFs(11) }}>{t('video.history.emptyHint')}</div>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

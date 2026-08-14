@@ -1,14 +1,14 @@
 /**
  * VideoParams component test
  *
- * 涵蓋需求：
- * - DOM 順序：提示詞 → Asset 參考 → 參考圖片 → 參考影片 → 參考音訊
- * - 多模態說明文字存在
- * - 各 MediaUploader 顯示正確的 hint（圖片/影片/音訊）
- * - 「新任務」按鈕：清 prompt + 4 個 reference 陣列；保留 ratio/duration、history、active tasks；revoke blob URLs
- * - Ratio 下拉包含 'adaptive' 選項；預設選中 adaptive
- * - 加入 reference image 後，縮圖出現 [Image 1] badge
- * - Asset 行旁顯示對應 [Type N] label，計數會接續 reference 後
+ * 涵盖需求：
+ * - DOM 顺序：提示词 → Asset 参考 → 参考图片 → 参考视频 → 参考音频
+ * - 多模态说明文字存在
+ * - 各 MediaUploader 显示正确的 hint（图片/视频/音频）
+ * - 「新任务」按钮：清 prompt + 4 个 reference 阵列；保留 ratio/duration、history、active tasks；revoke blob URLs
+ * - Ratio 下拉包含 'adaptive' 选项；默认选中 adaptive
+ * - 加入 reference image 后，缩图出现 [Image 1] badge
+ * - Asset 行旁显示对应 [Type N] label，计数会接续 reference 后
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, cleanup, fireEvent, within } from '@testing-library/react'
@@ -53,11 +53,11 @@ describe('VideoParams — layout & hints', () => {
   it('renders sections in the new order: prompt → asset → image → video → audio', () => {
     render(<VideoParams />)
     const html = document.body.innerHTML
-    const promptIdx = html.indexOf('提示詞')
-    const assetIdx = html.indexOf('Asset 參考')
-    const imageIdx = html.indexOf('參考圖片')
-    const videoIdx = html.indexOf('參考影片')
-    const audioIdx = html.indexOf('參考音訊')
+    const promptIdx = html.indexOf('提示词')
+    const assetIdx = html.indexOf('素材引用')
+    const imageIdx = html.indexOf('参考图片')
+    const videoIdx = html.indexOf('参考视频')
+    const audioIdx = html.indexOf('参考音频')
 
     expect(promptIdx).toBeGreaterThanOrEqual(0)
     expect(promptIdx).toBeLessThan(assetIdx)
@@ -70,7 +70,7 @@ describe('VideoParams — layout & hints', () => {
     render(<VideoParams />)
     // Per UX cleanup: each uploader has its own hint, so the redundant
     // top-level cheatsheet was removed.
-    expect(screen.queryByText(/多模態參考生成/)).toBeNull()
+    expect(screen.queryByText(/多模态参考生成/)).toBeNull()
   })
 
   it('shows the [Image N] / [Video N] / [Audio N] usage hint under prompt', () => {
@@ -89,17 +89,17 @@ describe('VideoParams — layout & hints', () => {
 
   it('image uploader hint mentions 0–9', () => {
     render(<VideoParams />)
-    expect(screen.getByText(/0–9 張/)).toBeInTheDocument()
+    expect(screen.getByText(/0-9 张；1 张 = 图生视频，多张 = 多模态/)).toBeInTheDocument()
   })
 
   it('video uploader hint mentions 0–3 and 15 秒', () => {
     render(<VideoParams />)
-    expect(screen.getByText(/0–3 段.*15 秒.*mp4/)).toBeInTheDocument()
+    expect(screen.getByText(/0-3 段.*15 秒.*mp4/)).toBeInTheDocument()
   })
 
   it('audio uploader hint mentions 0–3 and 15 秒', () => {
     render(<VideoParams />)
-    expect(screen.getByText(/0–3 段.*15 秒.*mp3/)).toBeInTheDocument()
+    expect(screen.getByText(/0-3 段.*15 秒.*mp3/)).toBeInTheDocument()
   })
 })
 
@@ -149,11 +149,11 @@ describe('VideoParams — Resolution options', () => {
     },
   )
 
-  it('renders 解析度 label above 畫面比例 in the DOM', () => {
+  it('renders 分辨率 label above 画面比例 in the DOM', () => {
     render(<VideoParams />)
     const html = document.body.innerHTML
-    const resolutionIdx = html.indexOf('解析度')
-    const ratioIdx = html.indexOf('畫面比例')
+    const resolutionIdx = html.indexOf('分辨率')
+    const ratioIdx = html.indexOf('画面比例')
     expect(resolutionIdx).toBeGreaterThanOrEqual(0)
     expect(ratioIdx).toBeGreaterThanOrEqual(0)
     expect(resolutionIdx).toBeLessThan(ratioIdx)
@@ -184,7 +184,7 @@ describe('VideoParams — Return last frame toggle', () => {
 
   it('shows hint text describing the chaining workflow', () => {
     render(<VideoParams />)
-    expect(screen.getByText(/前段尾幀.*下段首幀/)).toBeInTheDocument()
+    expect(screen.getByText(/前段尾帧.*下段首帧/)).toBeInTheDocument()
   })
 })
 
@@ -234,7 +234,7 @@ describe('VideoParams — Duration options', () => {
   })
 })
 
-describe('VideoParams — 新任務 button', () => {
+describe('VideoParams — 新任务 button', () => {
   it('clears prompt and all reference media; preserves ratio/duration/history/activeTasks', async () => {
     const user = userEvent.setup()
     // Pre-populate store with a bit of everything.
@@ -266,7 +266,7 @@ describe('VideoParams — 新任務 button', () => {
       .mockImplementation(() => undefined)
 
     render(<VideoParams />)
-    const newTaskBtn = screen.getByRole('button', { name: /新任務/ })
+    const newTaskBtn = screen.getByRole('button', { name: /新任务/ })
     await user.click(newTaskBtn)
 
     const s = useVideoStore.getState()
@@ -342,42 +342,42 @@ describe('VideoParams — content labels', () => {
   })
 })
 
-/** Seed / 任務最長等待時間 / 浮水印 現在收在「進階設定」折疊區內。 */
+/** Seed / 任务最长等待时间 / 水印 现在收在「高级设置」折叠区内。 */
 function openAdvancedSettings() {
-  fireEvent.click(screen.getByRole('button', { name: /進階設定/ }))
+  fireEvent.click(screen.getByRole('button', { name: /高级设置/ }))
 }
 
-describe('VideoParams — 進階設定 collapse', () => {
+describe('VideoParams — 高级设置 collapse', () => {
   it('is collapsed by default: seed / exec-expires controls not rendered', () => {
     render(<VideoParams />)
-    const header = screen.getByRole('button', { name: /進階設定/ })
+    const header = screen.getByRole('button', { name: /高级设置/ })
     expect(header).toHaveAttribute('aria-expanded', 'false')
     // 摘要文字
-    expect(screen.getByText('Seed · 等待時間 · 浮水印')).toBeInTheDocument()
-    // 內容為條件渲染 — 收合時完全不在 DOM
-    expect(screen.queryByLabelText('隨機種子 (Seed)')).toBeNull()
-    expect(screen.queryByLabelText('任務最長等待時間')).toBeNull()
-    expect(screen.queryByLabelText('浮水印')).toBeNull()
+    expect(screen.getByText('Seed · 等待时间 · 水印')).toBeInTheDocument()
+    // 内容为条件渲染 — 收起时完全不在 DOM
+    expect(screen.queryByLabelText('随机种子 (Seed)')).toBeNull()
+    expect(screen.queryByLabelText('任务最长等待时间')).toBeNull()
+    expect(screen.queryByLabelText('水印')).toBeNull()
   })
 
   it('clicking the header expands the section and toggles aria-expanded', () => {
     render(<VideoParams />)
     openAdvancedSettings()
-    const header = screen.getByRole('button', { name: /進階設定/ })
+    const header = screen.getByRole('button', { name: /高级设置/ })
     expect(header).toHaveAttribute('aria-expanded', 'true')
-    expect(screen.getByLabelText('隨機種子 (Seed)')).toBeInTheDocument()
-    expect(screen.getByLabelText('任務最長等待時間')).toBeInTheDocument()
-    expect(screen.getByLabelText('浮水印')).toBeInTheDocument()
-    // 再點一次收回
+    expect(screen.getByLabelText('随机种子 (Seed)')).toBeInTheDocument()
+    expect(screen.getByLabelText('任务最长等待时间')).toBeInTheDocument()
+    expect(screen.getByLabelText('水印')).toBeInTheDocument()
+    // 再点一次收回
     openAdvancedSettings()
-    expect(screen.queryByLabelText('隨機種子 (Seed)')).toBeNull()
+    expect(screen.queryByLabelText('随机种子 (Seed)')).toBeNull()
   })
 
   it('watermark toggle inside the section flips the store', () => {
     render(<VideoParams />)
     openAdvancedSettings()
     const initial = useVideoStore.getState().watermark
-    fireEvent.click(screen.getByLabelText('浮水印'))
+    fireEvent.click(screen.getByLabelText('水印'))
     expect(useVideoStore.getState().watermark).toBe(!initial)
   })
 })
@@ -386,7 +386,7 @@ describe('VideoParams — seed input', () => {
   it('renders the seed label and a number input defaulting to -1', () => {
     render(<VideoParams />)
     openAdvancedSettings()
-    const input = screen.getByLabelText('隨機種子 (Seed)') as HTMLInputElement
+    const input = screen.getByLabelText('随机种子 (Seed)') as HTMLInputElement
     expect(input).toBeInTheDocument()
     expect(input.value).toBe('-1')
   })
@@ -395,7 +395,7 @@ describe('VideoParams — seed input', () => {
     const user = userEvent.setup()
     render(<VideoParams />)
     openAdvancedSettings()
-    const input = screen.getByLabelText('隨機種子 (Seed)')
+    const input = screen.getByLabelText('随机种子 (Seed)')
     await user.clear(input)
     await user.type(input, '42')
     expect(useVideoStore.getState().seed).toBe(42)
@@ -406,7 +406,7 @@ describe('VideoParams — seed input', () => {
     useVideoStore.getState().setSeed(-1)
     render(<VideoParams />)
     openAdvancedSettings()
-    const dice = screen.getByRole('button', { name: '隨機 seed' })
+    const dice = screen.getByRole('button', { name: '随机 seed' })
     await user.click(dice)
 
     const seed = useVideoStore.getState().seed
@@ -415,7 +415,7 @@ describe('VideoParams — seed input', () => {
     expect(seed).toBeLessThanOrEqual(4294967295)
 
     // Visible input must reflect the new value, not stay at -1
-    const input = screen.getByLabelText('隨機種子 (Seed)') as HTMLInputElement
+    const input = screen.getByLabelText('随机种子 (Seed)') as HTMLInputElement
     expect(input.value).toBe(String(seed))
   })
 
@@ -423,7 +423,7 @@ describe('VideoParams — seed input', () => {
     const user = userEvent.setup()
     render(<VideoParams />)
     openAdvancedSettings()
-    const input = screen.getByLabelText('隨機種子 (Seed)')
+    const input = screen.getByLabelText('随机种子 (Seed)')
     await user.clear(input)
     await user.type(input, 'abc')
     expect(useVideoStore.getState().seed).toBe(-1)
@@ -441,7 +441,7 @@ describe('VideoParams — uploader limits', () => {
       })
     }
     const { container } = render(<VideoParams />)
-    // Find the 參考圖片 section by label, then check its dropzone count
+    // Find the 参考图片 section by label, then check its dropzone count
     const sections = container.querySelectorAll('.dropzone')
     // Image is the first one in DOM after asset section. With items.length === maxItems,
     // dropzone is not rendered for images. Count sections still should be 2 (video, audio).
@@ -492,11 +492,11 @@ describe('VideoParams — clickable label insert', () => {
   })
 
   it('inserts at the last-known cursor position even after the textarea loses focus', () => {
-    // 真實瀏覽器點擊插入按鈕時，textarea 會先 blur 才觸發 click——
-    // 插入位置必須用失焦前記住的游標，而不是 fallback 到結尾。
+    // 真实浏览器点击插入按钮时，textarea 会先 blur 才触发 click——
+    // 插入位置必须用失焦前记住的游标，而不是 fallback 到结尾。
     useVideoStore.setState({ prompt: 'redcar' })
     render(<VideoParams />)
-    const ta = screen.getByPlaceholderText('描述您想要生成的影片內容...') as HTMLTextAreaElement
+    const ta = screen.getByPlaceholderText('描述你想要生成的视频内容...') as HTMLTextAreaElement
     ta.focus()
     ta.setSelectionRange(3, 3)
     fireEvent.select(ta)
@@ -508,7 +508,7 @@ describe('VideoParams — clickable label insert', () => {
   it('replaces the selected range remembered before blur', () => {
     useVideoStore.setState({ prompt: 'a OLD b' })
     render(<VideoParams />)
-    const ta = screen.getByPlaceholderText('描述您想要生成的影片內容...') as HTMLTextAreaElement
+    const ta = screen.getByPlaceholderText('描述你想要生成的视频内容...') as HTMLTextAreaElement
     ta.focus()
     ta.setSelectionRange(2, 5)
     fireEvent.select(ta)
@@ -567,9 +567,9 @@ describe('VideoParams — clickable label insert', () => {
 describe('VideoParams — mode tab strip', () => {
   it('renders three mode tabs', () => {
     render(<VideoParams />)
-    expect(screen.getByRole('button', { name: /首幀/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /首帧/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /首\+尾/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /多模態/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /多模态/ })).toBeInTheDocument()
   })
 
   it('clicking a tab updates videoStore.mode', async () => {
@@ -627,9 +627,9 @@ describe('VideoParams — incompatibility banner', () => {
       ],
     })
     render(<VideoParams />)
-    // Banner header reads "{n} 個項目不相容"; the clear button matches /不相容/
+    // Banner header reads "{n} 个项目不相容"; the clear button matches /不相容/
     // too, so anchor on the header phrase to be unambiguous.
-    expect(screen.getByText(/個項目不相容/)).toBeInTheDocument()
+    expect(screen.getByText(/个项目不兼容/)).toBeInTheDocument()
   })
 
   it('clear incompatible removes all mismatched items', async () => {
@@ -643,7 +643,7 @@ describe('VideoParams — incompatibility banner', () => {
     })
     render(<VideoParams />)
     await userEvent.click(
-      screen.getByRole('button', { name: /清掉不相容項目/ }),
+      screen.getByRole('button', { name: /清掉不兼容项目/ }),
     )
     const modal = screen.getByRole('dialog')
     await userEvent.click(within(modal).getByRole('button', { name: /清掉/ }))
@@ -663,7 +663,7 @@ describe('VideoParams — incompatibility banner', () => {
       referenceVideos: [{ preview: 'v', uploading: false }],
     })
     render(<VideoParams />)
-    await userEvent.click(screen.getByRole('button', { name: /清掉不相容項目/ }))
+    await userEvent.click(screen.getByRole('button', { name: /清掉不兼容项目/ }))
     const modal = screen.getByRole('dialog')
     await userEvent.click(within(modal).getByRole('button', { name: /取消/ }))
     // State unchanged
@@ -694,7 +694,7 @@ describe('VideoParams — incompatibility banner', () => {
     expect(screen.getByRole('button', { name: /生成/ })).toBeDisabled()
     // The reason appears both inside the banner and as the inline hint
     // below the Generate button — both call sites use generateBlockReason.
-    expect(screen.getAllByText(/圖片數量與模式不符/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/图片数量与模式不符/).length).toBeGreaterThan(0)
   })
 
   it('shows banner for roleSetOK violation (both images first_frame)', () => {
@@ -708,8 +708,8 @@ describe('VideoParams — incompatibility banner', () => {
       ],
     })
     render(<VideoParams />)
-    expect(screen.getByText(/參數與目前模式不符/)).toBeInTheDocument()
-    expect(screen.getAllByText(/首尾幀模式需要恰好一張首幀與一張尾幀/).length).toBeGreaterThan(0)
+    expect(screen.getByText(/参数与当前模式不符/)).toBeInTheDocument()
+    expect(screen.getAllByText(/首尾帧模式需要恰好一张首帧与一张尾帧/).length).toBeGreaterThan(0)
   })
 
   it('asset-ref image row shows role select in first_last_frame mode', () => {
@@ -727,7 +727,7 @@ describe('execution_expires_after dropdown', () => {
   it('renders with seven preset options and 3600 selected by default', () => {
     render(<VideoParams />)
     openAdvancedSettings()
-    const select = screen.getByLabelText('任務最長等待時間') as HTMLSelectElement
+    const select = screen.getByLabelText('任务最长等待时间') as HTMLSelectElement
     expect(select).toBeInTheDocument()
     expect(select.options).toHaveLength(7)
     expect(select.value).toBe('3600')
@@ -736,7 +736,7 @@ describe('execution_expires_after dropdown', () => {
   it('updates the store when changed', () => {
     render(<VideoParams />)
     openAdvancedSettings()
-    const select = screen.getByLabelText('任務最長等待時間') as HTMLSelectElement
+    const select = screen.getByLabelText('任务最长等待时间') as HTMLSelectElement
     fireEvent.change(select, { target: { value: '14400' } })
     expect(useVideoStore.getState().executionExpiresAfter).toBe(14400)
   })

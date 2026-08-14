@@ -1,7 +1,7 @@
 // src/components/chat/ChatComposer.tsx
-// 輸入框：Enter 送出、Shift+Enter 換行；生成中顯示中止鈕。
-// 憑證未齊備時（缺 API 金鑰 / 文字接入點）於輸入卡片上方顯示引導提示，
-// 附「開啟憑證設定」一鍵開抽屜，並禁用送出鈕（比照影片/圖片頁）。
+// 输入框：Enter 送出、Shift+Enter 换行；生成中显示中止钮。
+// 凭证未齐备时（缺 API 密钥 / 文字接入点）于输入卡片上方显示引导提示，
+// 附「打开凭证设置」一键开抽屜，并禁用送出钮（比照视频/图片页）。
 import { useLayoutEffect, useRef } from 'react'
 import { useChatStore } from '../../stores/chatStore'
 import { useAuthStore } from '../../stores/authStore'
@@ -14,7 +14,7 @@ interface Props {
 }
 
 export default function ChatComposer({ onSend, onStop }: Props) {
-  // store-backed 草稿：失敗輪可把送失敗的輸入救回這裡。
+  // store-backed 草稿：失败轮可把送失败的输入救回这里。
   const text = useChatStore((s) => s.composerDraft)
   const setText = useChatStore((s) => s.setComposerDraft)
   const isGenerating = useChatStore((s) => s.isGenerating)
@@ -23,8 +23,8 @@ export default function ChatComposer({ onSend, onStop }: Props) {
   const credsBlockReason = computeCredsBlockReason(apiKey, textEndpoint)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  // 自動長高：以「值」驅動而非輸入事件，程式化改動（送出清空、編輯重送回填、
-  // 帶草稿掛載）也會同步高度。useLayoutEffect 避免 paint 前的高度跳動。
+  // 自动长高：以「值」驱动而非输入事件，程式化改动（送出清空、编辑重送回填、
+  // 带草稿挂载）也会同步高度。useLayoutEffect 避免 paint 前的高度跳动。
   useLayoutEffect(() => {
     const el = textareaRef.current
     if (!el) return
@@ -58,11 +58,11 @@ export default function ChatComposer({ onSend, onStop }: Props) {
               color: 'var(--accent)', fontSize: 12,
             }}
           >
-            開啟憑證設定
+            打开凭证设置
           </button>
         </div>
       )}
-      {/* 一體式輸入卡片：textarea 自動長高，送出/中止鈕嵌入右下 */}
+      {/* 一体式输入卡片：textarea 自动长高，送出/中止钮嵌入右下 */}
       <div className="chat-composer-card">
         <textarea
           ref={textareaRef}
@@ -74,7 +74,7 @@ export default function ChatComposer({ onSend, onStop }: Props) {
               submit()
             }
           }}
-          placeholder="輸入訊息測試模型…"
+          placeholder="输入消息测试模型…"
           rows={2}
           style={{
             width: '100%', background: 'transparent', border: 'none', outline: 'none',
@@ -84,7 +84,7 @@ export default function ChatComposer({ onSend, onStop }: Props) {
         />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
           <span style={{ fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-            Enter 送出 · Shift+Enter 換行
+            Enter 送出 · Shift+Enter 换行
           </span>
           {isGenerating ? (
             <button

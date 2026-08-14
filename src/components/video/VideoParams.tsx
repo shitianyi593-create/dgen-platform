@@ -12,6 +12,8 @@ import type { ImageRole } from '../../types'
 import { computeContentLabels } from '../../utils/contentLabels'
 import { computeCompatibility } from '../../utils/videoMode'
 import { computePanelScale, scaledFs } from '../../utils/panelScale'
+import { useOptionalI18n } from '../../i18n/useOptionalI18n'
+import type { Locale } from '../../i18n/locales'
 /** Default width when no parent overrides — used as the scale=1 baseline. */
 export const VIDEO_PARAMS_DEFAULT_WIDTH = 320
 
@@ -43,7 +45,33 @@ const ROLE_BADGE: Record<ImageRole, string> = {
   reference_image: 'REF',
 }
 
+function ratioLabel(value: string, locale: Locale) {
+  const zh = locale === 'zh-CN'
+  switch (value) {
+    case 'adaptive': return zh ? 'Adaptive（自动依输入选择）' : 'Adaptive (based on input)'
+    case '16:9': return zh ? '16:9 (横向)' : '16:9 (landscape)'
+    case '9:16': return zh ? '9:16 (竖向)' : '9:16 (portrait)'
+    case '1:1': return zh ? '1:1 (方形)' : '1:1 (square)'
+    case '21:9': return zh ? '21:9 (超宽)' : '21:9 (ultrawide)'
+    default: return value
+  }
+}
+
+function durationLabel(value: number, locale: Locale) {
+  if (value === -1) return locale === 'zh-CN' ? 'Auto（模型自选）' : 'Auto (model decides)'
+  return locale === 'zh-CN' ? `${value} 秒` : `${value}s`
+}
+
+function executionExpiresLabel(value: number, locale: Locale) {
+  const zh = locale === 'zh-CN'
+  const hours = value / 3600
+  if (hours === 1) return zh ? '1 小时 (默认)' : '1 hour (default)'
+  if (hours === 72) return zh ? '72 小时 (最长)' : '72 hours (max)'
+  return zh ? `${hours} 小时` : `${hours} hours`
+}
+
 export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: VideoParamsProps) {
+  const { locale, t } = useOptionalI18n()
   const {
     apiKey, endpoint,
   } = useAuthStore()
@@ -109,7 +137,7 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
 
   const [showClearConfirm, setShowClearConfirm] = useState(false)
 
-  // 進階設定折疊（Seed / 任務最長等待時間 / 浮水印）— 預設收合。
+  // 高级设置折叠（Seed / 任务最长等待时间 / 水印）— 默认收起。
   const [advancedOpen, setAdvancedOpen] = useState(false)
 
   const { generate } = useVideoGeneration()
@@ -126,7 +154,7 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
   // insert button blurs the textarea BEFORE the click lands, so reading
   // selectionStart at click time (or gating on document.activeElement)
   // always degrades to append-at-end — this ref is what preserves the
-  // caret across that blur. External prompt rewrites (載入參數 / 新任務)
+  // caret across that blur. External prompt rewrites (加载参数 / 新任务)
   // can leave the offsets stale, but slice() and setSelectionRange() both
   // clamp out-of-range values, so the worst case is an end-of-string insert.
   const selectionRef = useRef<{ start: number; end: number } | null>(null)
@@ -162,15 +190,15 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
   // useVideoGeneration.ts:97-107 so the inline hint matches the toast users
   // would see if they somehow clicked through.
   const generateBlockReason: string | null =
-    !apiKey ? '請輸入 API 金鑰'
-    : !endpoint ? '請輸入影片生成接入點 (Endpoint)'
-    : !prompt.trim() ? '請輸入提示詞'
-    : !compat.imageCountOK ? '圖片數量與模式不符'
-    : !compat.roleSetOK ? '首尾幀模式需要恰好一張首幀與一張尾幀'
-    : compat.incompatibleImageIndexes.length ? '部分圖片 role 與模式不符'
-    : compat.incompatibleVideosFlag ? '此模式不允許參考影片'
-    : compat.incompatibleAudiosFlag ? '此模式不允許參考音訊'
-    : compat.incompatibleAssetRefIndexes.length ? '部分 asset 參考與模式不符'
+    !apiKey ? t('video.block.apiKey')
+    : !endpoint ? t('video.block.endpoint')
+    : !prompt.trim() ? t('video.block.prompt')
+    : !compat.imageCountOK ? t('video.block.imageCount')
+    : !compat.roleSetOK ? t('video.block.roleSet')
+    : compat.incompatibleImageIndexes.length ? t('video.block.imageRole')
+    : compat.incompatibleVideosFlag ? t('video.block.videoNotAllowed')
+    : compat.incompatibleAudiosFlag ? t('video.block.audioNotAllowed')
+    : compat.incompatibleAssetRefIndexes.length ? t('video.block.assetRef')
     : null
 
   // T25 / I1: trigger the incompatibility banner for ALL canGenerate failure
@@ -187,8 +215,8 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
   )
 
   const panelScale = computePanelScale(width, VIDEO_PARAMS_DEFAULT_WIDTH)
-  // 捲動內容 + sticky footer（handoff §B1）：外層鎖 overflow，
-  // 內容區獨立捲動，CTA / 提示 / 任務進行中固定在 footer。
+  // 滚动内容 + sticky footer（handoff §B1）：外层锁 overflow，
+  // 内容区独立滚动，CTA / 提示 / 任务进行中固定在 footer。
   const panelStyle: CSSProperties = {
     width,
     flexShrink: 0,
@@ -207,7 +235,7 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
       <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
       {/* Model */}
       <div style={{ marginBottom: 16 }}>
-        <label className="label">模型</label>
+        <label className="label">{t('video.model')}</label>
         <select className="select-field" disabled>
           <option>Seedance 2.0</option>
         </select>
@@ -221,11 +249,11 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
           justifyContent: 'space-between',
           marginBottom: 6,
         }}>
-          <label className="label" style={{ margin: 0 }}>提示詞</label>
+          <label className="label" style={{ margin: 0 }}>{t('video.prompt')}</label>
           <button
             type="button"
             onClick={() => resetForNewTask()}
-            title="清除提示詞與所有參考素材，開始新任務"
+            title={t('video.newTaskTitle')}
             style={{
               background: 'none',
               border: 'none',
@@ -236,13 +264,13 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
               padding: 0,
             }}
           >
-            新任務
+            {t('video.newTask')}
           </button>
         </div>
         <textarea
           ref={promptRef}
           className="input-field"
-          placeholder="描述您想要生成的影片內容..."
+          placeholder={t('video.promptPlaceholder')}
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           onSelect={(e) => captureSelection(e.currentTarget)}
@@ -251,13 +279,13 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
           style={{ resize: 'vertical', minHeight: 80 }}
         />
         <div className="hint" style={{ marginTop: 4 }}>
-          可用 <code>[Image 1]</code> / <code>[Video 1]</code> / <code>[Audio 1]</code> 引用素材；各項目右下角會顯示對應編號。
+          {t('video.promptHint')}
         </div>
       </div>
 
       {/* Mode tabs */}
       <div style={{ marginBottom: 12 }}>
-        <label className="label">影片生成模式</label>
+        <label className="label">{t('video.mode')}</label>
         <div style={{
           display: 'flex', gap: 2,
           background: 'var(--bg-input)',
@@ -265,9 +293,9 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
           padding: 3,
         }}>
           {([
-            { v: 'first_frame', label: '首幀' },
-            { v: 'first_last_frame', label: '首+尾' },
-            { v: 'multimodal', label: '多模態' },
+            { v: 'first_frame', label: t('video.mode.firstFrame') },
+            { v: 'first_last_frame', label: t('video.mode.firstLastFrame') },
+            { v: 'multimodal', label: t('video.mode.multimodal') },
           ] as const).map((m) => (
             <button
               key={m.v}
@@ -292,9 +320,9 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
           ))}
         </div>
         <div className="hint" style={{ marginTop: 6 }}>
-          {mode === 'first_frame' && '用單張首幀圖生影片；可串接尾幀做長片'}
-          {mode === 'first_last_frame' && '首尾畫面嚴格鎖定為指定圖片'}
-          {mode === 'multimodal' && '圖 + 影 + 音 多模態參考，0-9 張圖'}
+          {mode === 'first_frame' && t('video.modeHint.firstFrame')}
+          {mode === 'first_last_frame' && t('video.modeHint.firstLastFrame')}
+          {mode === 'multimodal' && t('video.modeHint.multimodal')}
         </div>
       </div>
 
@@ -315,10 +343,10 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
         }}>
           <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
             {incompatCount > 0
-              ? `${incompatCount} 個項目不相容`
-              : '參數與目前模式不符'}
+              ? t('video.incompat.count', { count: incompatCount })
+              : t('video.incompat.params')}
           </div>
-          <div style={{ marginTop: 2 }}>{generateBlockReason ?? '切換模式後部分項目不符合 API 規則'}</div>
+          <div style={{ marginTop: 2 }}>{generateBlockReason ?? t('video.incompat.defaultHint')}</div>
           {incompatCount > 0 && (
             <button
               type="button"
@@ -335,7 +363,7 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
                 cursor: 'pointer',
               }}
             >
-              清掉不相容項目
+              {t('video.incompat.clear')}
             </button>
           )}
         </div>
@@ -346,7 +374,7 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
       <div style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
           <span className="label" style={{ margin: 0 }}>
-            Asset 參考 <span style={{ color: 'var(--text-muted)' }}>({assetRefs.length})</span>
+            {t('video.assetReference')} <span style={{ color: 'var(--text-muted)' }}>({assetRefs.length})</span>
           </span>
           <button
             type="button"
@@ -361,7 +389,7 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
               padding: 0,
             }}
           >
-            + 新增
+            {t('video.add')}
           </button>
         </div>
         {assetRefs.map((ref, idx) => {
@@ -392,13 +420,13 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
               onChange={(e) => updateAssetRef(idx, { type: e.target.value as 'image' | 'video' | 'audio' })}
               style={{ width: 72, flexShrink: 0 }}
             >
-              <option value="image">圖片</option>
-              <option value="video">影片</option>
-              <option value="audio">音訊</option>
+              <option value="image">{t('video.type.image')}</option>
+              <option value="video">{t('video.type.video')}</option>
+              <option value="audio">{t('video.type.audio')}</option>
             </select>
             <input
               className="input-field"
-              placeholder="asset-xxxxx 或 https://..."
+              placeholder={t('video.assetPlaceholder')}
               value={ref.id}
               onChange={(e) => updateAssetRef(idx, { id: e.target.value })}
               style={{ flex: 1 }}
@@ -418,8 +446,8 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
                   flexShrink: 0,
                 }}
               >
-                <option value="first_frame">首幀</option>
-                <option value="last_frame">尾幀</option>
+                <option value="first_frame">{t('video.role.firstFrame')}</option>
+                <option value="last_frame">{t('video.role.lastFrame')}</option>
               </select>
             )}
             {(() => {
@@ -431,18 +459,18 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
                   data-testid="asset-label"
                   aria-label={
                     insertable
-                      ? `插入 ${labelText} 到提示詞`
-                      : '請先填入有效的 asset id / URI / URL'
+                      ? t('video.insertAssetLabel', { label: labelText })
+                      : t('video.invalidAssetLabel')
                   }
                   title={
                     insertable
-                      ? '點擊將此標籤插入到提示詞'
-                      : '請先填入 asset id（asset-… / asset://… / http(s)://…）'
+                      ? t('video.insertAssetTitle')
+                      : t('video.invalidAssetTitle')
                   }
                   disabled={!insertable}
                   onClick={() => insertIntoPrompt(labelText)}
                   style={{
-                    // Ghost 樣式（handoff §B5）：降權的插入標籤鈕。
+                    // Ghost 样式（handoff §B5）：降权的插入标签钮。
                     // Disabled state mirrors `.input-field` chrome so the
                     // button reads as part of the same input strip until the
                     // user types something insertable.
@@ -482,7 +510,7 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
             <button
               type="button"
               className="icon-btn danger"
-              aria-label="移除 asset 參考"
+              aria-label={t('video.removeAssetReference')}
               onClick={() => removeAssetRef(idx)}
               style={{ width: 26, height: 26, flexShrink: 0 }}
             >
@@ -492,7 +520,7 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
           )
         })}
         <div className="hint">
-          輸入 asset ID（如 asset-20260224213258-pnqkh）以 asset:// URI 送出；或直接貼上 https URL（例如前一段任務的 video_url / last_frame_url）作為串接輸入。
+          {t('video.assetHint')}
         </div>
       </div>
 
@@ -500,10 +528,10 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
       <MediaUploader
         label={
           mode === 'first_frame'
-            ? '首幀圖片'
+            ? t('video.referenceImages.firstFrame')
             : mode === 'first_last_frame'
-              ? '首尾幀圖片'
-              : '參考圖片'
+              ? t('video.referenceImages.firstLastFrame')
+              : t('video.referenceImages.default')
         }
         accept={{ 'image/*': ['.png', '.jpg', '.jpeg', '.webp'] }}
         items={referenceImages}
@@ -512,7 +540,7 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
         onRemove={removeReferenceImage}
         hint={
           mode === 'multimodal'
-            ? '0–9 張；1 張＝圖生影片，多張＝多模態 / 角色參考'
+            ? t('video.referenceImages.hint')
             : undefined
         }
         labels={labels.imageLabels}
@@ -526,40 +554,40 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
 
       {/* Reference Videos */}
       <MediaUploader
-        label="參考影片"
+        label={t('video.referenceVideo')}
         accept={{ 'video/*': ['.mp4', '.mov', '.webm'] }}
         items={referenceVideos}
         maxItems={3}
         onAdd={addReferenceVideo}
         onRemove={removeReferenceVideo}
-        hint="0–3 段，總長 ≤ 15 秒（mp4 / mov）"
+        hint={t('video.referenceVideo.hint')}
         labels={labels.videoLabels}
         onLabelClick={insertIntoPrompt}
         disabled={!tosReady}
-        disabledHint="請先設定物件儲存憑證"
+        disabledHint={t('video.objectStorageRequired')}
         locked={mode !== 'multimodal'}
-        lockedHint="此模式不支援，需多模態模式才能使用"
+        lockedHint={t('video.modeRequiresMultimodal')}
       />
 
       {/* Reference Audio */}
       <MediaUploader
-        label="參考音訊"
+        label={t('video.referenceAudio')}
         accept={{ 'audio/*': ['.mp3', '.wav', '.aac', '.m4a'] }}
         items={referenceAudios}
         maxItems={3}
         onAdd={addReferenceAudio}
         onRemove={removeReferenceAudio}
-        hint="0–3 段，總長 ≤ 15 秒（wav / mp3）"
+        hint={t('video.referenceAudio.hint')}
         labels={labels.audioLabels}
         onLabelClick={insertIntoPrompt}
         disabled={!tosReady}
-        disabledHint="請先設定物件儲存憑證"
+        disabledHint={t('video.objectStorageRequired')}
         locked={mode !== 'multimodal'}
-        lockedHint="此模式不支援"
+        lockedHint={t('video.modeUnsupported')}
       />
 
-      {/* 基本參數 — 解析度 / 畫面比例 / 影片長度 3 欄 grid（handoff §B3）。
-          DOM 順序維持 解析度 → 畫面比例 → 影片長度。 */}
+      {/* 基本参数 — 分辨率 / 画面比例 / 视频长度 3 栏 grid（handoff §B3）。
+          DOM 顺序维持 分辨率 → 画面比例 → 视频长度。 */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr 1fr',
@@ -567,45 +595,45 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
         marginBottom: 16,
       }}>
         <div>
-          <label className="label" style={{ fontSize: scaledFs(11), color: 'var(--text-muted)', marginBottom: 4 }}>解析度</label>
+          <label className="label" style={{ fontSize: scaledFs(11), color: 'var(--text-muted)', marginBottom: 4 }}>{t('video.resolution')}</label>
           <select
             className="select-field"
             value={resolution}
             onChange={(e) => setResolution(e.target.value)}
           >
             {RESOLUTION_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <option key={o.value} value={o.value}>{o.value}</option>
             ))}
           </select>
         </div>
         <div>
-          <label className="label" style={{ fontSize: scaledFs(11), color: 'var(--text-muted)', marginBottom: 4 }}>畫面比例</label>
+          <label className="label" style={{ fontSize: scaledFs(11), color: 'var(--text-muted)', marginBottom: 4 }}>{t('video.aspectRatio')}</label>
           <select
             className="select-field"
             value={ratio}
             onChange={(e) => setRatio(e.target.value)}
           >
             {RATIO_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <option key={o.value} value={o.value}>{ratioLabel(o.value, locale)}</option>
             ))}
           </select>
         </div>
         <div>
-          <label className="label" style={{ fontSize: scaledFs(11), color: 'var(--text-muted)', marginBottom: 4 }}>影片長度</label>
+          <label className="label" style={{ fontSize: scaledFs(11), color: 'var(--text-muted)', marginBottom: 4 }}>{t('video.duration')}</label>
           <select
             className="select-field"
             value={duration}
             onChange={(e) => setDuration(Number(e.target.value))}
           >
             {DURATION_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <option key={o.value} value={o.value}>{durationLabel(o.value, locale)}</option>
             ))}
           </select>
         </div>
       </div>
 
       {/* Toggle: Return Last Frame — sr-only checkbox + label（a11y，§B4）。
-          視覺 span 保留 toggle 類與 data-testid。 */}
+          视觉 span 保留 toggle 类与 data-testid。 */}
       <div style={{ marginBottom: 12 }}>
         <label
           htmlFor="video-return-last-frame"
@@ -617,14 +645,14 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
           }}
         >
           <div>
-            <span style={{ fontSize: scaledFs(14) }}>回傳尾幀</span>
-            <div className="hint" style={{ marginTop: 2 }}>方便將前段尾幀作為下段首幀串接出長片</div>
+            <span style={{ fontSize: scaledFs(14) }}>{t('video.returnLastFrame')}</span>
+            <div className="hint" style={{ marginTop: 2 }}>{t('video.returnLastFrameHint')}</div>
           </div>
           <input
             id="video-return-last-frame"
             className="sr-only"
             type="checkbox"
-            aria-label="回傳尾幀"
+            aria-label={t('video.returnLastFrame')}
             checked={returnLastFrame}
             onChange={(e) => setReturnLastFrame(e.target.checked)}
           />
@@ -648,12 +676,12 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
             cursor: 'pointer',
           }}
         >
-          <span style={{ fontSize: scaledFs(14) }}>生成音訊</span>
+          <span style={{ fontSize: scaledFs(14) }}>{t('video.generateAudio')}</span>
           <input
             id="video-generate-audio"
             className="sr-only"
             type="checkbox"
-            aria-label="生成音訊"
+            aria-label={t('video.generateAudio')}
             checked={generateAudio}
             onChange={(e) => setGenerateAudio(e.target.checked)}
           />
@@ -665,8 +693,8 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
         </label>
       </div>
 
-      {/* 進階設定折疊（handoff §B2）— Seed / 任務最長等待時間 / 浮水印。
-          預設收合；內容條件渲染。 */}
+      {/* 高级设置折叠（handoff §B2）— Seed / 任务最长等待时间 / 水印。
+          默认收起；内容条件渲染。 */}
       <div style={{ border: '1px solid var(--border)', borderRadius: 8, marginBottom: 16 }}>
         <button
           type="button"
@@ -695,14 +723,14 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
               transition: 'transform 0.15s',
             }}
           />
-          <span style={{ flex: 1, fontSize: scaledFs(13), fontWeight: 500 }}>進階設定</span>
-          <span style={{ fontSize: scaledFs(11), color: 'var(--text-muted)' }}>Seed · 等待時間 · 浮水印</span>
+          <span style={{ flex: 1, fontSize: scaledFs(13), fontWeight: 500 }}>{t('video.advanced')}</span>
+          <span style={{ fontSize: scaledFs(11), color: 'var(--text-muted)' }}>{t('video.advancedSummary')}</span>
         </button>
         {advancedOpen && (
           <div style={{ padding: '12px 12px 4px', borderTop: '1px solid var(--border)' }}>
             {/* Seed */}
             <div style={{ marginBottom: 16 }}>
-              <label className="label" htmlFor="video-seed-input">隨機種子 (Seed)</label>
+              <label className="label" htmlFor="video-seed-input">{t('video.seed')}</label>
               <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                 <input
                   id="video-seed-input"
@@ -722,8 +750,8 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
                 />
                 <button
                   type="button"
-                  aria-label="隨機 seed"
-                  title="產生隨機 seed（可重現的固定值）"
+                  aria-label={t('video.randomSeed')}
+                  title={t('video.randomSeedTitle')}
                   onClick={() => {
                     const n = Math.floor(Math.random() * 4294967296)
                     setSeed(n)
@@ -740,17 +768,17 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
                     flexShrink: 0,
                   }}
                 >
-                  隨機
+                  {t('video.random')}
                 </button>
               </div>
               <div className="hint" style={{ marginTop: 4 }}>
-                <code>-1</code> 代表每次隨機；指定整數可在相同提示詞下取得相似輸出。
+                {t('video.seedHint')}
               </div>
             </div>
 
             {/* Execution expires after — task TTL, sent to ARK as execution_expires_after */}
             <div style={{ marginBottom: 16 }}>
-              <label className="label" htmlFor="video-exec-expires">任務最長等待時間</label>
+              <label className="label" htmlFor="video-exec-expires">{t('video.executionExpires')}</label>
               <select
                 id="video-exec-expires"
                 className="input-field"
@@ -758,11 +786,11 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
                 onChange={(e) => setExecutionExpiresAfter(Number(e.target.value))}
               >
                 {EXECUTION_EXPIRES_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
+                  <option key={o.value} value={o.value}>{executionExpiresLabel(o.value, locale)}</option>
                 ))}
               </select>
               <div className="hint" style={{ marginTop: 4 }}>
-                達到時間且任務仍未完成（含排隊）會被自動標記為 expired。
+                {t('video.executionExpiresHint')}
               </div>
             </div>
 
@@ -778,14 +806,14 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
                 }}
               >
                 <div>
-                  <span style={{ fontSize: scaledFs(14) }}>浮水印</span>
-                  <div className="hint" style={{ marginTop: 2 }}>在輸出中加入浮水印</div>
+                  <span style={{ fontSize: scaledFs(14) }}>{t('video.watermark')}</span>
+                  <div className="hint" style={{ marginTop: 2 }}>{t('video.watermarkHint')}</div>
                 </div>
                 <input
                   id="video-watermark"
                   className="sr-only"
                   type="checkbox"
-                  aria-label="浮水印"
+                  aria-label={t('video.watermark')}
                   checked={watermark}
                   onChange={(e) => setWatermark(e.target.checked)}
                 />
@@ -824,7 +852,7 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
           }}
         >
           <Icon name="play" size={14} />
-          生成影片
+          {t('video.generate')}
         </button>
         {generateBlockReason && credsOK && (
           <div className="hint" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
@@ -846,7 +874,7 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
             gap: 6,
           }}>
             <span className="spinner" style={{ width: 12, height: 12 }} />
-            {activeCount} 個任務進行中
+            {t('video.activeTasks', { count: activeCount })}
           </div>
         )}
       </div>
@@ -856,9 +884,9 @@ export default function VideoParams({ width = VIDEO_PARAMS_DEFAULT_WIDTH }: Vide
           the video / audio bulk removals walk from the end. */}
       <ConfirmModal
         open={showClearConfirm}
-        title={`清掉 ${incompatCount} 個不相容項目？`}
-        subtitle="保留與目前模式相容的部分。"
-        confirmLabel="清掉"
+        title={t('video.incompat.confirmTitle', { count: incompatCount })}
+        subtitle={t('video.incompat.confirmSubtitle')}
+        confirmLabel={t('video.incompat.confirmLabel')}
         variant="danger"
         onConfirm={() => {
           const s = useVideoStore.getState()

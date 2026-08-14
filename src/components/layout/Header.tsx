@@ -7,8 +7,8 @@ import { useI18n } from '../../i18n/useI18n'
 import type { MessageKey } from '../../i18n/locales'
 import { LanguageSwitcher } from './LanguageSwitcher'
 
-// Only the implemented tabs are shown. 語音模型 is still in the roadmap
-// (see README "後續開發") but not built yet — kept out of nav so users
+// Only the implemented tabs are shown. 语音模型 is still in the roadmap
+// (see README "后续开发") but not built yet — kept out of nav so users
 // don't click into a placeholder.
 const TABS: Array<{ path: string; labelKey: MessageKey }> = [
   { path: '/video', labelKey: 'nav.video' },
@@ -47,7 +47,7 @@ export default function Header() {
       </div>
 
       {/* Tabs — nowrap + no-shrink so the CJK labels can't wrap inside the
-          fixed 56px header band. The 5th tab (影片生成 2.5) narrowed the
+          fixed 56px header band. The 5th tab (视频生成 2.5) narrowed the
           slack between the logo block and the status pills; without these
           the labels start wrapping around ~1100px viewport width. */}
       <nav

@@ -13,10 +13,10 @@ import ToastProgress from '../components/common/ToastProgress'
  * Replaces the in-page `<DeleteProgressPanel>` and `<UploadProgressPanel>`
  * components from the previous layout (spec §4.3).
  *
- * @param onShowFailDetails Called when the user clicks "查看詳情" on a
+ * @param onShowFailDetails Called when the user clicks "查看详情" on a
  *   finished delete job that has at least one failure. The host page is
  *   responsible for opening a modal that lists the failed items + offers
- *   a "重試失敗項" action.
+ *   a "重试失败项" action.
  */
 export function useAssetJobToasts(onShowFailDetails: () => void) {
   const deleteJob = useAssetStore((s) => s.deleteJob)
@@ -38,7 +38,7 @@ export function useAssetJobToasts(onShowFailDetails: () => void) {
         () => (
           <ToastProgress
             kind="delete"
-            title="刪除中"
+            title="删除中"
             current={current}
             total={total}
             status="running"
@@ -53,7 +53,7 @@ export function useAssetJobToasts(onShowFailDetails: () => void) {
       const subtitle =
         deleteJob.status === 'aborted'
           ? deleteJob.abortReason
-          : `成功 ${deleteJob.succeeded}，失敗 ${failedCount}`
+          : `成功 ${deleteJob.succeeded}，失败 ${failedCount}`
       toast.custom(
         () => (
           <ToastProgress
@@ -61,7 +61,7 @@ export function useAssetJobToasts(onShowFailDetails: () => void) {
             title={
               deleteJob.status === 'aborted'
                 ? `已中止（${deleteJob.succeeded}/${total}）`
-                : `${failedCount} 個失敗`
+                : `${failedCount} 个失败`
             }
             current={current}
             total={total}
@@ -69,7 +69,7 @@ export function useAssetJobToasts(onShowFailDetails: () => void) {
             subtitle={subtitle}
             errorAction={
               failedCount > 0
-                ? { label: '查看詳情', onClick: onShowFailDetails }
+                ? { label: '查看详情', onClick: onShowFailDetails }
                 : undefined
             }
             onDismiss={() => useAssetStore.getState().clearDeleteJob()}
@@ -85,7 +85,7 @@ export function useAssetJobToasts(onShowFailDetails: () => void) {
       () => (
         <ToastProgress
           kind="delete"
-          title={`已刪除 ${deleteJob.succeeded} 個`}
+          title={`已删除 ${deleteJob.succeeded} 个`}
           current={total}
           total={total}
           status="success"
@@ -111,7 +111,7 @@ export function useAssetJobToasts(onShowFailDetails: () => void) {
       () => (
         <ToastProgress
           kind="upload"
-          title={`上傳中（${uploads.length}）`}
+          title={`上传中（${uploads.length}）`}
           current={done}
           total={total}
           status="running"

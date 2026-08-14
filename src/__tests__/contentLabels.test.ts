@@ -1,12 +1,12 @@
 /**
- * contentLabels 純函式測試
+ * contentLabels 纯函数测试
  *
- * 涵蓋需求：
- * - 純 reference 媒體（無 asset）→ image/video/audio 各自從 1 起算
- * - 含 image-type asset → 接續在 referenceImages 後計數
- * - asset 順序混合（video → image → image）→ 各自獨立計數
- * - 全空 → 全空陣列
- * - formatLabel 輸出 `[Image 1]`（有空格）形式
+ * 涵盖需求：
+ * - 纯 reference 媒体（无 asset）→ image/video/audio 各自从 1 起算
+ * - 含 image-type asset → 接续在 referenceImages 后计数
+ * - asset 顺序混合（video → image → image）→ 各自独立计数
+ * - 全空 → 全空阵列
+ * - formatLabel 输出 `[Image 1]`（有空格）形式
  */
 import { describe, it, expect } from 'vitest'
 import { computeContentLabels, formatLabel } from '../utils/contentLabels'

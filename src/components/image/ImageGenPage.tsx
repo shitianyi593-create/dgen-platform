@@ -3,6 +3,7 @@ import ImagePreview from './ImagePreview'
 import ImageHistory, { IMAGE_HISTORY_DEFAULT_WIDTH } from './ImageHistory'
 import ResizeHandle from '../common/ResizeHandle'
 import { useResizableWidth } from '../../hooks/useResizableWidth'
+import { useOptionalI18n } from '../../i18n/useOptionalI18n'
 
 const PARAMS_MIN = 240
 const PARAMS_MAX = 520
@@ -10,6 +11,7 @@ const HISTORY_MIN = 220
 const HISTORY_MAX = 520
 
 export default function ImageGenPage() {
+  const { t } = useOptionalI18n()
   const [paramsWidth, setParamsWidth] = useResizableWidth({
     storageKey: 'imageGenPage.paramsWidth',
     defaultWidth: IMAGE_PARAMS_DEFAULT_WIDTH,
@@ -28,7 +30,7 @@ export default function ImageGenPage() {
       <ImageParams width={paramsWidth} />
       <ResizeHandle
         side="left"
-        ariaLabel="拖曳調整參數欄寬度"
+        ariaLabel={t('video.resize.params')}
         getCurrentWidth={() => paramsWidth}
         onResize={setParamsWidth}
         resetWidth={IMAGE_PARAMS_DEFAULT_WIDTH}
@@ -36,7 +38,7 @@ export default function ImageGenPage() {
       <ImagePreview />
       <ResizeHandle
         side="right"
-        ariaLabel="拖曳調整生成紀錄寬度"
+        ariaLabel={t('video.resize.history')}
         getCurrentWidth={() => historyWidth}
         onResize={setHistoryWidth}
         resetWidth={IMAGE_HISTORY_DEFAULT_WIDTH}

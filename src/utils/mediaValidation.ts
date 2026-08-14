@@ -77,11 +77,11 @@ export const AUDIO_LIMITS = {
 } as const
 
 /**
- * Seedream 參考圖（輸入圖）限制。格式清單與 ARK Asset 共用
- * `IMAGE_LIMITS.exts/mimes`；maxBytes 目前恰好等於 IMAGE_LIMITS.maxBytes
- * （30 MB），但屬巧合 — 兩者規則來源不同（Seedream API vs ARK Asset），
- * 故維持獨立常數。maxTotalPx（6000×6000 = 36,000,000）為 forward
- * declaration，供未來 async probe / API 端把關使用，sync basic 不檢查。
+ * Seedream 参考图（输入图）限制。格式清单与 ARK Asset 共用
+ * `IMAGE_LIMITS.exts/mimes`；maxBytes 目前恰好等于 IMAGE_LIMITS.maxBytes
+ * （30 MB），但属巧合 — 两者规则来源不同（Seedream API vs ARK Asset），
+ * 故维持独立常数。maxTotalPx（6000×6000 = 36,000,000）为 forward
+ * declaration，供未来 async probe / API 端把关使用，sync basic 不检查。
  */
 export const SEEDREAM_REF_LIMITS = {
   maxBytes: 30 * 1024 * 1024,
@@ -103,7 +103,7 @@ function checkFormat(
   const okExt = exts.includes(e)
   const okMime = !file.type || mimes.includes(file.type.toLowerCase())
   if (!okExt && !okMime) {
-    errors.push(`不支援的檔案格式（${file.name}）。允許：${exts.join(', ')}`)
+    errors.push(`不支持的文件格式（${file.name}）。允许：${exts.join(', ')}`)
   }
   return errors
 }
@@ -117,7 +117,7 @@ function fmtMB(bytes: number): string {
 export function validateImageBasic(file: File): ValidationResult {
   const errors = checkFormat(file, IMAGE_LIMITS.exts, IMAGE_LIMITS.mimes)
   if (file.size > IMAGE_LIMITS.maxBytes) {
-    errors.push(`圖片大小超過 30 MB（${fmtMB(file.size)} MB）`)
+    errors.push(`图片大小超过 30 MB（${fmtMB(file.size)} MB）`)
   }
   return { ok: errors.length === 0, errors }
 }
@@ -125,7 +125,7 @@ export function validateImageBasic(file: File): ValidationResult {
 export function validateVideoBasic(file: File): ValidationResult {
   const errors = checkFormat(file, VIDEO_LIMITS.exts, VIDEO_LIMITS.mimes)
   if (file.size > VIDEO_LIMITS.maxBytes) {
-    errors.push(`影片大小超過 50 MB（${fmtMB(file.size)} MB）`)
+    errors.push(`视频大小超过 50 MB（${fmtMB(file.size)} MB）`)
   }
   return { ok: errors.length === 0, errors }
 }
@@ -133,16 +133,16 @@ export function validateVideoBasic(file: File): ValidationResult {
 export function validateAudioBasic(file: File): ValidationResult {
   const errors = checkFormat(file, AUDIO_LIMITS.exts, AUDIO_LIMITS.mimes)
   if (file.size > AUDIO_LIMITS.maxBytes) {
-    errors.push(`音訊大小超過 15 MB（${fmtMB(file.size)} MB）`)
+    errors.push(`音频大小超过 15 MB（${fmtMB(file.size)} MB）`)
   }
   return { ok: errors.length === 0, errors }
 }
 
-/** Seedream 參考圖同步 basic 驗證：格式 + 大小。尺寸/比例由 async probe 或 API 端把關。 */
+/** Seedream 参考图同步 basic 验证：格式 + 大小。尺寸/比例由 async probe 或 API 端把关。 */
 export function validateSeedreamRefBasic(file: File): ValidationResult {
   const errors = checkFormat(file, IMAGE_LIMITS.exts, IMAGE_LIMITS.mimes)
   if (file.size > SEEDREAM_REF_LIMITS.maxBytes) {
-    errors.push(`圖片大小超過 30 MB（${fmtMB(file.size)} MB）`)
+    errors.push(`图片大小超过 30 MB（${fmtMB(file.size)} MB）`)
   }
   return { ok: errors.length === 0, errors }
 }
@@ -252,13 +252,13 @@ export async function validateImage(file: File): Promise<ValidationResult> {
       height > IMAGE_LIMITS.maxPx
     ) {
       errors.push(
-        `尺寸需在 ${IMAGE_LIMITS.minPx}–${IMAGE_LIMITS.maxPx}px（實際 ${width}×${height}）`,
+        `尺寸需在 ${IMAGE_LIMITS.minPx}–${IMAGE_LIMITS.maxPx}px（实际 ${width}×${height}）`,
       )
     }
     const aspect = width / height
     if (aspect < IMAGE_LIMITS.minAspect || aspect > IMAGE_LIMITS.maxAspect) {
       errors.push(
-        `寬高比需在 ${IMAGE_LIMITS.minAspect}–${IMAGE_LIMITS.maxAspect}（實際 ${aspect.toFixed(2)}）`,
+        `宽高比需在 ${IMAGE_LIMITS.minAspect}–${IMAGE_LIMITS.maxAspect}（实际 ${aspect.toFixed(2)}）`,
       )
     }
     return { ok: errors.length === 0, errors }
@@ -280,7 +280,7 @@ export async function validateVideo(file: File): Promise<ValidationResult> {
       durationSec > VIDEO_LIMITS.maxDurationSec
     ) {
       errors.push(
-        `影片長度需 ${VIDEO_LIMITS.minDurationSec}–${VIDEO_LIMITS.maxDurationSec} 秒（實際 ${durationSec.toFixed(1)}s）`,
+        `视频长度需 ${VIDEO_LIMITS.minDurationSec}–${VIDEO_LIMITS.maxDurationSec} 秒（实际 ${durationSec.toFixed(1)}s）`,
       )
     }
     if (width && height) {
@@ -291,18 +291,18 @@ export async function validateVideo(file: File): Promise<ValidationResult> {
         height > VIDEO_LIMITS.maxPx
       ) {
         errors.push(
-          `尺寸需在 ${VIDEO_LIMITS.minPx}–${VIDEO_LIMITS.maxPx}px（實際 ${width}×${height}）`,
+          `尺寸需在 ${VIDEO_LIMITS.minPx}–${VIDEO_LIMITS.maxPx}px（实际 ${width}×${height}）`,
         )
       }
       const aspect = width / height
       if (aspect < VIDEO_LIMITS.minAspect || aspect > VIDEO_LIMITS.maxAspect) {
         errors.push(
-          `寬高比需在 ${VIDEO_LIMITS.minAspect}–${VIDEO_LIMITS.maxAspect}（實際 ${aspect.toFixed(2)}）`,
+          `宽高比需在 ${VIDEO_LIMITS.minAspect}–${VIDEO_LIMITS.maxAspect}（实际 ${aspect.toFixed(2)}）`,
         )
       }
       if (totalPx < VIDEO_LIMITS.minTotalPx || totalPx > VIDEO_LIMITS.maxTotalPx) {
         errors.push(
-          `總像素需 ${VIDEO_LIMITS.minTotalPx}–${VIDEO_LIMITS.maxTotalPx}（實際 ${totalPx}）`,
+          `总像素需 ${VIDEO_LIMITS.minTotalPx}–${VIDEO_LIMITS.maxTotalPx}（实际 ${totalPx}）`,
         )
       }
     }
@@ -323,7 +323,7 @@ export async function validateAudio(file: File): Promise<ValidationResult> {
       durationSec > AUDIO_LIMITS.maxDurationSec
     ) {
       errors.push(
-        `音訊長度需 ${AUDIO_LIMITS.minDurationSec}–${AUDIO_LIMITS.maxDurationSec} 秒（實際 ${durationSec.toFixed(1)}s）`,
+        `音频长度需 ${AUDIO_LIMITS.minDurationSec}–${AUDIO_LIMITS.maxDurationSec} 秒（实际 ${durationSec.toFixed(1)}s）`,
       )
     }
     return { ok: errors.length === 0, errors }

@@ -20,12 +20,12 @@ export async function copyToClipboard(text: string): Promise<boolean> {
 }
 
 /**
- * copyToClipboard + 標準 toast 回饋（成功：「已複製<label>」；失敗：Clipboard
+ * copyToClipboard + standard toast feedback (success: "已复制<label>").
  * API 不可用）。VideoPreview / ImageHistory / ImagePreview 共用同一份文案。
  */
 export async function copyWithToast(label: string, value: string | undefined): Promise<void> {
   if (!value) return
   const ok = await copyToClipboard(value)
-  if (ok) toast.success(`已複製${label}`)
-  else toast.error('複製失敗：瀏覽器不支援 Clipboard API')
+  if (ok) toast.success(`已复制${label}`)
+  else toast.error('复制失败：浏览器不支持 Clipboard API')
 }

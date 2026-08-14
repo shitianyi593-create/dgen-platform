@@ -3,13 +3,15 @@ import { useVideoStore, type VideoStoreHook } from '../../stores/videoStore'
 import UrlPanel from '../common/UrlPanel'
 import type { UrlPanelRow } from '../common/UrlPanel'
 import { Icon } from '../common/icons'
+import { useOptionalI18n } from '../../i18n/useOptionalI18n'
 
 interface VideoPreviewProps {
-  /** 讀取來源 store；預設 2.0 的 useVideoStore（既有行為不變）。 */
+  /** 读取来源 store；默认 2.0 的 useVideoStore（既有行为不变）。 */
   useStore?: VideoStoreHook
 }
 
 export default function VideoPreview({ useStore = useVideoStore }: VideoPreviewProps = {}) {
+  const { t } = useOptionalI18n()
   const { currentVideoUrl, currentTaskId, activeTaskIds, history } = useStore()
 
   // Prefer local video path over remote URL
@@ -49,7 +51,7 @@ export default function VideoPreview({ useStore = useVideoStore }: VideoPreviewP
         marginBottom: 16,
         marginTop: 0,
       }}>
-        生成的影片
+        {t('video.preview.title')}
       </h2>
 
       <div style={{
@@ -74,17 +76,21 @@ export default function VideoPreview({ useStore = useVideoStore }: VideoPreviewP
             }}
           >
             <source src={videoSrc} />
-            您的瀏覽器不支援影片播放。
+            {t('video.preview.browserUnsupported')}
           </video>
         ) : currentItem && (currentItem.status === 'queued' || currentItem.status === 'running') ? (
           <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
             <div className="spinner" style={{ width: 40, height: 40, marginBottom: 16 }} />
-            <div style={{ fontSize: 15 }}>正在生成影片...</div>
+            <div style={{ fontSize: 15 }}>{t('video.preview.generating')}</div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>
-              任務 ID: {currentItem.taskId}
+              {t('video.preview.taskId', { taskId: currentItem.taskId })}
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-              狀態: {currentItem.status === 'running' ? '處理中' : '排隊中'}
+              {t('video.preview.status', {
+                status: currentItem.status === 'running'
+                  ? t('video.history.status.running')
+                  : t('video.history.status.queued'),
+              })}
             </div>
           </div>
         ) : currentItem && currentItem.status === 'failed' ? (
@@ -92,17 +98,17 @@ export default function VideoPreview({ useStore = useVideoStore }: VideoPreviewP
             <div style={{ marginBottom: 12, opacity: 0.5 }}>
               <Icon name="alert-triangle" size={32} />
             </div>
-            <div style={{ fontSize: 14, color: 'var(--danger)', marginBottom: 8 }}>生成失敗</div>
+            <div style={{ fontSize: 14, color: 'var(--danger)', marginBottom: 8 }}>{t('video.preview.failed')}</div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', wordBreak: 'break-word', maxWidth: 400 }}>
-              {currentItem.error || '未知錯誤'}
+              {currentItem.error || t('video.preview.unknownError')}
             </div>
           </div>
         ) : activeTasks.length > 0 ? (
           <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
             <div className="spinner" style={{ width: 40, height: 40, marginBottom: 16 }} />
-            <div style={{ fontSize: 15 }}>正在生成影片...</div>
+            <div style={{ fontSize: 15 }}>{t('video.preview.generating')}</div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>
-              {activeTasks.length} 個任務進行中
+              {t('video.activeTasks', { count: activeTasks.length })}
             </div>
           </div>
         ) : (
@@ -111,7 +117,7 @@ export default function VideoPreview({ useStore = useVideoStore }: VideoPreviewP
               <rect x="2" y="2" width="20" height="20" rx="2" />
               <path d="M10 8l6 4-6 4V8z" />
             </svg>
-            <div style={{ fontSize: 14 }}>生成的影片將顯示於此。</div>
+            <div style={{ fontSize: 14 }}>{t('video.preview.empty')}</div>
           </div>
         )}
       </div>
@@ -132,10 +138,10 @@ export default function VideoPreview({ useStore = useVideoStore }: VideoPreviewP
           justifyContent: 'space-between',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span>{currentTaskId && `任務: ${currentTaskId}`}</span>
+            <span>{currentTaskId && t('video.preview.task', { taskId: currentTaskId })}</span>
             {isLocal && (
               <span style={{ fontSize: 10, padding: '1px 5px', borderRadius: 3, background: 'var(--success-bg)', color: 'var(--success)' }}>
-                本地
+                {t('video.preview.local')}
               </span>
             )}
           </div>
@@ -150,7 +156,7 @@ export default function VideoPreview({ useStore = useVideoStore }: VideoPreviewP
               fontSize: 13,
             }}
           >
-            下載影片
+            {t('video.preview.downloadVideo')}
           </a>
         </div>
       )}
@@ -177,7 +183,7 @@ export default function VideoPreview({ useStore = useVideoStore }: VideoPreviewP
             }}
           >
             <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)' }}>
-              尾幀圖（last frame）
+              {t('video.preview.lastFrame')}
             </div>
             <a
               href={lastFrameSrc}
@@ -186,7 +192,7 @@ export default function VideoPreview({ useStore = useVideoStore }: VideoPreviewP
               download
               style={{ color: 'var(--accent)', textDecoration: 'none', fontSize: 12 }}
             >
-              下載尾幀
+              {t('video.preview.downloadLastFrame')}
             </a>
           </div>
           <img
@@ -204,19 +210,19 @@ export default function VideoPreview({ useStore = useVideoStore }: VideoPreviewP
       )}
 
       {/* URL panel — copy-able links the user can paste back into Asset
-          參考 to chain a follow-up generation.（共用 UrlPanel 元件） */}
+          参考 to chain a follow-up generation.（共用 UrlPanel 组件） */}
       {currentItem && (currentItem.videoUrl || currentItem.lastFrameUrl) && (
         <div data-testid="url-section" style={{ marginTop: 12 }}>
           <UrlPanel
             rows={[
               ...(currentItem.videoUrl
-                ? [{ label: '影片 URL', url: currentItem.videoUrl, testId: 'video-url-row' } satisfies UrlPanelRow]
+                ? [{ label: t('video.preview.videoUrl'), url: currentItem.videoUrl, testId: 'video-url-row' } satisfies UrlPanelRow]
                 : []),
               ...(currentItem.lastFrameUrl
-                ? [{ label: '尾幀 URL', url: currentItem.lastFrameUrl, testId: 'last-frame-url-row' } satisfies UrlPanelRow]
+                ? [{ label: t('video.preview.lastFrameUrl'), url: currentItem.lastFrameUrl, testId: 'last-frame-url-row' } satisfies UrlPanelRow]
                 : []),
             ]}
-            hint="可貼到左側「Asset 參考」欄位作為下一個任務的輸入。"
+            hint={t('video.preview.urlHint')}
           />
         </div>
       )}
@@ -231,10 +237,10 @@ export default function VideoPreview({ useStore = useVideoStore }: VideoPreviewP
           border: '1px solid var(--border)',
         }}>
           <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 6 }}>
-            進行中的任務 ({activeTasks.length})
+            {t('video.preview.activeTasksTitle', { count: activeTasks.length })}
           </div>
-          {activeTasks.map((t) => (
-            <div key={t.id} style={{
+          {activeTasks.map((task) => (
+            <div key={task.id} style={{
               display: 'flex',
               alignItems: 'center',
               gap: 8,
@@ -244,13 +250,15 @@ export default function VideoPreview({ useStore = useVideoStore }: VideoPreviewP
             }}>
               <span className="spinner" style={{ width: 10, height: 10, flexShrink: 0 }} />
               <span style={{
-                color: t.status === 'running' ? 'var(--accent)' : 'var(--warning)',
+                color: task.status === 'running' ? 'var(--accent)' : 'var(--warning)',
                 width: 40, flexShrink: 0,
               }}>
-                {t.status === 'running' ? '處理中' : '排隊中'}
+                {task.status === 'running'
+                  ? t('video.history.status.running')
+                  : t('video.history.status.queued')}
               </span>
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {t.prompt.slice(0, 40)}{t.prompt.length > 40 ? '...' : ''}
+                {task.prompt.slice(0, 40)}{task.prompt.length > 40 ? '...' : ''}
               </span>
             </div>
           ))}

@@ -45,14 +45,14 @@ function mockOk(payload: unknown) {
  *   1) ListAssetGroups (page 1 only — the eager walk is gone)
  *   2) ListAssets for the auto-selected group (PageSize=100)
  *   3) ListAssets PageSize=1 — the auto-selected group's count, for the
- *      header's 「N 個素材」(spec §4.3). One call, for one group.
+ *      header's 「N 个素材」(spec §4.3). One call, for one group.
  *
- * 中間那一段「每個群組一發 countAssetsInGroup」的扇出已隨無限捲動刪除
- *（spec §3）：群組上千時它就是打爆 ListAssets QPM 的那半邊。
+ * 中间那一段「每个群组一发 countAssetsInGroup」的扇出已随无限滚动删除
+ *（spec §3）：群组上千时它就是打爆 ListAssets QPM 的那半边。
  *
- * 只有斷言標題數字的測試會餵第 3 個 mock；其餘的讓它落空（count 是
- * best-effort，失敗被吞掉只留 '—'），這樣加一發 count 不會把每個 mock
- * 佇列都推移一格。
+ * 只有断言标题数字的测试会喂第 3 个 mock；其余的让它落空（count 是
+ * best-effort，失败被吞掉只留 '—'），这样加一发 count 不会把每个 mock
+ * 队列都推移一格。
  */
 
 describe('AssetLibraryPage v2', () => {
@@ -61,26 +61,26 @@ describe('AssetLibraryPage v2', () => {
       assetCreds: { accessKeyId: '', accessKeySecret: '', projectName: '' },
     })
     render(<AssetLibraryPage />)
-    expect(screen.getByText(/請先.*私有素材庫憑證/)).toBeInTheDocument()
+    expect(screen.getByText(/请先.*私有素材库凭证/)).toBeInTheDocument()
     // The inner component should NOT render
-    expect(screen.queryByText('私有素材庫管理')).not.toBeInTheDocument()
+    expect(screen.queryByText('私有素材库管理')).not.toBeInTheDocument()
   })
 
-  it('renders 上傳素材 header button and no legacy page-title block', async () => {
+  it('renders 上传素材 header button and no legacy page-title block', async () => {
     mockOk({ Items: [], TotalCount: 0, PageNumber: 1, PageSize: 50 })
 
     render(<AssetLibraryPage />)
     expect(
-      await screen.findByRole('button', { name: /上傳素材/ }),
+      await screen.findByRole('button', { name: /上传素材/ }),
     ).toBeInTheDocument()
-    // Legacy title block (私有素材庫管理 + subtitle) is gone.
-    expect(screen.queryByText('私有素材庫管理')).toBeNull()
+    // Legacy title block (私有素材库管理 + subtitle) is gone.
+    expect(screen.queryByText('私有素材库管理')).toBeNull()
     expect(screen.queryByText(/管理 BytePlus ModelArk Asset/)).toBeNull()
-    // 原設計（2026-05-06 spec）：素材工具列不做搜尋框。側欄的「群組」搜尋
-    // 是後來刻意加的，所以斷言收斂到 <main>（素材區）內沒有搜尋輸入 ——
-    // 語意與原斷言一致，且不與側欄的 placeholder 文案耦合。
+    // 原设计（2026-05-06 spec）：素材工具列不做搜索框。侧栏的「群组」搜索
+    // 是后来刻意加的，所以断言收敛到 <main>（素材区）内没有搜索输入 ——
+    // 语意与原断言一致，且不与侧栏的 placeholder 文案耦合。
     expect(
-      within(screen.getByRole('main')).queryByPlaceholderText(/搜尋/),
+      within(screen.getByRole('main')).queryByPlaceholderText(/搜索/),
     ).toBeNull()
   })
 
@@ -102,7 +102,7 @@ describe('AssetLibraryPage v2', () => {
       TotalCount: 1, PageNumber: 1, PageSize: 100,
     })
     // countAssetsInGroup for the auto-selected group. TotalCount 刻意不是 1：
-    // 標題讀的是伺服器端的群組總數，不是剛載進來的那一頁（那頁只有 1 筆）。
+    // 标题读的是服务器端的群组总数，不是刚载进来的那一页（那页只有 1 笔）。
     mockOk({ Items: [], TotalCount: 7, PageNumber: 1, PageSize: 1 })
 
     render(<AssetLibraryPage />)
@@ -111,20 +111,20 @@ describe('AssetLibraryPage v2', () => {
     const matches = await screen.findAllByText('my-assets')
     expect(matches.length).toBeGreaterThan(0)
     // Header shows the group's asset count next to the group name.
-    expect(await screen.findByText('7 個素材')).toBeInTheDocument()
-    // 類型 chip 的數字（'全部 1'）—— label 與 count 是兩個 span，所以精確
-    // 比對得到 '1'。側欄的逐群組徽章已隨 count 扇出一起移除，這個 '1' 只可能
-    // 來自 chip。
+    expect(await screen.findByText('7 个素材')).toBeInTheDocument()
+    // 类型 chip 的数字（'全部 1'）—— label 与 count 是两个 span，所以精确
+    // 比对得到 '1'。侧栏的逐群组徽章已随 count 扇出一起移除，这个 '1' 只可能
+    // 来自 chip。
     const onesAfter = await screen.findAllByText('1')
     expect(onesAfter.length).toBeGreaterThan(0)
     // asset card filename rendered
     expect(await screen.findByText('cat.png')).toBeInTheDocument()
-    // toolbar visible — type chips (全部/圖片/…) + status <select>
+    // toolbar visible — type chips (全部/图片/…) + status <select>
     const allChips = screen.getAllByText(/全部/)
     expect(allChips.length).toBeGreaterThanOrEqual(1)
-    expect(screen.getAllByText(/圖片/).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText(/图片/).length).toBeGreaterThanOrEqual(1)
     expect(
-      screen.getByRole('combobox', { name: '狀態篩選' }),
+      screen.getByRole('combobox', { name: '状态筛选' }),
     ).toBeInTheDocument()
   })
 
@@ -149,7 +149,7 @@ describe('AssetLibraryPage v2', () => {
 
     // Refetch triggered by the same statusFilter state as before.
     mockOk({ Items: [], TotalCount: 0, PageNumber: 1, PageSize: 100 })
-    fireEvent.change(screen.getByRole('combobox', { name: '狀態篩選' }), {
+    fireEvent.change(screen.getByRole('combobox', { name: '状态筛选' }), {
       target: { value: 'Failed' },
     })
     await waitFor(() => {
@@ -162,7 +162,7 @@ describe('AssetLibraryPage v2', () => {
     mockOk({ Items: [], TotalCount: 0, PageNumber: 1, PageSize: 50 })
     render(<AssetLibraryPage />)
     await waitFor(() =>
-      expect(screen.getByText(/建立第一個群組/)).toBeInTheDocument(),
+      expect(screen.getByText(/创建第一个群组/)).toBeInTheDocument(),
     )
   })
 
@@ -215,18 +215,18 @@ describe('AssetLibraryPage — batch delete', () => {
     fireEvent.click(firstCheck)
 
     // ActionPillBar (role="toolbar") is the new selection bar; its
-    // delete action is labeled "刪除 N 個" (no longer "刪除選取").
+    // delete action is labeled "删除 N 个" (no longer "删除选择").
     expect(await screen.findByRole('toolbar')).toBeInTheDocument()
     // The pill-bar button comes first in DOM order; the ConfirmModal
-    // confirm button (aria-label "刪除 1 個") mounts after the click.
-    fireEvent.click(screen.getAllByRole('button', { name: /刪除 1 個/ })[0])
+    // confirm button (aria-label "删除 1 个") mounts after the click.
+    fireEvent.click(screen.getAllByRole('button', { name: /删除 1 个/ })[0])
 
     // ConfirmModal opens; both the toolbar and the dialog contain a
-    // "刪除 1 個" button — pick the one inside the dialog.
+    // "删除 1 个" button — pick the one inside the dialog.
     const dialog = await screen.findByRole('dialog')
     const confirmBtn = Array.from(
       dialog.querySelectorAll('button'),
-    ).find((b) => /刪除 1 個/.test(b.textContent ?? ''))
+    ).find((b) => /删除 1 个/.test(b.textContent ?? ''))
     expect(confirmBtn).toBeTruthy()
     fireEvent.click(confirmBtn!)
 
@@ -243,7 +243,7 @@ describe('AssetLibraryPage — batch delete', () => {
     await mountWithAsset()
     fireEvent.click(screen.getAllByTestId('asset-check')[0])
     // Pill-bar's danger button opens the ConfirmModal.
-    fireEvent.click(screen.getAllByRole('button', { name: /刪除 1 個/ })[0])
+    fireEvent.click(screen.getAllByRole('button', { name: /删除 1 个/ })[0])
 
     // Modal is open; click cancel ("取消")
     fireEvent.click(
@@ -262,17 +262,17 @@ describe('AssetLibraryPage — batch delete', () => {
 
     // Select the only asset rendered
     fireEvent.click(screen.getAllByTestId('asset-check')[0])
-    // ActionPillBar's badge contains "已選" + the count.
+    // ActionPillBar's badge contains "已选" + the count.
     expect(await screen.findByRole('toolbar')).toBeInTheDocument()
-    expect(screen.getByText(/已選/)).toBeTruthy()
+    expect(screen.getByText(/已选/)).toBeTruthy()
 
-    // Click the pill-bar's danger action ("刪除 1 個")
-    fireEvent.click(screen.getAllByRole('button', { name: /刪除 1 個/ })[0])
+    // Click the pill-bar's danger action ("删除 1 个")
+    fireEvent.click(screen.getAllByRole('button', { name: /删除 1 个/ })[0])
 
     // ConfirmModal should be open (role="dialog"); window.confirm must NOT fire;
     // batchDelete should NOT have been called yet (still awaiting confirm)
     expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByText(/刪除 \d+ 個 asset/)).toBeInTheDocument()
+    expect(screen.getByText(/删除 \d+ 个 asset/)).toBeInTheDocument()
     expect(confirmSpy).not.toHaveBeenCalled()
     expect(batchDelete).not.toHaveBeenCalled()
 
@@ -311,13 +311,13 @@ describe('AssetLibraryPage — single-asset delete (ConfirmModal)', () => {
     // Open the preview drawer by clicking the asset card
     fireEvent.click(screen.getAllByTestId('asset-card')[0])
 
-    // Click the drawer's delete button (aria-label 刪除素材)
-    const deleteBtn = await screen.findByRole('button', { name: '刪除素材' })
+    // Click the drawer's delete button (aria-label 删除素材)
+    const deleteBtn = await screen.findByRole('button', { name: '删除素材' })
     fireEvent.click(deleteBtn)
 
     // ConfirmModal should be open (role="dialog"); window.confirm must NOT have fired
     expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByText(/刪除資產/)).toBeInTheDocument()
+    expect(screen.getByText(/删除资产/)).toBeInTheDocument()
     expect(confirmSpy).not.toHaveBeenCalled()
 
     confirmSpy.mockRestore()
@@ -345,14 +345,14 @@ describe('AssetLibraryPage — group delete (ConfirmModal typed)', () => {
 
     await mountWithGroup()
 
-    // Open the overflow menu for the group, then click the 刪除 entry
+    // Open the overflow menu for the group, then click the 删除 entry
     fireEvent.click(screen.getByTestId('group-overflow-group-aaa'))
-    fireEvent.click(screen.getByRole('button', { name: '刪除' }))
+    fireEvent.click(screen.getByRole('button', { name: '删除' }))
 
     // ConfirmModal should be open with typed-name input; window.prompt must NOT fire
     expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByText(/刪除群組？/)).toBeInTheDocument()
-    expect(screen.getByPlaceholderText(/輸入群組名稱/)).toBeInTheDocument()
+    expect(screen.getByText(/删除群组？/)).toBeInTheDocument()
+    expect(screen.getByPlaceholderText(/输入群组名称/)).toBeInTheDocument()
     expect(promptSpy).not.toHaveBeenCalled()
 
     promptSpy.mockRestore()
@@ -393,15 +393,15 @@ describe('AssetLibraryPage — ActionPillBar (bottom-anchored selection bar)', (
     // Bottom-anchored pill bar uses role="toolbar"
     const toolbar = await screen.findByRole('toolbar')
     expect(toolbar).toBeInTheDocument()
-    // Badge contains "已選" and the count
-    expect(screen.getByText(/已選/)).toBeInTheDocument()
+    // Badge contains "已选" and the count
+    expect(screen.getByText(/已选/)).toBeInTheDocument()
     // Selected count rendered inside the badge
     expect(toolbar.textContent).toContain('1')
     // Actions present per spec §4.3
-    expect(screen.getByRole('button', { name: '全選本頁' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '全选本页' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '清除' })).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: /刪除 1 個/ }),
+      screen.getByRole('button', { name: /删除 1 个/ }),
     ).toBeInTheDocument()
   })
 })
@@ -419,13 +419,13 @@ describe('AssetLibraryPage — build first group (ConfirmModal)', () => {
 
     // Wait for the empty-state CTA to appear
     const ctaBtn = await screen.findByRole('button', {
-      name: /建立第一個群組/,
+      name: /创建第一个群组/,
     })
     fireEvent.click(ctaBtn)
 
     // ConfirmModal should be open with an input; window.prompt must NOT fire
     expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText(/群組名稱/)).toBeInTheDocument()
+    expect(screen.getByPlaceholderText(/群组名称/)).toBeInTheDocument()
     expect(promptSpy).not.toHaveBeenCalled()
 
     promptSpy.mockRestore()

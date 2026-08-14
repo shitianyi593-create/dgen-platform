@@ -93,11 +93,11 @@ export const useVideoStore = create<VideoState>()(
   prompt: '',
   ratio: 'adaptive',
   duration: 5,
-  // Seedance 2.0 默認解析度（官方文件）
+  // Seedance 2.0 默认分辨率（官方文件）
   resolution: '720p',
   watermark: false,
   generateAudio: true,
-  // 預設 ON — 連續生成（首尾幀串接）是常態 workflow
+  // 默认 ON — 连续生成（首尾帧串接）是常态 workflow
   returnLastFrame: true,
   // -1 signals "random per call" to Seedance; users can lock a specific seed
   seed: -1,
@@ -308,8 +308,8 @@ export const useVideoStore = create<VideoState>()(
   ),
 );
 
-/** 共用元件（VideoHistory / VideoPreview / poller / upload hook）接受的 store 形狀。
- *  video25Store 的 state 為 VideoState 超集，可直接傳入。 */
+/** 共用组件（VideoHistory / VideoPreview / poller / upload hook）接受的 store 形状。
+ *  video25Store 的 state 为 VideoState 超集，可直接传入。 */
 export type VideoStoreHook = UseBoundStore<StoreApi<VideoState>>;
 
 // ── Persistence helpers ─────────────────────────────────────

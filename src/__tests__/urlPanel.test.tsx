@@ -1,12 +1,12 @@
 /**
  * UrlPanel component test
  *
- * 涵蓋需求（handoff 共用新元件 UrlPanel）：
- * - 每列：label + readonly URL 框 + 「複製」鈕（accessible name 恰為 複製）
- * - openable 列多一顆「開啟」連結（href = url、新分頁）
- * - row testId 透傳到列容器
+ * 涵盖需求（handoff 共用新组件 UrlPanel）：
+ * - 每列：label + readonly URL 框 + 「复制」钮（accessible name 恰为 复制）
+ * - openable 列多一颗「打开」连结（href = url、新分页）
+ * - row testId 透传到列容器
  * - 底部 hint
- * - 點「複製」→ copyWithToast(label, url)
+ * - 点「复制」→ copyWithToast(label, url)
  */
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, cleanup, fireEvent } from '@testing-library/react'
@@ -27,8 +27,8 @@ describe('UrlPanel', () => {
     render(
       <UrlPanel
         rows={[
-          { label: '影片', url: 'https://cdn/x.mp4', testId: 'video-url-row' },
-          { label: '尾幀', url: 'https://cdn/y.png', testId: 'last-frame-url-row' },
+          { label: '视频', url: 'https://cdn/x.mp4', testId: 'video-url-row' },
+          { label: '尾帧', url: 'https://cdn/y.png', testId: 'last-frame-url-row' },
         ]}
       />,
     )
@@ -38,31 +38,31 @@ describe('UrlPanel', () => {
     expect(inputs).toHaveLength(2)
     expect(inputs[0].value).toBe('https://cdn/x.mp4')
     expect(inputs[0]).toHaveAttribute('readonly')
-    // a11y：readonly 框以列 label 作為 accessible name
-    expect(screen.getByRole('textbox', { name: '影片' })).toBe(inputs[0])
+    // a11y：readonly 框以列 label 作为 accessible name
+    expect(screen.getByRole('textbox', { name: '视频' })).toBe(inputs[0])
   })
 
-  it('each row has a copy button named exactly 複製; click copies via copyWithToast', () => {
-    render(<UrlPanel rows={[{ label: '影片', url: 'https://cdn/x.mp4' }]} />)
-    const btn = screen.getByRole('button', { name: '複製' })
+  it('each row has a copy button named exactly 复制; click copies via copyWithToast', () => {
+    render(<UrlPanel rows={[{ label: '视频', url: 'https://cdn/x.mp4' }]} />)
+    const btn = screen.getByRole('button', { name: '复制' })
     fireEvent.click(btn)
-    expect(vi.mocked(copyWithToast)).toHaveBeenCalledWith('影片', 'https://cdn/x.mp4')
+    expect(vi.mocked(copyWithToast)).toHaveBeenCalledWith('视频', 'https://cdn/x.mp4')
   })
 
-  it('openable rows render an 開啟 link to the url in a new tab', () => {
-    render(<UrlPanel rows={[{ label: '影片', url: 'https://cdn/x.mp4', openable: true }]} />)
-    const link = screen.getByRole('link', { name: '開啟' })
+  it('openable rows render an 打开 link to the url in a new tab', () => {
+    render(<UrlPanel rows={[{ label: '视频', url: 'https://cdn/x.mp4', openable: true }]} />)
+    const link = screen.getByRole('link', { name: '打开' })
     expect(link).toHaveAttribute('href', 'https://cdn/x.mp4')
     expect(link).toHaveAttribute('target', '_blank')
   })
 
   it('rows without openable render no link', () => {
-    render(<UrlPanel rows={[{ label: '影片', url: 'https://cdn/x.mp4' }]} />)
+    render(<UrlPanel rows={[{ label: '视频', url: 'https://cdn/x.mp4' }]} />)
     expect(screen.queryByRole('link')).toBeNull()
   })
 
   it('renders the hint text when provided', () => {
-    render(<UrlPanel rows={[{ label: 'a', url: 'https://x' }]} hint="URL 24 小時後過期" />)
-    expect(screen.getByText('URL 24 小時後過期')).toBeInTheDocument()
+    render(<UrlPanel rows={[{ label: 'a', url: 'https://x' }]} hint="URL 24 小时后过期" />)
+    expect(screen.getByText('URL 24 小时后过期')).toBeInTheDocument()
   })
 })

@@ -1,6 +1,6 @@
 /**
- * local API 層測試 — 僅剩 downloadAssetBlob 一個 entry。
- * 其餘 export/import/list/check 端點已隨多用戶隔離重構移除。
+ * local API 层测试 — 仅剩 downloadAssetBlob 一个 entry。
+ * 其余 export/import/list/check 端点已随多用戶隔离重构移除。
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'

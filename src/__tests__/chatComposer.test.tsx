@@ -11,15 +11,15 @@ const VALID_EP = 'ep-20260101000000-txttx'
 
 beforeEach(() => {
   sessionStorage.clear()
-  // composerDraft 現為 store-backed；每個測試需從空草稿開始。
+  // composerDraft 现为 store-backed；每个测试需从空草稿开始。
   useChatStore.setState({ isGenerating: false, composerDraft: '' })
-  // 齊備憑證：除非測試自行清空，否則不出現引導提示、送出鈕可用。
+  // 齐备凭证：除非测试自行清空，否则不出现引导提示、送出钮可用。
   useAuthStore.setState({ apiKey: 'k', textEndpoint: VALID_EP })
   useCredentialsUiStore.setState({ drawerOpen: false, drawerTarget: null, expandedSection: null })
 })
 
 describe('ChatComposer', () => {
-  it('Enter：以 trim 後的文字呼叫 onSend 並清空輸入框', async () => {
+  it('Enter：以 trim 后的文字呼叫 onSend 并清空输入框', async () => {
     const user = userEvent.setup()
     const onSend = vi.fn()
     render(<ChatComposer onSend={onSend} onStop={vi.fn()} />)
@@ -31,7 +31,7 @@ describe('ChatComposer', () => {
     expect(textarea.value).toBe('')
   })
 
-  it('Shift+Enter：不送出（換行）', async () => {
+  it('Shift+Enter：不送出（换行）', async () => {
     const user = userEvent.setup()
     const onSend = vi.fn()
     render(<ChatComposer onSend={onSend} onStop={vi.fn()} />)
@@ -42,48 +42,48 @@ describe('ChatComposer', () => {
     expect(textarea.value).toContain('line one')
   })
 
-  it('空白 / 純空白字元：Enter 不送出', async () => {
+  it('空白 / 纯空白字符：Enter 不送出', async () => {
     const user = userEvent.setup()
     const onSend = vi.fn()
     render(<ChatComposer onSend={onSend} onStop={vi.fn()} />)
     const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
-    // 完全空的輸入
+    // 完全空的输入
     await user.click(textarea)
     await user.keyboard('{Enter}')
     expect(onSend).not.toHaveBeenCalled()
-    // 純空白字元
+    // 纯空白字符
     await user.type(textarea, '    ')
     await user.keyboard('{Enter}')
     expect(onSend).not.toHaveBeenCalled()
   })
 
-  it('缺 API 金鑰：顯示引導提示與「開啟憑證設定」鈕、送出禁用、點擊開抽屜', async () => {
+  it('缺 API 密钥：显示引导提示与「打开凭证设置」钮、送出禁用、点击开抽屜', async () => {
     const user = userEvent.setup()
     useAuthStore.setState({ apiKey: '', textEndpoint: VALID_EP })
     render(<ChatComposer onSend={vi.fn()} onStop={vi.fn()} />)
-    expect(screen.getByText('請先輸入 API 金鑰')).toBeInTheDocument()
+    expect(screen.getByText('请先输入 API 密钥')).toBeInTheDocument()
     const sendBtn = screen.getByRole('button', { name: '送出' })
     expect(sendBtn).toBeDisabled()
-    const openBtn = screen.getByRole('button', { name: '開啟憑證設定' })
+    const openBtn = screen.getByRole('button', { name: '打开凭证设置' })
     await user.click(openBtn)
     const ui = useCredentialsUiStore.getState()
     expect(ui.drawerOpen).toBe(true)
     expect(ui.drawerTarget).toBe('inference')
   })
 
-  it('憑證齊備：不顯示引導提示，且 Enter 正常送出', async () => {
+  it('凭证齐备：不显示引导提示，且 Enter 正常送出', async () => {
     const user = userEvent.setup()
     const onSend = vi.fn()
     render(<ChatComposer onSend={onSend} onStop={vi.fn()} />)
-    expect(screen.queryByText('請先輸入 API 金鑰')).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '開啟憑證設定' })).not.toBeInTheDocument()
+    expect(screen.queryByText('请先输入 API 密钥')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '打开凭证设置' })).not.toBeInTheDocument()
     const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
     await user.type(textarea, 'hi')
     await user.keyboard('{Enter}')
     expect(onSend).toHaveBeenCalledWith('hi')
   })
 
-  it('生成中：顯示中止鈕，點擊呼叫 onStop', async () => {
+  it('生成中：显示中止钮，点击呼叫 onStop', async () => {
     const user = userEvent.setup()
     const onStop = vi.fn()
     useChatStore.setState({ isGenerating: true })

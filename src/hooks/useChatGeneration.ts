@@ -15,10 +15,10 @@ import { computeTokensPerSec } from '../utils/chatStats'
 import type { ChatTurn, TurnResult } from '../types/chat'
 
 /**
- * 純函式：把輪次序列攤成 Chat API 的 messages 歷史。
- * - error 輪整輪剔除（連 user 訊息都不進歷史 — 該次請求沒有有效回應）。
- * - aborted / 空回應輪：user 訊息保留，空的 assistant 訊息略過（部分內容則保留）。
- * - 不回送 reasoning_content（文件建議只回送 content）。
+ * 纯函数：把轮次序列摊成 Chat API 的 messages 历史。
+ * - error 轮整轮剔除（连 user 消息都不进历史 — 该次请求没有有效响应）。
+ * - aborted / 空响应轮：user 消息保留，空的 assistant 消息略过（部分内容则保留）。
+ * - 不回送 reasoning_content（文件建议只回送 content）。
  */
 export function buildHistoryMessages(turns: ChatTurn[]): ChatMessage[] {
   const msgs: ChatMessage[] = []
@@ -31,22 +31,22 @@ export function buildHistoryMessages(turns: ChatTurn[]): ChatMessage[] {
 }
 
 /**
- * 純函式：只看憑證（API 金鑰、文字接入點）是否齊備（null = 齊備）。
- * Composer 的憑證引導提示與 computeChatBlockReason 共用，避免字串重複。
+ * 纯函数：只看凭证（API 密钥、文字接入点）是否齐备（null = 齐备）。
+ * Composer 的凭证引导提示与 computeChatBlockReason 共用，避免字符串重复。
  */
 export function computeCredsBlockReason(apiKey: string, textEndpoint: string): string | null {
-  if (!apiKey) return '請先輸入 API 金鑰'
-  if (!textEndpoint) return '請先設定文字生成接入點'
+  if (!apiKey) return '请先输入 API 密钥'
+  if (!textEndpoint) return '请先设置文字生成接入点'
   return null
 }
 
-/** 送出前置檢查（null = 可送出）。Composer 按鈕 disable 與 send() 共用。 */
+/** 送出前置检查（null = 可送出）。Composer 按钮 disable 与 send() 共用。 */
 export function computeChatBlockReason(): string | null {
   const { apiKey, textEndpoint } = useAuthStore.getState()
   const s = useChatStore.getState()
   const creds = computeCredsBlockReason(apiKey, textEndpoint)
   if (creds) return creds
-  if (s.isGenerating) return '生成中，請先等待完成或按中止'
+  if (s.isGenerating) return '生成中，请先等待完成或按中止'
   return null
 }
 
@@ -56,7 +56,7 @@ function makeTurnId(): string {
 
 export function useChatGeneration() {
   const abortRef = useRef<AbortController | null>(null)
-  // Responses API 官方建議連續請求間隔 ≥100ms（重送連點防抖用）。
+  // Responses API 官方建议连续请求间隔 ≥100ms（重送连点防抖用）。
   const lastDoneAtRef = useRef(0)
 
   const run = useCallback(async (text: string, resendOf?: ChatTurn): Promise<void> => {
@@ -71,11 +71,11 @@ export function useChatGeneration() {
     let prevId: string | undefined
     const systemPrompt = s.systemPrompt.trim()
     if (mode === 'chat') {
-      // 重送 = 以「該輪之前的歷史」重建同一 request。重送僅允許最後一輪
-      //（resendOf 一定是 turns 最後一筆）→ 過濾掉它即為之前的歷史。
+      // 重送 = 以「该轮之前的历史」重建同一 request。重送仅允许最后一轮
+      //（resendOf 一定是 turns 最后一笔）→ 过滤掉它即为之前的历史。
       const historyTurns = resendOf ? s.turns.filter((t) => t.id !== resendOf.id) : s.turns
       const userMsg = { role: 'user' as const, content: text }
-      // system prompt 非空時作為對話首則 system 訊息（穩定前綴，有利隱性 cache）。
+      // system prompt 非空时作为对话首则 system 消息（稳定前缀，有利隐性 cache）。
       const messages: ChatMessage[] = systemPrompt
         ? [{ role: 'system', content: s.systemPrompt }, ...buildHistoryMessages(historyTurns), userMsg]
         : [...buildHistoryMessages(historyTurns), userMsg]
@@ -87,8 +87,8 @@ export function useChatGeneration() {
       )
     }
 
-    // 先「同步」佔住 in-flight 名額（addTurn + setGenerating + controller）再做
-    // 任何 await — 否則等待期間 isGenerating 仍為 false，連點會產生重疊請求。
+    // 先「同步」占住 in-flight 名额（addTurn + setGenerating + controller）再做
+    // 任何 await — 否则等待期间 isGenerating 仍为 false，连点会产生重叠请求。
     const turnId = makeTurnId()
     const requestAt = new Date().toISOString()
     const { addTurn, updateTurn, setGenerating } = useChatStore.getState()
@@ -108,7 +108,7 @@ export function useChatGeneration() {
       if (since < 120) await new Promise((r) => setTimeout(r, 120 - since))
     }
 
-    // t0 在間隔等待之後 — totalMs 不含人工等待時間。
+    // t0 在间隔等待之后 — totalMs 不含人工等待时间。
     const t0 = performance.now()
     let ttftMs: number | undefined
 
@@ -144,8 +144,8 @@ export function useChatGeneration() {
       })
     } catch (err) {
       const totalMs = performance.now() - t0
-      // 中止/錯誤發生在串流途中時，sse.ts 會把已收到的原始 chunk 掛在錯誤上，
-      // 保留下來供 debug 面板顯示（僅在有值時併入，避免覆蓋非串流輪的 undefined）。
+      // 中止/错误发生在流式途中时，sse.ts 会把已收到的原始 chunk 挂在错误上，
+      // 保留下来供 debug 面板显示（仅在有值时并入，避免覆盖非流式轮的 undefined）。
       const partialChunks = (err as { sseChunks?: string[] }).sseChunks
       const chunkPatch = partialChunks ? { sseChunks: partialChunks } : {}
       if (controller.signal.aborted) {
@@ -159,10 +159,10 @@ export function useChatGeneration() {
           timing: { requestAt, ttftMs, totalMs },
           ...chunkPatch,
         })
-        // 失敗輪：把送失敗的輸入救回輸入框（僅在草稿為空時，避免蓋掉生成期間新輸入的內容）。
+        // 失败轮：把送失败的输入救回输入框（仅在草稿为空时，避免盖掉生成期间新输入的内容）。
         const { composerDraft, setComposerDraft } = useChatStore.getState()
         if (!composerDraft.trim()) setComposerDraft(text)
-        toast.error(`生成失敗: ${e.message}`)
+        toast.error(`生成失败: ${e.message}`)
       }
     } finally {
       lastDoneAtRef.current = Date.now()
@@ -173,7 +173,7 @@ export function useChatGeneration() {
 
   const send = useCallback((text: string) => run(text), [run])
 
-  /** 重送最後一輪（隱性 cache 驗證的主要手段：同一 request 第二次應 HIT）。 */
+  /** 重送最后一轮（隐性 cache 验证的主要手段：同一 request 第二次应 HIT）。 */
   const resendLast = useCallback(async (): Promise<void> => {
     const { turns } = useChatStore.getState()
     const last = turns[turns.length - 1]

@@ -1,10 +1,10 @@
 /**
- * Export / Import 高階整合測試。
- * 細部單元測試在 exportBundle.test.ts 與 importBundle.test.ts。
+ * Export / Import 高级整合测试。
+ * 細部单元测试在 exportBundle.test.ts 与 importBundle.test.ts。
  *
- * 這支測試只驗證：
- * - export 出來的 zip 可以被 import 還原成等價的 VideoHistoryItem
- * - 過期素材以 missing 標記但不阻擋匯出
+ * 这支测试只验证：
+ * - export 出来的 zip 可以被 import 还原成等价的 VideoHistoryItem
+ * - 过期素材以 missing 标记但不阻挡导出
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'

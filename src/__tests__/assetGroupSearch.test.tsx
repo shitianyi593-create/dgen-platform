@@ -14,7 +14,7 @@ const baseProps = {
   onRename: vi.fn(async () => {}),
   onDelete: vi.fn(),
   onBatchDelete: vi.fn(async () => null),
-  // 這個檔案測的是過濾，不是分頁 —— 清單當作已全載完（footer 不顯示）。
+  // 这个文件测的是过滤，不是分页 —— 清单当作已全载完（footer 不显示）。
   onLoadMore: vi.fn(),
   hasMore: false,
   loadingMore: false,
@@ -23,11 +23,11 @@ const baseProps = {
 }
 
 describe('AssetGroupSidebar search', () => {
-  const groups = [g('a', '人物素材'), g('b', '場景素材'), g('c', 'Products')]
+  const groups = [g('a', '人物素材'), g('b', '场景素材'), g('c', 'Products')]
 
   it('filters by case-insensitive substring', () => {
     render(<AssetGroupSidebar {...baseProps} groups={groups} />)
-    fireEvent.change(screen.getByLabelText('搜尋群組'), { target: { value: 'prod' } })
+    fireEvent.change(screen.getByLabelText('搜索群组'), { target: { value: 'prod' } })
     expect(screen.getByTestId('group-row-c')).toBeInTheDocument()
     expect(screen.queryByTestId('group-row-a')).not.toBeInTheDocument()
     expect(screen.queryByTestId('group-row-b')).not.toBeInTheDocument()
@@ -35,13 +35,13 @@ describe('AssetGroupSidebar search', () => {
 
   it('shows an empty-state message when nothing matches', () => {
     render(<AssetGroupSidebar {...baseProps} groups={groups} />)
-    fireEvent.change(screen.getByLabelText('搜尋群組'), { target: { value: 'zzz' } })
-    expect(screen.getByText('無符合群組')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('搜索群组'), { target: { value: 'zzz' } })
+    expect(screen.getByText('没有匹配的群组')).toBeInTheDocument()
   })
 
   it('clearing the query restores the full list', () => {
     render(<AssetGroupSidebar {...baseProps} groups={groups} />)
-    const input = screen.getByLabelText('搜尋群組')
+    const input = screen.getByLabelText('搜索群组')
     fireEvent.change(input, { target: { value: 'prod' } })
     fireEvent.change(input, { target: { value: '' } })
     expect(screen.getByTestId('group-row-a')).toBeInTheDocument()
@@ -59,9 +59,9 @@ describe('AssetGroupSidebar search', () => {
         disableClientFilter
       />,
     )
-    fireEvent.change(screen.getByLabelText('搜尋群組'), { target: { value: 'prod' } })
+    fireEvent.change(screen.getByLabelText('搜索群组'), { target: { value: 'prod' } })
     expect(onQueryChange).toHaveBeenCalledWith('prod')
-    // 伺服器端模式：清單由 props.groups 決定，前端不再過濾
+    // 服务器端模式：清单由 props.groups 决定，前端不再过滤
     expect(screen.getByTestId('group-row-a')).toBeInTheDocument()
   })
 })

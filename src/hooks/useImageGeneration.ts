@@ -13,7 +13,21 @@ import {
   type SizeLevel,
   type OutputFormat,
 } from '../utils/seedreamModels'
+import { useOptionalI18n } from '../i18n/useOptionalI18n'
+import { messages, DEFAULT_LOCALE, type MessageKey } from '../i18n/locales'
 import type { ImageGenerationRequest, ImageHistoryItem } from '../types/image'
+
+type Translate = (key: MessageKey, params?: Record<string, string | number>) => string
+
+const defaultT: Translate = (key, params) => {
+  let message: string = messages[DEFAULT_LOCALE][key] ?? key
+  if (params) {
+    message = message.replace(/\{([a-zA-Z0-9_]+)\}/g, (match, name: string) => (
+      params[name] === undefined ? match : String(params[name])
+    ))
+  }
+  return message
+}
 
 export interface BuildImageRequestArgs {
   endpoint: string
@@ -28,11 +42,11 @@ export interface BuildImageRequestArgs {
   watermark: boolean
   sequentialEnabled: boolean
   maxImages: number
-  /** 已解析的參考圖輸入（data URI 或 https URL），依 UI 順序。 */
+  /** 已解析的参考图输入（data URI 或 https URL），依 UI 顺序。 */
   imageInputs: string[]
 }
 
-/** 純函式：組出 Seedream request payload。獨立匯出供單元測試。 */
+/** 纯函数：组出 Seedream request payload。独立导出供单元测试。 */
 export function buildImageRequest(args: BuildImageRequestArgs): ImageGenerationRequest {
   const spec = SEEDREAM_MODELS[args.modelKey]
   const req: ImageGenerationRequest = {
@@ -49,7 +63,7 @@ export function buildImageRequest(args: BuildImageRequestArgs): ImageGenerationR
     watermark: args.watermark,
     stream: false,
   }
-  // 4-5/4-0 官方「不支援自訂設定」→ 不送 output_format。
+  // 4-5/4-0 官方「不支持自定义设置」→ 不送 output_format。
   if (!spec.formatLocked) req.output_format = args.outputFormat
   if (args.imageInputs.length === 1) req.image = args.imageInputs[0]
   else if (args.imageInputs.length > 1) req.image = [...args.imageInputs]
@@ -63,34 +77,34 @@ export function buildImageRequest(args: BuildImageRequestArgs): ImageGenerationR
 }
 
 /**
- * 純函式：回傳目前狀態下不能生成的原因（null = 可生成）。
- * ImageParams 的按鈕 disable 與 generate() 的前置檢查共用同一份邏輯。
+ * 纯函数：返回目前状态下不能生成的原因（null = 可生成）。
+ * ImageParams 的按钮 disable 与 generate() 的前置检查共用同一份逻辑。
  */
-export function computeImageBlockReason(): string | null {
+export function computeImageBlockReason(t: Translate = defaultT): string | null {
   const { apiKey, imageEndpoint } = useAuthStore.getState()
   const s = useImageStore.getState()
   const spec = SEEDREAM_MODELS[s.modelKey]
 
-  if (!apiKey) return '請先輸入 API 金鑰'
-  if (!imageEndpoint) return '請先設定圖片生成接入點（憑證設定 ⌘,）'
-  if (!s.prompt.trim()) return '請輸入提示詞'
+  if (!apiKey) return t('image.block.apiKey')
+  if (!imageEndpoint) return t('image.block.endpoint')
+  if (!s.prompt.trim()) return t('image.block.prompt')
   if (s.refImages.some((m) => m.stale)) {
-    return '部分參考圖因頁面重整失效，請移除後重新上傳'
+    return t('image.block.staleRefs')
   }
   const activeUrls = s.refUrls.map((u) => u.trim()).filter((u) => u !== '')
   if (activeUrls.some((u) => !/^https?:\/\//i.test(u))) {
-    return '參考圖 URL 格式不正確（需以 http(s):// 開頭）'
+    return t('image.block.invalidUrl')
   }
   const refCount = s.refImages.length + activeUrls.length
   if (refCount > spec.maxRefImages) {
-    return `${spec.label} 參考圖上限為 ${spec.maxRefImages} 張（目前 ${refCount} 張）`
+    return t('image.block.refLimit', { model: spec.label, max: spec.maxRefImages, count: refCount })
   }
   if (s.sizeMode === 'custom') {
     const v = validateCustomSize(s.modelKey, s.customWidth, s.customHeight)
-    if (!v.ok) return v.error ?? '自訂像素不合法'
+    if (!v.ok) return v.error ?? t('image.block.invalidCustomSize')
   }
   if (s.sequentialEnabled && !spec.supportsSequential) {
-    return `${spec.label} 不支援組圖輸出`
+    return t('image.block.sequentialUnsupported', { model: spec.label })
   }
   return null
 }
@@ -99,15 +113,16 @@ function makeEntryId(): string {
   return `img-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 }
 
-const URL_TTL_MS = 24 * 3600 * 1000 // Seedream 圖片 URL 保留 24 小時
+const URL_TTL_MS = 24 * 3600 * 1000 // Seedream 图片 URL 保留 24 小时
 
 /**
- * 圖片生成流程。同步 API：await 直接拿到結果，不需要 poller。
- * 允許並發 — 每次 generate() 有獨立的 history entry。
+ * 图片生成流程。同步 API：await 直接拿到结果，不需要 poller。
+ * 允许并发 — 每次 generate() 有独立的 history entry。
  */
 export function useImageGeneration() {
+  const { t } = useOptionalI18n()
   const generate = useCallback(async (): Promise<void> => {
-    const reason = computeImageBlockReason()
+    const reason = computeImageBlockReason(t)
     if (reason) {
       toast.error(reason)
       return
@@ -115,7 +130,7 @@ export function useImageGeneration() {
 
     const s = useImageStore.getState()
     const { imageEndpoint } = useAuthStore.getState()
-    // Snapshot：使用者可能在等待期間改表單。
+    // Snapshot：用户可能在等待期间改表单。
     const refSnapshot = [...s.refImages]
     const urlSnapshot = s.refUrls.map((u) => u.trim()).filter((u) => u !== '')
 
@@ -146,7 +161,7 @@ export function useImageGeneration() {
     setCurrentEntry(entryId)
 
     try {
-      // 上傳檔 → base64 data URI（Seedream 接受 URL 或 base64）。
+      // 上传档 → base64 data URI（Seedream 接受 URL 或 base64）。
       const fileInputs: string[] = []
       for (const m of refSnapshot) {
         if (!m.file) continue
@@ -172,13 +187,13 @@ export function useImageGeneration() {
       const images = (response.data ?? [])
         .filter((d) => typeof d.url === 'string' && d.url !== '')
         .map((d) => ({ url: d.url!, size: d.size, outputFormat: d.output_format }))
-      // 組圖時部分失敗的逐圖錯誤（data[].error）— 保留供除錯區顯示。
+      // 组图时部分失败的逐图错误（data[].error）— 保留供调试区显示。
       const imageErrors = (response.data ?? [])
         .filter((d) => d.error)
         .map((d) => ({ code: d.error?.code, message: d.error?.message }))
       if (images.length === 0) {
-        // 空回應但本體可解析出 error.code：夾帶到 Error 上供 catch 存 errorCode。
-        const e = new Error(response.error?.message ?? 'API 未回傳任何圖片') as Error & {
+        // 空响应但本体可解析出 error.code：夹带到 Error 上供 catch 存 errorCode。
+        const e = new Error(response.error?.message ?? t('image.error.emptyResponse')) as Error & {
           code?: string
         }
         e.code = response.error?.code
@@ -205,7 +220,7 @@ export function useImageGeneration() {
           imageErrors: imageErrors.length ? imageErrors : undefined,
         },
       })
-      toast.success(`已生成 ${images.length} 張圖片`)
+      toast.success(t('image.toast.generated', { count: images.length }))
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error'
       const errorCode = (err as { code?: string } | null)?.code
@@ -215,9 +230,9 @@ export function useImageGeneration() {
         errorCode,
         completedAt: Date.now(),
       })
-      toast.error(`生成失敗: ${message}`)
+      toast.error(t('image.toast.generateFailed', { message }))
     }
-  }, [])
+  }, [t])
 
   return { generate }
 }

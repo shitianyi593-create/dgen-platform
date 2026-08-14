@@ -66,10 +66,10 @@ describe('assetStore — bootstrap + groups', () => {
   })
 
   it('setGroups clears the asset checks when it re-points the selection', () => {
-    // checkedIds 裝的是「目前這個群組裡被勾的素材」。selectGroup 換組時清掉，
-    // 但 setGroups 也會偷偷改指選取（伺服器端搜尋整批換清單、或選中的群組被
-    // 別人刪掉）—— 沒清的話浮動列還亮著「刪除 2 個」，而確認 Modal 的縮圖與
-    // 摘要是對著新群組的素材解析的：名單空白、只剩「刪除 2 個？不可逆」。
+    // checkedIds 装的是「目前这个群组里被勾的素材」。selectGroup 换组时清掉，
+    // 但 setGroups 也会偷偷改指选择（服务器端搜索整批换清单、或选中的群组被
+    // 别人删掉）—— 没清的话浮动列还亮著「删除 2 个」，而确认 Modal 的缩图与
+    // 摘要是对著新群组的素材解析的：名单空白、只剩「删除 2 个？不可逆」。
     useAssetStore.setState({
       selectedGroupId: 'gone',
       checkedIds: new Set(['asset-1', 'asset-2']),
@@ -80,8 +80,8 @@ describe('assetStore — bootstrap + groups', () => {
   })
 
   it('setGroups keeps the asset checks when the selection survives', () => {
-    // 只在「選取真的被改指」時清。單純的 refresh（含背景 refreshGroups 剛好在
-    // 勾到一半時完成）不得動使用者進行中的勾選。
+    // 只在「选择真的被改指」时清。单纯的 refresh（含背景 refreshGroups 刚好在
+    // 勾到一半时完成）不得动用户进行中的勾选。
     useAssetStore.setState({
       selectedGroupId: 'g1',
       checkedIds: new Set(['asset-1']),
@@ -154,13 +154,13 @@ describe('assetStore — assets', () => {
   })
 
   it('removeGroup clears the asset checks when it re-points the selection', () => {
-    // 與 setGroups 同一條不變式：checkedIds 裝的是「目前這個群組裡被勾的素材」，
-    // 選取一被改指就全是死 id。批刪自己選中的群組會走到這裡 —— 沒清的話浮動列
-    // 還亮著「刪除 2 個」，確認 Modal 對新群組的素材解析成空白名單，按下去
-    // DeleteAsset 全數 404（batchDelete 視為冪等成功）→「已刪除 2 個」的假成功。
+    // 与 setGroups 同一条不变式：checkedIds 装的是「目前这个群组里被勾的素材」，
+    // 选择一被改指就全是死 id。批删自己选中的群组会走到这里 —— 没清的话浮动列
+    // 还亮著「删除 2 个」，确认 Modal 对新群组的素材解析成空白名单，按下去
+    // DeleteAsset 全数 404（batchDelete 视为幂等成功）→「已删除 2 个」的假成功。
     const group2 = { ...group1, id: 'g2', name: 'g2' }
     useAssetStore.getState().setGroups([group1, group2])
-    expect(useAssetStore.getState().selectedGroupId).toBe('g1') // 前提：選取在 g1
+    expect(useAssetStore.getState().selectedGroupId).toBe('g1') // 前提：选择在 g1
     useAssetStore.getState().checkPageRange(['asset-1', 'asset-2'])
     useAssetStore.getState().removeGroup('g1')
     expect(useAssetStore.getState().selectedGroupId).toBe('g2')
@@ -168,8 +168,8 @@ describe('assetStore — assets', () => {
   })
 
   it('removeGroup keeps the asset checks when the selection is untouched', () => {
-    // 刪的是別的群組（單列刪除、批刪沒選中的那些）→ 使用者在當前群組裡進行中
-    // 的勾選不得被動到。
+    // 删的是别的群组（单列删除、批删没选中的那些）→ 用户在当前群组里进行中
+    // 的勾选不得被动到。
     const group2 = { ...group1, id: 'g2', name: 'g2' }
     useAssetStore.getState().setGroups([group1, group2])
     expect(useAssetStore.getState().selectedGroupId).toBe('g1')
@@ -297,7 +297,7 @@ describe('assetStore — deleteJob', () => {
   })
 
   it('startDeleteJob records an explicit group kind', () => {
-    // 重試失敗項時要靠 kind 分流到 DeleteAssetGroup，不能誤走 DeleteAsset。
+    // 重试失败项时要靠 kind 分流到 DeleteAssetGroup，不能误走 DeleteAsset。
     useAssetStore.getState().startDeleteJob(2, 'group')
     expect(useAssetStore.getState().deleteJob?.kind).toBe('group')
   })
@@ -309,9 +309,9 @@ describe('assetStore — deleteJob', () => {
   })
 
   it('startDeleteJob refuses to overwrite a running job (shared slot invariant)', () => {
-    // 素材／群組兩條管線共用這一個 slot。覆蓋不會讓舊批次停下來 —— 它會繼續
-    // patch 同一格，於是進度描述甲批次、kind 卻是乙批次的，「重試失敗項」照
-    // kind 分流就會把群組 id 送進 DeleteAsset（404 當成功）→ 假成功 toast。
+    // 素材／群组两条管线共用这一个 slot。覆盖不会让旧批次停下来 —— 它会继续
+    // patch 同一格，于是进度描述甲批次、kind 卻是乙批次的，「重试失败项」照
+    // kind 分流就会把群组 id 送进 DeleteAsset（404 当成功）→ 假成功 toast。
     useAssetStore.getState().startDeleteJob(2, 'group')
     useAssetStore.getState().startDeleteJob(5)
     expect(useAssetStore.getState().deleteJob).toMatchObject({
@@ -322,7 +322,7 @@ describe('assetStore — deleteJob', () => {
   })
 
   it('startDeleteJob starts a fresh job once the previous one settled', () => {
-    // 不變式只擋 running —— done／aborted 之後的「重試失敗項」必須起得來。
+    // 不变式只挡 running —— done／aborted 之后的「重试失败项」必须起得来。
     useAssetStore.getState().startDeleteJob(2, 'group')
     useAssetStore.getState().patchDeleteJob({ status: 'done', succeeded: 2 })
     useAssetStore.getState().startDeleteJob(1)

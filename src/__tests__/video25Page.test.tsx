@@ -1,14 +1,14 @@
 /**
- * /video-25 頁面接線測試（Task 13）。
+ * /video-25 页面接线测试（Task 13）。
  *
- * 這裡刻意渲染整個 <App />（而非單獨的 Video25GenPage），因為要驗證的正是
- * 「路由表 + 導覽列 + 頁面殼層」三者接在一起」這件事：
+ * 这里刻意渲染整个 <App />（而非单独的 Video25GenPage），因为要验证的正是
+ * 「路由表 + 导航列 + 页面壳层」三者接在一起」这件事：
  *   - App.tsx 的 <Route path="/video-25"> 有排在 catch-all 之前
- *   - Header 的分頁能導到該路由
- *   - 頁面把 useStore={useVideo25Store} 真的傳給了共用的 Preview / History
+ *   - Header 的分页能导到该路由
+ *   - 页面把 useStore={useVideo25Store} 真的传给了共用的 Preview / History
  *
- * 最後一點是最容易回歸的地方：漏傳 prop 不會有型別錯誤（prop 選填、預設 2.0
- * store），只會靜靜地在 2.5 頁顯示 2.0 的紀錄與預覽。
+ * 最后一点是最容易回归的地方：漏传 prop 不会有型别错误（prop 选填、默认 2.0
+ * store），只会静静地在 2.5 页显示 2.0 的记录与预览。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
@@ -17,6 +17,9 @@ import App from '../App'
 import { useVideoStore } from '../stores/videoStore'
 import { useVideo25Store } from '../stores/video25Store'
 import { I18nProvider } from '../i18n/I18nProvider'
+import { messages } from '../i18n/locales'
+
+const t = messages['zh-CN']
 
 vi.mock('react-hot-toast', () => ({
   default: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }),
@@ -36,14 +39,14 @@ function seedBothHistories() {
   useVideo25Store.getState().addHistory({
     taskId: 'cgt-25-page',
     status: 'succeeded',
-    prompt: '二點五的紀錄',
+    prompt: '二点五的记录',
     createdAt: Date.now() / 1000,
     videoUrl: 'https://example.com/v25.mp4',
   })
   useVideoStore.getState().addHistory({
     taskId: 'cgt-20-page',
     status: 'succeeded',
-    prompt: '二點零的紀錄',
+    prompt: '二点零的记录',
     createdAt: Date.now() / 1000,
     videoUrl: 'https://example.com/v20.mp4',
   })
@@ -57,22 +60,22 @@ beforeEach(() => {
 })
 
 describe('/video-25 route', () => {
-  it('掛載 2.5 參數面板、預覽與任務紀錄三欄', () => {
+  it('挂载 2.5 参数面板、预览与任务记录三栏', () => {
     renderAppAt('/video-25')
-    expect(screen.getByText('Seedance 2.5')).toBeInTheDocument()               // Video25Params 模型欄
-    expect(screen.getByRole('checkbox', { name: '提示詞優化' })).toBeInTheDocument()
-    expect(screen.getByText('任務紀錄')).toBeInTheDocument()                    // VideoHistory
+    expect(screen.getByText('Seedance 2.5')).toBeInTheDocument()               // Video25Params 模型栏
+    expect(screen.getByRole('checkbox', { name: t['video25.optimize.toggle'] })).toBeInTheDocument()
+    expect(screen.getByText(t['video.history.title'])).toBeInTheDocument()                    // VideoHistory
   })
 
-  it('/video 仍是 2.0 頁，沒有提示詞優化開關', () => {
+  it('/video 仍是 2.0 页，没有提示词优化开关', () => {
     renderAppAt('/video')
     expect(screen.getByText('Seedance 2.0')).toBeInTheDocument()
-    expect(screen.queryByRole('checkbox', { name: '提示詞優化' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('checkbox', { name: t['video25.optimize.toggle'] })).not.toBeInTheDocument()
   })
 })
 
-describe('Header 影片生成 2.5 分頁', () => {
-  it('分頁存在且點擊後導向 2.5 頁', async () => {
+describe('Header 视频生成 2.5 分页', () => {
+  it('分页存在且点击后导向 2.5 页', async () => {
     const user = userEvent.setup()
     renderAppAt('/video')
     const tab = screen.getByRole('button', { name: '视频生成 2.5' })
@@ -84,22 +87,22 @@ describe('Header 影片生成 2.5 分頁', () => {
   })
 })
 
-describe('2.5 頁的共用元件綁定 useVideo25Store', () => {
-  it('/video-25 的任務紀錄只顯示 2.5 store 的項目', () => {
+describe('2.5 页的共用组件绑定 useVideo25Store', () => {
+  it('/video-25 的任务记录只显示 2.5 store 的项目', () => {
     seedBothHistories()
     renderAppAt('/video-25')
-    expect(screen.getByText('二點五的紀錄')).toBeInTheDocument()
-    expect(screen.queryByText('二點零的紀錄')).not.toBeInTheDocument()
+    expect(screen.getByText('二点五的记录')).toBeInTheDocument()
+    expect(screen.queryByText('二点零的记录')).not.toBeInTheDocument()
   })
 
-  it('/video 的任務紀錄只顯示 2.0 store 的項目（2.5 未污染 2.0）', () => {
+  it('/video 的任务记录只显示 2.0 store 的项目（2.5 未污染 2.0）', () => {
     seedBothHistories()
     renderAppAt('/video')
-    expect(screen.getByText('二點零的紀錄')).toBeInTheDocument()
-    expect(screen.queryByText('二點五的紀錄')).not.toBeInTheDocument()
+    expect(screen.getByText('二点零的记录')).toBeInTheDocument()
+    expect(screen.queryByText('二点五的记录')).not.toBeInTheDocument()
   })
 
-  it('/video-25 的預覽讀 2.5 store 的 currentTask', () => {
+  it('/video-25 的预览读 2.5 store 的 currentTask', () => {
     seedBothHistories()
     useVideo25Store.getState().setCurrentTask('cgt-25-page')
     useVideoStore.getState().setCurrentTask('cgt-20-page')
@@ -108,9 +111,9 @@ describe('2.5 頁的共用元件綁定 useVideo25Store', () => {
     expect(screen.queryByText(/cgt-20-page/)).not.toBeInTheDocument()
   })
 
-  // 欄寬 storage key 若被複製成 2.0 頁的（videoGenPage.*），型別完全正確、
-  // 只會讓兩頁的拖曳寬度互相覆寫 —— 與 useStore prop 同一類的靜默失敗。
-  it('欄寬 storage key 與 2.0 頁互不干擾', () => {
+  // 栏宽 storage key 若被复制成 2.0 页的（videoGenPage.*），型别完全正确、
+  // 只会让两页的拖拽宽度互相覆写 —— 与 useStore prop 同一类的静默失败。
+  it('栏宽 storage key 与 2.0 页互不干扰', () => {
     localStorage.setItem('videoGenPage.paramsWidth', '500')
     renderAppAt('/video-25')
     expect(localStorage.getItem('video25GenPage.paramsWidth')).toBe('320')

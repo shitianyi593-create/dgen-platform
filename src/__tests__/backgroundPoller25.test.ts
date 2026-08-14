@@ -42,7 +42,7 @@ describe('useBackgroundPoller polls the 2.5 store too', () => {
       expect(item?.videoUrl).toBe('https://v/25.mp4')
       expect(useVideo25Store.getState().activeTaskIds).not.toContain('cgt-25-x')
     })
-    // 2.0 store 不受影響
+    // 2.0 store 不受影响
     expect(useVideoStore.getState().history).toHaveLength(0)
   })
 })

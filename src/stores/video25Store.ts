@@ -1,6 +1,6 @@
-// Seedance 2.5 專用 store — copy-fork 自 videoStore.ts。
-// TODO(tech-debt): seedanceModels 能力表合併 — 終局應與 videoStore 合併為單一
-// 由能力表驅動的 store；在那之前，共通 bug 修復需同步兩份。
+// Seedance 2.5 专用 store — copy-fork 自 videoStore.ts。
+// TODO(tech-debt): seedanceModels 能力表合并 — 终局应与 videoStore 合并为单一
+// 由能力表驱动的 store；在那之前，共通 bug 修复需同步两份。
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { LocalMedia, AssetRef } from '../types';
@@ -9,7 +9,7 @@ import { defaultRoleForMode } from '../utils/videoMode';
 import { type VideoState } from './videoStore';
 
 interface Video25State extends VideoState {
-  /** 提示詞優化開關（僅 2.5 頁）。 */
+  /** 提示词优化开关（仅 2.5 页）。 */
   promptOptimize: boolean;
   setPromptOptimize: (v: boolean) => void;
 }
@@ -22,15 +22,15 @@ export const useVideo25Store = create<Video25State>()(
 
   prompt: '',
   ratio: 'adaptive',
-  // Seedance 2.5 官方預設 Auto
+  // Seedance 2.5 官方默认 Auto
   duration: -1,
-  // Seedance 2.5 預設解析度（官方文件）
+  // Seedance 2.5 默认分辨率（官方文件）
   resolution: '720p',
   watermark: false,
   generateAudio: true,
-  // 預設 ON — 連續生成（首尾幀串接）是常態 workflow
+  // 默认 ON — 连续生成（首尾帧串接）是常态 workflow
   returnLastFrame: true,
-  // 提示詞優化開關 — 預設關閉，由使用者顯式開啟
+  // 提示词优化开关 — 默认关闭，由用户显式打开
   promptOptimize: false,
   // -1 signals "random per call" to Seedance; users can lock a specific seed
   seed: -1,

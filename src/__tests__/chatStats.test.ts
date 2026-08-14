@@ -13,17 +13,17 @@ function turn(over: Partial<ChatTurn>): ChatTurn {
 }
 
 describe('computeChatTotals', () => {
-  it('空對話：全部 0 / null', () => {
+  it('空对话：全部 0 / null', () => {
     expect(computeChatTotals([])).toEqual({
       turns: 0, totalTokens: 0, promptTokens: 0, cachedTokens: 0,
       cacheHitRate: null, currentContextTokens: null,
     })
   })
 
-  it('累計 usage 並以最後一筆有 usage 的輪作為目前上下文', () => {
+  it('累计 usage 并以最后一笔有 usage 的轮作为目前上下文', () => {
     const t1 = turn({ id: 'a', usage: { promptTokens: 100, completionTokens: 50, totalTokens: 150, cachedTokens: 0, reasoningTokens: 0 } })
     const t2 = turn({ id: 'b', usage: { promptTokens: 200, completionTokens: 60, totalTokens: 260, cachedTokens: 150, reasoningTokens: 10 } })
-    const t3 = turn({ id: 'c', error: { body: 'boom' } })  // 失敗輪沒 usage
+    const t3 = turn({ id: 'c', error: { body: 'boom' } })  // 失败轮没 usage
     const totals = computeChatTotals([t1, t2, t3])
     expect(totals.turns).toBe(3)
     expect(totals.totalTokens).toBe(410)
@@ -33,7 +33,7 @@ describe('computeChatTotals', () => {
     expect(totals.currentContextTokens).toBe(200)
   })
 
-  it('有輪但都沒有 usage（失敗輪 + pending 輪）：turns 計數但 totals 全 0 / null', () => {
+  it('有轮但都没有 usage（失败轮 + pending 轮）：turns 计数但 totals 全 0 / null', () => {
     const t1 = turn({ id: 'a', error: { body: 'boom' } })
     const t2 = turn({ id: 'b', pending: true })
     const totals = computeChatTotals([t1, t2])
@@ -47,13 +47,13 @@ describe('computeChatTotals', () => {
 })
 
 describe('computeTokensPerSec', () => {
-  it('串流：以 totalMs − ttftMs 為生成時間', () => {
+  it('流式：以 totalMs − ttftMs 为生成时间', () => {
     expect(computeTokensPerSec(100, 5000, 1000)).toBeCloseTo(25)
   })
-  it('非串流（無 ttft）：以 totalMs 為生成時間', () => {
+  it('非流式（无 ttft）：以 totalMs 为生成时间', () => {
     expect(computeTokensPerSec(100, 4000)).toBeCloseTo(25)
   })
-  it('缺 completionTokens 或時間為 0 → undefined', () => {
+  it('缺 completionTokens 或时间为 0 → undefined', () => {
     expect(computeTokensPerSec(undefined, 4000)).toBeUndefined()
     expect(computeTokensPerSec(100, 0)).toBeUndefined()
     expect(computeTokensPerSec(100, 1000, 1000)).toBeUndefined()

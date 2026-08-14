@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import type { ChatApiMode, ChatTurn, GenParams, SystemPromptMode } from '../types/chat'
 import { DEFAULT_GEN_PARAMS } from '../types/chat'
 
-/** Responses 模式下一輪要帶的 previous_response_id：最後一個非 error 且有 responseId 的輪。 */
+/** Responses 模式下一轮要带的 previous_response_id：最后一个非 error 且有 responseId 的轮。 */
 export function lastResponseId(turns: ChatTurn[]): string | undefined {
   for (let i = turns.length - 1; i >= 0; i--) {
     const t = turns[i]
@@ -15,31 +15,31 @@ export function lastResponseId(turns: ChatTurn[]): string | undefined {
 interface ChatState {
   apiMode: ChatApiMode
   params: GenParams
-  /** 系統提示（穩定前綴）。屬於 cache prefix / 伺服器端串接的一部分。 */
+  /** 系统提示（稳定前缀）。属于 cache prefix / 服务器端串接的一部分。 */
   systemPrompt: string
-  /** 系統提示注入方式（僅 Responses 模式有效）。 */
+  /** 系统提示注入方式（仅 Responses 模式有效）。 */
   systemPromptMode: SystemPromptMode
   turns: ChatTurn[]
   isGenerating: boolean
-  /** 工具列「全部展開/收合」master 開關。 */
+  /** 工具列「全部展开/收起」master 开关。 */
   expandAll: boolean
-  /** 輸入框草稿（store-backed，供失敗輪救回輸入）。 */
+  /** 输入框草稿（store-backed，供失败轮救回输入）。 */
   composerDraft: string
 
-  /** 對話進行中（turns 非空）鎖定 — no-op；「新對話」後才可切換。 */
+  /** 对话进行中（turns 非空）锁定 — no-op；「新对话」后才可切换。 */
   setApiMode: (m: ChatApiMode) => void
   setParam: <K extends keyof GenParams>(key: K, value: GenParams[K]) => void
-  /** 對話進行中鎖定 — no-op（系統提示是 cache prefix / 伺服器端串接的一部分）。 */
+  /** 对话进行中锁定 — no-op（系统提示是 cache prefix / 服务器端串接的一部分）。 */
   setSystemPrompt: (text: string) => void
   setSystemPromptMode: (m: SystemPromptMode) => void
   setComposerDraft: (text: string) => void
   addTurn: (t: ChatTurn) => void
   updateTurn: (id: string, patch: Partial<ChatTurn>) => void
-  /** 自此輪回溯：移除指定輪與其後所有輪（找不到 id 則 no-op）。清空後模式切換自動解鎖。 */
+  /** 自此轮回溯：移除指定轮与其后所有轮（找不到 id 则 no-op）。清空后模式切换自动解锁。 */
   truncateFromTurn: (id: string) => void
   setGenerating: (v: boolean) => void
   toggleExpandAll: () => void
-  /** 清空對話（保留參數、apiMode、系統提示設定），解鎖模式切換。 */
+  /** 清空对话（保留参数、apiMode、系统提示设置），解锁模式切换。 */
   newConversation: () => void
 }
 
@@ -98,14 +98,14 @@ export const useChatStore = create<ChatState>()(
         turns: s.turns,
         expandAll: s.expandAll,
         composerDraft: s.composerDraft,
-        // isGenerating 是暫態，不持久化
+        // isGenerating 是暂态，不持久化
       }),
       merge: (persistedState, currentState) => {
         const p = (persistedState ?? {}) as Partial<ChatState>
         return {
           ...currentState,
           ...p,
-          // 重整時生成中的輪：串流已斷，標記為中止（保留已收到的部分內容）。
+          // 刷新时生成中的轮：流式已断，标记为中止（保留已收到的部分内容）。
           turns: (p.turns ?? []).map((t) =>
             t.pending ? { ...t, pending: false, aborted: true } : t,
           ),

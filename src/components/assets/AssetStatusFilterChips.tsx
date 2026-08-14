@@ -33,9 +33,9 @@ export default function AssetStatusFilterChips({ value, onChange }: Props) {
         whiteSpace: 'nowrap',
       }}
     >
-      狀態
+      状态
       <select
-        aria-label="狀態篩選"
+        aria-label="状态筛选"
         value={value}
         onChange={(e) => onChange(e.target.value as StatusFilter)}
         style={{

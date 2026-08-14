@@ -25,7 +25,7 @@ describe('ImageGenPage', () => {
   it('mounts all three panels', () => {
     render(<MemoryRouter initialEntries={['/image']}><ImageGenPage /></MemoryRouter>)
     expect(screen.getByText('模型版本')).toBeInTheDocument()   // ImageParams
-    expect(screen.getByText(/尚未生成/)).toBeInTheDocument()    // ImagePreview（空狀態）
-    expect(screen.getByText('生成紀錄')).toBeInTheDocument()   // ImageHistory
+    expect(screen.getByText(/尚未生成/)).toBeInTheDocument()    // ImagePreview（空状态）
+    expect(screen.getByText('生成记录')).toBeInTheDocument()   // ImageHistory
   })
 })

@@ -59,7 +59,7 @@ describe('ImagePreview', () => {
       completedAt: Date.now() - 2000, expiresAt: Date.now() - 1000,
     }))
     render(<ImagePreview />)
-    expect(screen.getByText(/已過期/)).toBeInTheDocument()
+    expect(screen.getByText(/已过期/)).toBeInTheDocument()
     expect(screen.queryByRole('img')).toBeNull()
   })
   it('failed entry shows the error', () => {
@@ -67,28 +67,28 @@ describe('ImagePreview', () => {
     render(<ImagePreview />)
     expect(screen.getByText(/boom/)).toBeInTheDocument()
   })
-  it('succeeded entry shows a URL action bar per image; 複製 URL calls the copy helper', () => {
+  it('succeeded entry shows a URL action bar per image; 复制 URL calls the copy helper', () => {
     seed(base({
       images: [{ url: 'https://x/a.png' }, { url: 'https://x/b.png' }],
       completedAt: Date.now(), expiresAt: Date.now() + 1000_000,
     }))
     render(<ImagePreview />)
-    // URL 以唯讀 input 顯示完整值（monospace 面板）
+    // URL 以唯读 input 显示完整值（monospace 面板）
     expect(screen.getByDisplayValue('https://x/a.png')).toBeInTheDocument()
     expect(screen.getByDisplayValue('https://x/b.png')).toBeInTheDocument()
-    const copyBtns = screen.getAllByRole('button', { name: '複製' })
+    const copyBtns = screen.getAllByRole('button', { name: '复制' })
     expect(copyBtns).toHaveLength(2)
     fireEvent.click(copyBtns[0])
-    // UrlPanel 以列 label 作為 toast 主詞
-    expect(vi.mocked(copyWithToast)).toHaveBeenCalledWith('圖片 1', 'https://x/a.png')
-    const links = screen.getAllByRole('link', { name: '開啟' })
+    // UrlPanel 以列 label 作为 toast 主词
+    expect(vi.mocked(copyWithToast)).toHaveBeenCalledWith('图片 1', 'https://x/a.png')
+    const links = screen.getAllByRole('link', { name: '打开' })
     expect(links[1]).toHaveAttribute('href', 'https://x/b.png')
   })
   it('imported (blob) entry renders images without a URL action bar', () => {
     seed(base({ images: [{ url: 'blob:local-1' }], imported: true }))
     render(<ImagePreview />)
     expect(screen.getByRole('img')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '複製' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '复制' })).not.toBeInTheDocument()
     expect(screen.queryByText(/blob:local-1/)).not.toBeInTheDocument()
     expect(screen.queryByDisplayValue(/blob:local-1/)).not.toBeInTheDocument()
   })
@@ -98,6 +98,6 @@ describe('ImagePreview', () => {
       completedAt: Date.now() - 2000, expiresAt: Date.now() - 1000,
     }))
     render(<ImagePreview />)
-    expect(screen.queryByRole('button', { name: '複製' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '复制' })).not.toBeInTheDocument()
   })
 })

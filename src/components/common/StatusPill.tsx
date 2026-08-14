@@ -1,11 +1,11 @@
 import type { CSSProperties } from 'react'
 
 /**
- * 統一狀態膠囊（handoff 全站共用改動 §2）。
- * kind → 語意 token 對照；running 帶 spinner 取代舊的文字 `●`。
- * 各頁自行把狀態映射到 kind：
- *   完成 / Active → success；處理中 / running / 生成中 → running；
- *   失敗 → danger；已過期 → warning；排隊中 / 已取消 → muted。
+ * 统一状态胶囊（handoff 全站共用改动 §2）。
+ * kind → 语意 token 对照；running 带 spinner 取代旧的文字 `●`。
+ * 各页自行把状态映射到 kind：
+ *   完成 / Active → success；处理中 / running / 生成中 → running；
+ *   失败 → danger；已过期 → warning；排隊中 / 已取消 → muted。
  */
 export type StatusPillKind = 'success' | 'running' | 'danger' | 'warning' | 'muted'
 

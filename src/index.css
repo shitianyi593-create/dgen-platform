@@ -356,7 +356,7 @@ body {
 .chat-turn:focus-within .chat-reveal { opacity: 1; }
 
 /* ── Chat hover-reveal ghost buttons ─────────────────────────────────── */
-/* Used by MessageBubble action rows (複製 / 編輯重送 / 刪除 / 重送 / 複製回應).
+/* Used by MessageBubble action rows (复制 / 编辑重送 / 删除 / 重送 / 复制响应).
    Reveal is driven by .chat-reveal above; this class only owns the ghost
    look + hover feedback. No new color tokens — reuses the existing palette. */
 .chat-ghost-btn {

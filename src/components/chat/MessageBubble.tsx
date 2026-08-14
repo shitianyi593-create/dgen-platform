@@ -1,6 +1,6 @@
 // src/components/chat/MessageBubble.tsx
-// 一輪對話 = user 泡泡 + assistant 泡泡。閱讀性優先：debug 預設收合，
-// 摘要膠囊帶關鍵數字，點擊展開 TurnDebugPanel。使用者/回應動作 hover 浮現。
+// 一轮对话 = user 泡泡 + assistant 泡泡。阅读性优先：debug 默认收起，
+// 摘要胶囊带关键数字，点击展开 TurnDebugPanel。用户/响应动作 hover 浮现。
 import { useState } from 'react'
 import TurnDebugPanel from './TurnDebugPanel'
 import ConfirmModal from '../common/ConfirmModal'
@@ -17,7 +17,7 @@ interface Props {
   resendDisabled: boolean
 }
 
-// .chat-ghost-btn 本身不 flex；icon+文字並排需要 inline-flex 對齊（handoff §D-1）。
+// .chat-ghost-btn 本身不 flex；icon+文字并排需要 inline-flex 对齐（handoff §D-1）。
 const iconBtnLayout: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 4 }
 
 function badgeStyle(color: string): React.CSSProperties {
@@ -29,27 +29,27 @@ function badgeStyle(color: string): React.CSSProperties {
 
 export default function MessageBubble({ turn, isLast, expandAll, onResend, resendDisabled }: Props) {
   const [expanded, setExpanded] = useState(expandAll)
-  // master 開關切換時同步；之後仍可個別開合。
-  // 用 render 期衍生狀態（React 官方「adjusting state on prop change」模式），
-  // 避免在 effect 內 setState 造成的串接 render。
+  // master 开关切换时同步；之后仍可个别开合。
+  // 用 render 期衍生状态（React 官方「adjusting state on prop change」模式），
+  // 避免在 effect 内 setState 造成的串接 render。
   const [prevExpandAll, setPrevExpandAll] = useState(expandAll)
   if (expandAll !== prevExpandAll) {
     setPrevExpandAll(expandAll)
     setExpanded(expandAll)
   }
 
-  // 「自此輪回溯」動作（S5）：確認狀態、N 計算與 store 操作抽在 useTurnActions。
+  // 「自此轮回溯」动作（S5）：确认状态、N 计算与 store 操作抽在 useTurnActions。
   const { turnsFromHere, confirmAction, setConfirmAction, handleConfirm } = useTurnActions(turn.id)
 
   const u = turn.usage
   const cacheHit = (u?.cachedTokens ?? 0) > 0
   const hasContent = turn.assistant.content.length > 0
 
-  // 動作列 hover/focus 浮現：純 CSS（.chat-turn:hover / :focus-within → .chat-reveal），
-  // 用 opacity 而非 display:none，元素恆可點擊、可聚焦，且 tab 切換子元素不閃爍。
+  // 动作列 hover/focus 浮现：纯 CSS（.chat-turn:hover / :focus-within → .chat-reveal），
+  // 用 opacity 而非 display:none，元素恒可点击、可聚焦，且 tab 切换子元素不闪烁。
   return (
     <div className="chat-turn" style={{ marginBottom: 16 }}>
-      {/* user 泡泡（靠右）+ hover 浮現動作列 */}
+      {/* user 泡泡（靠右）+ hover 浮现动作列 */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginBottom: 6 }}>
         <div style={{
           maxWidth: '70%', padding: '10px 14px', borderRadius: '14px 14px 4px 14px',
@@ -62,33 +62,33 @@ export default function MessageBubble({ turn, isLast, expandAll, onResend, resen
             className="chat-ghost-btn"
             onClick={() => setConfirmAction('edit')}
             disabled={resendDisabled}
-            aria-label="編輯並自此輪重送"
-            title="移除此輪與之後所有輪，並把原輸入回填到輸入框"
+            aria-label="编辑并自此轮重送"
+            title="移除此轮与之后所有轮，并把原输入回填到输入框"
             style={iconBtnLayout}
           >
             <Icon name="edit" size={12} />
-            編輯重送
+            编辑重送
           </button>
           <button
             className="chat-ghost-btn danger"
             onClick={() => setConfirmAction('delete')}
             disabled={resendDisabled}
-            aria-label="刪除此輪及之後"
-            title="移除此輪與之後所有輪"
+            aria-label="删除此轮及之后"
+            title="移除此轮与之后所有轮"
             style={iconBtnLayout}
           >
             <Icon name="trash" size={12} />
-            刪除
+            删除
           </button>
           <button
             className="chat-ghost-btn"
-            onClick={() => void copyWithToast('使用者訊息', turn.userText)}
-            aria-label="複製使用者訊息"
-            title="複製使用者訊息"
+            onClick={() => void copyWithToast('用户消息', turn.userText)}
+            aria-label="复制用户消息"
+            title="复制用户消息"
             style={iconBtnLayout}
           >
             <Icon name="copy" size={12} />
-            複製
+            复制
           </button>
           {isLast && (
             <button
@@ -96,7 +96,7 @@ export default function MessageBubble({ turn, isLast, expandAll, onResend, resen
               onClick={onResend}
               disabled={resendDisabled}
               aria-label="重送"
-              title="以同樣歷史重送（驗證隱性 cache 第二次是否 HIT）"
+              title="以同样历史重送（验证隐性 cache 第二次是否 HIT）"
               style={iconBtnLayout}
             >
               <Icon name="refresh-cw" size={12} />
@@ -111,7 +111,7 @@ export default function MessageBubble({ turn, isLast, expandAll, onResend, resen
         {turn.assistant.reasoning && (
           <details style={{ marginBottom: 4 }}>
             <summary style={{ fontSize: 11, color: 'var(--text-secondary)', cursor: 'pointer' }}>
-              思維鏈（reasoning_content）
+              思维链（reasoning_content）
             </summary>
             <div style={{
               fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'pre-wrap',
@@ -127,15 +127,15 @@ export default function MessageBubble({ turn, isLast, expandAll, onResend, resen
           color: 'var(--text-primary)', fontSize: 14, lineHeight: 1.7, whiteSpace: 'pre-wrap',
         }}>
           {turn.error
-            ? <span style={{ color: 'var(--danger)' }}>生成失敗{turn.error.status ? `（HTTP ${turn.error.status}）` : ''}</span>
-            : turn.assistant.content || (turn.pending ? '…' : turn.aborted ? '（已中止）' : '（空回應）')}
+            ? <span style={{ color: 'var(--danger)' }}>生成失败{turn.error.status ? `（HTTP ${turn.error.status}）` : ''}</span>
+            : turn.assistant.content || (turn.pending ? '…' : turn.aborted ? '（已中止）' : '（空响应）')}
         </div>
 
-        {/* debug 摘要膠囊 + 狀態徽章 + hover 浮現的「複製回應」 */}
+        {/* debug 摘要胶囊 + 状态徽章 + hover 浮现的「复制响应」 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
           <button
             onClick={() => setExpanded((v) => !v)}
-            aria-label={`${expanded ? '收合' : '展開'} debug 資訊`}
+            aria-label={`${expanded ? '收起' : '展开'} debug 信息`}
             aria-expanded={expanded}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -158,17 +158,17 @@ export default function MessageBubble({ turn, isLast, expandAll, onResend, resen
             )}
           </button>
           {turn.aborted && <span style={badgeStyle('var(--warning)')}>已中止</span>}
-          {turn.error && <span style={badgeStyle('var(--danger)')}>錯誤</span>}
+          {turn.error && <span style={badgeStyle('var(--danger)')}>错误</span>}
           {hasContent && (
             <button
               className="chat-ghost-btn chat-reveal"
-              onClick={() => void copyWithToast('回應內容', turn.assistant.content)}
-              aria-label="複製回應內容"
-              title="複製回應內容"
+              onClick={() => void copyWithToast('响应内容', turn.assistant.content)}
+              aria-label="复制响应内容"
+              title="复制响应内容"
               style={iconBtnLayout}
             >
               <Icon name="copy" size={12} />
-              複製回應
+              复制响应
             </button>
           )}
         </div>
@@ -178,18 +178,18 @@ export default function MessageBubble({ turn, isLast, expandAll, onResend, resen
 
       <ConfirmModal
         open={confirmAction === 'edit'}
-        title="編輯並自此輪重送？"
-        subtitle={`此輪與之後共 ${turnsFromHere} 輪將被移除，原輸入會回填到輸入框（debug 資料將遺失，可先下載 JSON）`}
-        confirmLabel="移除並回填"
+        title="编辑并自此轮重送？"
+        subtitle={`此轮与之后共 ${turnsFromHere} 轮将被移除，原输入会回填到输入框（debug 数据将丢失，可先下载 JSON）`}
+        confirmLabel="移除并回填"
         variant="danger"
         onConfirm={handleConfirm}
         onCancel={() => setConfirmAction(null)}
       />
       <ConfirmModal
         open={confirmAction === 'delete'}
-        title="刪除此輪及之後？"
-        subtitle={`此輪與之後共 ${turnsFromHere} 輪將被移除（debug 資料將遺失，可先下載 JSON）`}
-        confirmLabel="刪除"
+        title="删除此轮及之后？"
+        subtitle={`此轮与之后共 ${turnsFromHere} 轮将被移除（debug 数据将丢失，可先下载 JSON）`}
+        confirmLabel="删除"
         variant="danger"
         onConfirm={handleConfirm}
         onCancel={() => setConfirmAction(null)}

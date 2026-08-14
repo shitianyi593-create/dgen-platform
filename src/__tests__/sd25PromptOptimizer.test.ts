@@ -39,16 +39,16 @@ describe('buildOptimizeRequest', () => {
     expect(user).toContain('一隻貓在打哈欠')
   })
 
-  it('empty assets renders 無', () => {
+  it('empty assets renders 无', () => {
     const req = buildOptimizeRequest({ ...baseContext, assets: [] }, 'ep-text')
-    expect(req.messages[1].content).toContain('（無）')
+    expect(req.messages[1].content).toContain('（无）')
   })
 })
 
 describe('parseOptimizeResult', () => {
   it('parses a plain JSON object', () => {
-    const r = parseOptimizeResult('{"taskType":"edit","prompt":"優化後"}')
-    expect(r).toEqual({ taskType: 'edit', prompt: '優化後' })
+    const r = parseOptimizeResult('{"taskType":"edit","prompt":"优化后"}')
+    expect(r).toEqual({ taskType: 'edit', prompt: '优化后' })
   })
 
   it('strips markdown code fences', () => {
@@ -63,8 +63,8 @@ describe('parseOptimizeResult', () => {
   })
 
   it('non-JSON falls back to whole text as prompt', () => {
-    const r = parseOptimizeResult('這不是 JSON，但仍是可用的提示詞')
-    expect(r).toEqual({ taskType: 'unknown', prompt: '這不是 JSON，但仍是可用的提示詞' })
+    const r = parseOptimizeResult('这不是 JSON，但仍是可用的提示词')
+    expect(r).toEqual({ taskType: 'unknown', prompt: '这不是 JSON，但仍是可用的提示词' })
   })
 
   it('JSON without prompt string falls back to whole text', () => {

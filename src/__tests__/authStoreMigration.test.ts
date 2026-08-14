@@ -115,9 +115,9 @@ describe('authStore v4 → v5 migration', () => {
           bucket: 'b',
         },
         verifyState: {
-          inference: { status: 'pend', message: '尚未驗證' },
-          asset:     { status: 'pend', message: '尚未驗證' },
-          tos:       { status: 'pend', message: '尚未驗證' },
+          inference: { status: 'pend', message: '尚未验证' },
+          asset:     { status: 'pend', message: '尚未验证' },
+          tos:       { status: 'pend', message: '尚未验证' },
         },
       },
     }))

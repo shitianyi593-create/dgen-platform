@@ -92,7 +92,7 @@ export default function AssetGrid({
           color: 'var(--text-muted)',
         }}
       >
-        {emptyHint ?? '此群組尚無資產，點右上方上傳。'}
+        {emptyHint ?? '此群组尚无资产，点右上方上传。'}
       </div>
     )
   }

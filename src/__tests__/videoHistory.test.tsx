@@ -1,15 +1,15 @@
 /**
  * VideoHistory component test
  *
- * 涵蓋需求：
- * - 匯入項目超過 2 小時仍會顯示在面板（imported flag 跳過時間過濾）
- * - 一般項目超過 2 小時被過濾
- * - 「📥 已匯入」標籤只在 imported 項目顯示
- * - 過期/孤兒任務 chip 顯示
- * - queued 任務的 elapsed time、取消、刪除流程
+ * 涵盖需求：
+ * - 导入项目超过 2 小时仍会显示在面板（imported flag 跳过时间过滤）
+ * - 一般项目超过 2 小时被过滤
+ * - 「📥 已导入」标签只在 imported 项目显示
+ * - 过期/孤兒任务 chip 显示
+ * - queued 任务的 elapsed time、取消、删除流程
  *
- * 註：webkitdirectory + drag-drop 的匯入流程依賴瀏覽器 API，
- *     在 jsdom 下無法可靠運行。對應的單元測試在
+ * 注：webkitdirectory + drag-drop 的导入流程依赖浏览器 API，
+ *     在 jsdom 下无法可靠运行。对应的单元测试在
  *     exportBundle.test.ts / importBundle.test.ts。
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
@@ -84,7 +84,7 @@ describe('VideoHistory — display behavior (no time-based filtering)', () => {
     expect(screen.getByText(/prompt for t-recent/)).toBeInTheDocument()
   })
 
-  it('renders the 📥 已匯入 tag only for imported items', () => {
+  it('renders the 📥 已导入 tag only for imported items', () => {
     useVideoStore.getState().addHistory(
       makeItem('t-recent', { createdAt: NOW - 60 }),
     )
@@ -99,15 +99,15 @@ describe('VideoHistory — display behavior (no time-based filtering)', () => {
     expect(tags).toHaveLength(1)
   })
 
-  it('uses the new "任務紀錄" header without the "(2小時內)" qualifier', () => {
+  it('uses the new "任务记录" header without the "(2小时内)" qualifier', () => {
     render(<VideoHistory />)
-    expect(screen.getByText(/任務紀錄/)).toBeInTheDocument()
-    expect(screen.queryByText(/2小時內/)).toBeNull()
+    expect(screen.getByText(/任务记录/)).toBeInTheDocument()
+    expect(screen.queryByText(/2小时内/)).toBeNull()
     expect(screen.queryByText(/近期生成/)).toBeNull()
   })
 })
 
-describe('VideoHistory — 下載尾幀 menu item', () => {
+describe('VideoHistory — 下载尾帧 menu item', () => {
   it('renders the download-frame item (in the ⋯ menu) only when lastFrameUrl exists', () => {
     useVideoStore.getState().addHistory({
       taskId: 't-no-lf',
@@ -127,9 +127,9 @@ describe('VideoHistory — 下載尾幀 menu item', () => {
 
     render(<VideoHistory />)
 
-    // 「▼ 展開詳情」已移除 — 動作收在每張卡的 ⋯ 選單裡
-    expect(screen.queryByText(/展開詳情/)).toBeNull()
-    const menuButtons = screen.getAllByRole('button', { name: '更多動作' })
+    // 「▼ 展开详情」已移除 — 动作收在每张卡的 ⋯ 选单里
+    expect(screen.queryByText(/展开详情/)).toBeNull()
+    const menuButtons = screen.getAllByRole('button', { name: '更多动作' })
     expect(menuButtons).toHaveLength(2)
     for (const b of menuButtons) fireEvent.click(b)
 
@@ -139,8 +139,8 @@ describe('VideoHistory — 下載尾幀 menu item', () => {
   })
 })
 
-describe('VideoHistory — 匯出 .zip menu item', () => {
-  it('is available for failed tasks too (task.json 保留參數，供失敗任務留檔/回填)', () => {
+describe('VideoHistory — 导出 .zip menu item', () => {
+  it('is available for failed tasks too (task.json 保留参数，供失败任务留档/回填)', () => {
     useVideoStore.getState().addHistory({
       taskId: 't-failed',
       status: 'failed',
@@ -149,8 +149,8 @@ describe('VideoHistory — 匯出 .zip menu item', () => {
       error: 'quota exceeded',
     })
     render(<VideoHistory />)
-    fireEvent.click(screen.getByRole('button', { name: '更多動作' }))
-    expect(screen.getByRole('button', { name: /匯出 \.zip/ })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '更多动作' }))
+    expect(screen.getByRole('button', { name: /导出 \.zip/ })).toBeInTheDocument()
   })
 
   it('is available for expired tasks', () => {
@@ -161,13 +161,13 @@ describe('VideoHistory — 匯出 .zip menu item', () => {
       createdAt: Date.now() / 1000,
     })
     render(<VideoHistory />)
-    fireEvent.click(screen.getByRole('button', { name: '更多動作' }))
-    expect(screen.getByRole('button', { name: /匯出 \.zip/ })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '更多动作' }))
+    expect(screen.getByRole('button', { name: /导出 \.zip/ })).toBeInTheDocument()
   })
 })
 
 describe('VideoHistory — persistent card actions (succeeded)', () => {
-  it('shows 下載 mp4 and 複製 URL without opening any menu', () => {
+  it('shows 下载 mp4 and 复制 URL without opening any menu', () => {
     useVideoStore.getState().addHistory({
       taskId: 't-actions',
       status: 'succeeded',
@@ -176,23 +176,23 @@ describe('VideoHistory — persistent card actions (succeeded)', () => {
       videoUrl: 'https://cdn/v.mp4',
     })
     render(<VideoHistory />)
-    expect(screen.getByRole('button', { name: /下載 mp4/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /複製 URL/ })).toBeInTheDocument()
-    expect(screen.queryByText(/展開詳情/)).toBeNull()
+    expect(screen.getByRole('button', { name: /下载 mp4/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /复制 URL/ })).toBeInTheDocument()
+    expect(screen.queryByText(/展开详情/)).toBeNull()
   })
 })
 
 describe('expired and orphaned states', () => {
-  it('renders 已過期 label for expired status', () => {
+  it('renders 已过期 label for expired status', () => {
     useVideoStore.setState({
       ...useVideoStore.getInitialState(),
       history: [{ taskId: 'cgt-x', status: 'expired', prompt: 'p', createdAt: 0 }],
     })
     render(<VideoHistory />)
-    expect(screen.getByText('已過期')).toBeInTheDocument()
+    expect(screen.getByText('已过期')).toBeInTheDocument()
   })
 
-  it('renders 無法查詢 chip when orphaned', () => {
+  it('renders 无法查询 chip when orphaned', () => {
     useVideoStore.setState({
       ...useVideoStore.getInitialState(),
       history: [{
@@ -201,7 +201,7 @@ describe('expired and orphaned states', () => {
       }],
     })
     render(<VideoHistory />)
-    expect(screen.getByText(/無法查詢/)).toBeInTheDocument()
+    expect(screen.getByText(/无法查询/)).toBeInTheDocument()
   })
 })
 
@@ -237,7 +237,7 @@ describe('cancel button for queued tasks', () => {
       history: [{ taskId: 'cgt-c', status: 'queued', prompt: 'p', createdAt: 0 }],
     })
     render(<VideoHistory />)
-    expect(screen.getByRole('button', { name: '取消任務' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '取消任务' })).toBeInTheDocument()
   })
 
   it('does not show 取消 button when status is succeeded', () => {
@@ -249,13 +249,13 @@ describe('cancel button for queued tasks', () => {
       }],
     })
     render(<VideoHistory />)
-    expect(screen.queryByRole('button', { name: '取消任務' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '取消任务' })).not.toBeInTheDocument()
   })
 })
 
-/** 開啟指定卡片的 ⋯ 選單（新版動作列）。 */
+/** 打开指定卡片的 ⋯ 选单（新版动作列）。 */
 function openOverflowMenu() {
-  fireEvent.click(screen.getByRole('button', { name: '更多動作' }))
+  fireEvent.click(screen.getByRole('button', { name: '更多动作' }))
 }
 
 describe('delete record button flow', () => {
@@ -270,11 +270,11 @@ describe('delete record button flow', () => {
     const confirmSpy = vi.spyOn(window, 'confirm')
     render(<VideoHistory />)
     openOverflowMenu()
-    fireEvent.click(screen.getByRole('button', { name: '刪除記錄' }))
-    // window.confirm 已改為 ConfirmModal
+    fireEvent.click(screen.getByRole('button', { name: '删除记录' }))
+    // window.confirm 已改为 ConfirmModal
     expect(confirmSpy).not.toHaveBeenCalled()
     const modal = screen.getByRole('dialog')
-    fireEvent.click(within(modal).getByRole('button', { name: '刪除' }))
+    fireEvent.click(within(modal).getByRole('button', { name: '删除' }))
     expect(useVideoStore.getState().history).toEqual([])
     confirmSpy.mockRestore()
   })
@@ -289,7 +289,7 @@ describe('delete record button flow', () => {
     })
     render(<VideoHistory />)
     openOverflowMenu()
-    fireEvent.click(screen.getByRole('button', { name: '刪除記錄' }))
+    fireEvent.click(screen.getByRole('button', { name: '删除记录' }))
     const modal = screen.getByRole('dialog')
     fireEvent.click(within(modal).getByRole('button', { name: '取消' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -297,7 +297,7 @@ describe('delete record button flow', () => {
   })
 })
 
-describe('VideoHistory — 詳情 展開（prompt 與完整參數）', () => {
+describe('VideoHistory — 详情 展开（prompt 与完整参数）', () => {
   it('collapses details by default and reveals full prompt, original prompt and params on toggle', () => {
     useVideoStore.setState({
       ...useVideoStore.getInitialState(),
@@ -322,10 +322,10 @@ describe('VideoHistory — 詳情 展開（prompt 與完整參數）', () => {
     expect(screen.queryByText('原始 Prompt')).toBeNull()
     expect(screen.queryByText('seedance-2-5')).toBeNull()
     // The banned legacy label must never reappear
-    expect(screen.queryByText(/展開詳情/)).toBeNull()
+    expect(screen.queryByText(/展开详情/)).toBeNull()
 
     // Toggle open
-    fireEvent.click(screen.getByRole('button', { name: /詳情/ }))
+    fireEvent.click(screen.getByRole('button', { name: /详情/ }))
 
     const panel = screen.getByTestId('task-details')
     expect(within(panel).getByText(/a very long optimized prompt/)).toBeInTheDocument()
@@ -335,7 +335,7 @@ describe('VideoHistory — 詳情 展開（prompt 與完整參數）', () => {
     expect(within(panel).getByText('16:9')).toBeInTheDocument()
   })
 
-  it('shows params in 詳情 even for failed tasks (not only succeeded)', () => {
+  it('shows params in 详情 even for failed tasks (not only succeeded)', () => {
     useVideoStore.setState({
       ...useVideoStore.getInitialState(),
       history: [{
@@ -349,7 +349,7 @@ describe('VideoHistory — 詳情 展開（prompt 與完整參數）', () => {
       }],
     })
     render(<VideoHistory />)
-    fireEvent.click(screen.getByRole('button', { name: /詳情/ }))
+    fireEvent.click(screen.getByRole('button', { name: /详情/ }))
     const panel = screen.getByTestId('task-details')
     expect(within(panel).getByText('9:16')).toBeInTheDocument()
   })
@@ -365,7 +365,7 @@ describe('cancel button — post-cancel state', () => {
     })
     render(<VideoHistory />)
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: '取消任務' }))
+      fireEvent.click(screen.getByRole('button', { name: '取消任务' }))
     })
     expect(deleteSpy).toHaveBeenCalledWith('cgt-cancel')
     const state = useVideoStore.getState()

@@ -6,9 +6,9 @@ import AssetStatusFilterChips, {
 } from '../components/assets/AssetStatusFilterChips'
 
 describe('AssetStatusFilterChips (status <select> dropdown)', () => {
-  it('renders a select labelled 狀態篩選 with 全部/Active/Processing/Failed options', () => {
+  it('renders a select labelled 状态筛选 with 全部/Active/Processing/Failed options', () => {
     render(<AssetStatusFilterChips value="all" onChange={() => {}} />)
-    const select = screen.getByRole('combobox', { name: '狀態篩選' })
+    const select = screen.getByRole('combobox', { name: '状态筛选' })
     const options = within(select).getAllByRole('option')
     expect(options.map((o) => o.textContent)).toEqual([
       '全部',
@@ -21,7 +21,7 @@ describe('AssetStatusFilterChips (status <select> dropdown)', () => {
   it('reflects the current value', () => {
     render(<AssetStatusFilterChips value="Failed" onChange={() => {}} />)
     const select = screen.getByRole('combobox', {
-      name: '狀態篩選',
+      name: '状态筛选',
     }) as HTMLSelectElement
     expect(select.value).toBe('Failed')
   })
@@ -31,7 +31,7 @@ describe('AssetStatusFilterChips (status <select> dropdown)', () => {
     const user = userEvent.setup()
     render(<AssetStatusFilterChips value="all" onChange={onChange} />)
     await user.selectOptions(
-      screen.getByRole('combobox', { name: '狀態篩選' }),
+      screen.getByRole('combobox', { name: '状态筛选' }),
       'Processing',
     )
     expect(onChange).toHaveBeenCalledWith('Processing')

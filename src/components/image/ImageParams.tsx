@@ -20,6 +20,7 @@ import {
 } from '../../utils/seedreamModels'
 import { validateSeedreamRefBasic } from '../../utils/mediaValidation'
 import { Icon } from '../common/icons'
+import { useOptionalI18n } from '../../i18n/useOptionalI18n'
 
 export const IMAGE_PARAMS_DEFAULT_WIDTH = 320
 
@@ -30,8 +31,8 @@ function newRefId(): string {
 }
 
 /**
- * 近似「詞數」：CJK（漢字/假名/諺文）逐字計 1，其餘文字按空白斷詞。
- * 官方建議提示詞約 600 英文詞以內；純靠空白斷詞會把中文整段算成 1 詞。
+ * 近似「词数」：CJK（漢字/假名/諺文）逐字计 1，其余文字按空白断词。
+ * 官方建议提示词约 600 英文词以内；纯靠空白断词会把中文整段算成 1 词。
  */
 function approxPromptWordCount(prompt: string): number {
   const cjk = (prompt.match(/[一-鿿぀-ヿ가-힯]/g) ?? []).length
@@ -46,16 +47,17 @@ function approxPromptWordCount(prompt: string): number {
 export default function ImageParams({
   width = IMAGE_PARAMS_DEFAULT_WIDTH,
 }: { width?: number }) {
+  const { t } = useOptionalI18n()
   const store = useImageStore()
   const { generate } = useImageGeneration()
   const spec = SEEDREAM_MODELS[store.modelKey]
-  // computeImageBlockReason() 用 getState() 讀 imageStore + authStore 兩個快照。
-  // imageStore 的新鮮度來自上面的整-store 訂閱（每次狀態變化都重渲染）；
-  // authStore 則要在此明確訂閱，否則在憑證抽屜輸入金鑰/接入點後，
-  // 按鈕會一直停在 disabled，直到某次不相干的 imageStore 變化才刷新。
+  // computeImageBlockReason() 用 getState() 读 imageStore + authStore 两个快照。
+  // imageStore 的新鮮度来自上面的整-store 訂阅（每次状态变化都重渲染）；
+  // authStore 则要在此明确訂阅，否则在凭证抽屜输入密钥/接入点后，
+  // 按钮会一直停在 disabled，直到某次不相干的 imageStore 变化才刷新。
   useAuthStore((s) => s.apiKey)
   useAuthStore((s) => s.imageEndpoint)
-  const blockReason = computeImageBlockReason()
+  const blockReason = computeImageBlockReason(t)
 
   const onDrop = useCallback(
     (accepted: File[]) => {
@@ -75,16 +77,16 @@ export default function ImageParams({
     },
     [],
   )
-  // accept: image/* 在 onDrop 之前就把非圖片檔濾進 rejections——
-  // 不另行提示的話使用者會以為拖放沒反應，所以這裡也要 toast。
+  // accept: image/* 在 onDrop 之前就把非图片档滤进 rejections——
+  // 不另行提示的话用户会以为拖放没反应，所以这里也要 toast。
   const onDropRejected = useCallback((rejections: FileRejection[]) => {
     for (const r of rejections) {
       const v = validateSeedreamRefBasic(r.file)
       toast.error(
-        v.ok ? `不支援的檔案格式（${r.file.name}）` : v.errors.join('\n'),
+        v.ok ? t('image.validation.unsupportedFormat', { fileName: r.file.name }) : v.errors.join('\n'),
       )
     }
-  }, [])
+  }, [t])
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     onDropRejected,
@@ -101,38 +103,38 @@ export default function ImageParams({
     store.refImages.length + store.refUrls.filter((u) => u.trim() !== '').length
   const maxImagesCap = Math.max(1, SEQUENTIAL_TOTAL_CAP - refCount)
 
-  // 「插入 image N」— 讓提示詞用自然語言引用多張參考圖。編號規則必須與
-  // buildImageRequest 送出的 payload 順序一致：上傳檔在前（依列表順序），
-  // 接著非空的 URL 列（依列表順序）；空的 URL 列不佔號、也不顯示按鈕。
+  // 「插入 image N」— 让提示词用自然语言引用多张参考图。编号规则必须与
+  // buildImageRequest 送出的 payload 顺序一致：上传档在前（依列表顺序），
+  // 接著非空的 URL 列（依列表顺序）；空的 URL 列不占号、也不显示按钮。
   const fileCount = store.refImages.length
   const urlRefNumbers = store.refUrls.map((u, i) => {
     if (u.trim() === '') return null
-    // 此列在非空 URL 列中的序位（含自己）→ 接在上傳檔號段之後。
+    // 此列在非空 URL 列中的序位（含自己）→ 接在上传档号段之后。
     const seq = store.refUrls.slice(0, i + 1).filter((x) => x.trim() !== '').length
     return fileCount + seq
   })
 
   const promptRef = useRef<HTMLTextAreaElement>(null)
-  // 記住 textarea 最後的游標/選取範圍，插入時定位；失焦後仍保留。
-  // 注意：外部改寫 prompt（載入參數、新任務重置）不會更新這裡，offset 可能
-  // 過期——但 slice() 與 setSelectionRange() 對越界值都會安全 clamp，最壞只是
-  // 插入位置落在字串尾端，不會 crash。
+  // 记住 textarea 最后的游标/选择范围，插入时定位；失焦后仍保留。
+  // 注意：外部改写 prompt（加载参数、新任务重置）不会更新这里，offset 可能
+  // 过期——但 slice() 与 setSelectionRange() 对越界值都会安全 clamp，最坏只是
+  // 插入位置落在字符串尾端，不会 crash。
   const selectionRef = useRef<{ start: number; end: number } | null>(null)
   const captureSelection = (el: HTMLTextAreaElement) => {
     selectionRef.current = { start: el.selectionStart, end: el.selectionEnd }
   }
 
   const insertImageRef = (n: number) => {
-    // 官方多圖教學用純自然語言序數（"image 1"），不加中括號——中括號是
-    // Seedance 影格內容角色的慣例，Seedream 提示詞是自然語言，不需要。
+    // 官方多图教学用纯自然语言序数（"image 1"），不加中括号——中括号是
+    // Seedance 影格内容角色的惯例，Seedream 提示词是自然语言，不需要。
     const token = `image ${n}`
     const prompt = store.prompt
     const sel = selectionRef.current
     let next: string
     let caret: number
     if (sel) {
-      // 決定性補空白：相鄰字元存在且非空白才補，避免黏字（red|car →
-      // red image 1 car）也避免重複空白（'a |b' → 'a image 1 b'）。
+      // 决定性补空白：相邻字符存在且非空白才补，避免黏字（red|car →
+      // red image 1 car）也避免重复空白（'a |b' → 'a image 1 b'）。
       const before = prompt.slice(0, sel.start)
       const after = prompt.slice(sel.end)
       const padL = before !== '' && !/\s$/.test(before) ? ' ' : ''
@@ -147,7 +149,7 @@ export default function ImageParams({
     }
     store.setPrompt(next)
     selectionRef.current = { start: caret, end: caret }
-    // 重新聚焦並把游標移到插入內容之後（狀態更新後才 focus）。
+    // 重新聚焦并把游标移到插入内容之后（状态更新后才 focus）。
     requestAnimationFrame(() => {
       const el = promptRef.current
       if (el) {
@@ -171,7 +173,7 @@ export default function ImageParams({
         overflow: 'hidden',
       }}
     >
-      {/* 捲動內容區 — CTA 移入下方 sticky footer（handoff §C.1） */}
+      {/* 滚动内容区 — CTA 移入下方 sticky footer（handoff §C.1） */}
       <div
         style={{
           flex: 1,
@@ -184,7 +186,7 @@ export default function ImageParams({
       >
       {/* 模型版本 */}
       <div>
-        <label className="label" htmlFor="image-model-select">模型版本</label>
+        <label className="label" htmlFor="image-model-select">{t('image.modelVersion')}</label>
         <select
           id="image-model-select"
           className="select-field"
@@ -196,24 +198,24 @@ export default function ImageParams({
           ))}
         </select>
         <div className="hint">
-          呼叫使用「圖片生成接入點」；此選單用於鎖定參數選項，請與接入點的模型一致
+          {t('image.modelHint')}
         </div>
       </div>
 
       {/* Prompt */}
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-          <label className="label" htmlFor="image-prompt" style={{ margin: 0 }}>提示詞</label>
+          <label className="label" htmlFor="image-prompt" style={{ margin: 0 }}>{t('video.prompt')}</label>
           <button
             type="button"
             onClick={() => store.resetForNewTask()}
-            title="清除提示詞與參考圖，開始新任務"
+            title={t('video.newTaskTitle')}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
               color: 'var(--accent)', fontSize: 13, fontWeight: 500, padding: 0,
             }}
           >
-            新任務
+            {t('video.newTask')}
           </button>
         </div>
         <textarea
@@ -225,25 +227,25 @@ export default function ImageParams({
           onChange={(e) => store.setPrompt(e.target.value)}
           onSelect={(e) => captureSelection(e.currentTarget)}
           onBlur={(e) => captureSelection(e.currentTarget)}
-          placeholder="描述主體 + 動作 + 環境；需要美感時補風格/色彩/光線/構圖"
+          placeholder={t('image.promptPlaceholder')}
         />
         {hasAnyRef && (
           <div className="hint">
-            可用 <code>image 1</code>、<code>image 2</code>… 引用參考圖（上傳在前、URL 在後）
+            {t('image.promptRefHint')}
           </div>
         )}
         {approxPromptWordCount(store.prompt) > 600 && (
           <div className="hint" style={{ color: 'var(--warning)' }}>
-            提示詞超過約 600 詞，模型可能忽略細節（仍可送出）
+            {t('image.promptTooLong')}
           </div>
         )}
       </div>
 
-      {/* 參考圖（圖生圖） */}
+      {/* 参考图（图生图） */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
           <span className="label" style={{ margin: 0 }}>
-            參考圖{' '}
+            {t('image.referenceImages')}{' '}
             <span style={{ color: 'var(--text-muted)' }}>
               ({refCount}/{spec.maxRefImages})
             </span>
@@ -256,11 +258,11 @@ export default function ImageParams({
               color: 'var(--accent)', fontSize: 13, fontWeight: 500, padding: 0,
             }}
           >
-            + 圖片 URL
+            {t('image.addUrl')}
           </button>
         </div>
 
-        {/* 縮圖格（比照影片頁 MediaUploader 的 64px 縮圖 + 角標 + 圓形移除鈕） */}
+        {/* 缩图格（比照视频页 MediaUploader 的 64px 缩图 + 角标 + 圆形移除钮） */}
         {store.refImages.length > 0 && (
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
             {store.refImages.map((m, i) => (
@@ -271,7 +273,7 @@ export default function ImageParams({
                   overflow: 'hidden', border: '1px solid var(--border)',
                   background: 'var(--bg-input)', opacity: m.stale ? 0.5 : 1,
                 }}
-                title={m.filename + (m.stale ? '（失效，請重新上傳）' : '')}
+                title={m.filename + (m.stale ? t('image.staleTitle') : '')}
               >
                 {m.preview && !m.stale ? (
                   <img
@@ -287,12 +289,12 @@ export default function ImageParams({
                     wordBreak: 'break-all',
                   }}>
                     <div>{(m.filename ?? '').slice(0, 12)}</div>
-                    {m.stale && <div style={{ color: 'var(--warning)', marginTop: 2 }}>已失效</div>}
+                    {m.stale && <div style={{ color: 'var(--warning)', marginTop: 2 }}>{t('image.stale')}</div>}
                   </div>
                 )}
                 <button
                   type="button"
-                  title="插入到提示詞"
+                  title={t('image.insertToPrompt')}
                   onClick={() => insertImageRef(i + 1)}
                   style={{
                     position: 'absolute', bottom: 2, left: 2, padding: '1px 4px',
@@ -305,7 +307,7 @@ export default function ImageParams({
                 </button>
                 <button
                   type="button"
-                  aria-label={`移除 ${m.filename}`}
+                  aria-label={t('image.removeFile', { name: m.filename ?? 'unknown' })}
                   onClick={() => store.removeRefImage(m.id)}
                   style={{
                     position: 'absolute', top: 2, right: 2, width: 20, height: 20,
@@ -321,12 +323,12 @@ export default function ImageParams({
           </div>
         )}
 
-        {/* Dropzone — 與影片頁 .dropzone 同款 */}
+        {/* Dropzone — 与视频页 .dropzone 同款 */}
         <div
           {...getRootProps()}
           className={`dropzone ${isDragActive ? 'drag-active' : ''}`}
         >
-          <input {...getInputProps()} aria-label="上傳參考圖" />
+          <input {...getInputProps()} aria-label={t('image.uploadReference')} />
           <svg
             width="20" height="20" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
@@ -336,9 +338,9 @@ export default function ImageParams({
             <path d="M17 8l-5-5-5 5" />
             <path d="M12 3v12" />
           </svg>
-          <div>{isDragActive ? '放開以上傳' : '拖拽或點擊上傳'}</div>
+          <div>{isDragActive ? t('image.dropActive') : t('image.dropIdle')}</div>
           <div className="hint" style={{ marginTop: 4 }}>
-            留空 = 文生圖；上限 {spec.maxRefImages} 張，單檔 ≤ 30MB
+            {t('image.dropHint', { count: spec.maxRefImages })}
           </div>
         </div>
 
@@ -354,7 +356,7 @@ export default function ImageParams({
             {urlRefNumbers[i] !== null && (
               <button
                 type="button"
-                title="插入到提示詞"
+                title={t('image.insertToPrompt')}
                 onClick={() => insertImageRef(urlRefNumbers[i]!)}
                 style={insertRefBtnStyle}
               >
@@ -363,7 +365,7 @@ export default function ImageParams({
             )}
             <button
               type="button"
-              aria-label={`移除 URL ${i + 1}`}
+              aria-label={t('image.removeUrl', { index: i + 1 })}
               onClick={() => store.removeRefUrl(i)}
               style={{
                 width: 20, height: 20, borderRadius: '50%',
@@ -380,15 +382,15 @@ export default function ImageParams({
 
       {/* 尺寸 */}
       <div>
-        <label className="label">尺寸</label>
-        {/* Segmented control — 與影片頁「影片生成模式」同款 */}
+        <label className="label">{t('image.size')}</label>
+        {/* Segmented control — 与视频页「视频生成模式」同款 */}
         <div style={{
           display: 'flex', gap: 2, background: 'var(--bg-input)',
           borderRadius: 8, padding: 3, marginBottom: 8,
         }}>
           {([
-            { v: 'preset', label: '檔位', aria: '檔位模式' },
-            { v: 'custom', label: '自訂像素', aria: '自訂像素' },
+            { v: 'preset', label: t('image.sizeMode.preset'), aria: t('image.sizeMode.presetAria') },
+            { v: 'custom', label: t('image.sizeMode.custom'), aria: t('image.sizeMode.custom') },
           ] as const).map((m) => (
             <button
               key={m.v}
@@ -416,7 +418,7 @@ export default function ImageParams({
         {store.sizeMode === 'preset' ? (
           <div style={{ display: 'flex', gap: 8 }}>
             <div style={{ flex: 1 }}>
-              <label className="hint" htmlFor="image-size-level" style={{ display: 'block', marginTop: 0, marginBottom: 4, color: 'var(--text-secondary)' }}>解析度檔位</label>
+              <label className="hint" htmlFor="image-size-level" style={{ display: 'block', marginTop: 0, marginBottom: 4, color: 'var(--text-secondary)' }}>{t('image.sizeLevel')}</label>
               <select
                 id="image-size-level"
                 className="select-field"
@@ -429,7 +431,7 @@ export default function ImageParams({
               </select>
             </div>
             <div style={{ flex: 1 }}>
-              <label className="hint" htmlFor="image-aspect-ratio" style={{ display: 'block', marginTop: 0, marginBottom: 4, color: 'var(--text-secondary)' }}>比例</label>
+              <label className="hint" htmlFor="image-aspect-ratio" style={{ display: 'block', marginTop: 0, marginBottom: 4, color: 'var(--text-secondary)' }}>{t('image.aspectRatio')}</label>
               <select
                 id="image-aspect-ratio"
                 className="select-field"
@@ -446,7 +448,7 @@ export default function ImageParams({
           <div>
             <div style={{ display: 'flex', gap: 8 }}>
               <div style={{ flex: 1 }}>
-                <label className="hint" htmlFor="image-custom-width" style={{ display: 'block', marginTop: 0, marginBottom: 4, color: 'var(--text-secondary)' }}>寬 (px)</label>
+                <label className="hint" htmlFor="image-custom-width" style={{ display: 'block', marginTop: 0, marginBottom: 4, color: 'var(--text-secondary)' }}>{t('image.widthPx')}</label>
                 <input
                   id="image-custom-width"
                   className="input-field"
@@ -456,7 +458,7 @@ export default function ImageParams({
                 />
               </div>
               <div style={{ flex: 1 }}>
-                <label className="hint" htmlFor="image-custom-height" style={{ display: 'block', marginTop: 0, marginBottom: 4, color: 'var(--text-secondary)' }}>高 (px)</label>
+                <label className="hint" htmlFor="image-custom-height" style={{ display: 'block', marginTop: 0, marginBottom: 4, color: 'var(--text-secondary)' }}>{t('image.heightPx')}</label>
                 <input
                   id="image-custom-height"
                   className="input-field"
@@ -475,9 +477,9 @@ export default function ImageParams({
         )}
       </div>
 
-      {/* 輸出格式 */}
+      {/* 输出格式 */}
       <div>
-        <label className="label" htmlFor="image-output-format">輸出格式</label>
+        <label className="label" htmlFor="image-output-format">{t('image.outputFormat')}</label>
         <select
           id="image-output-format"
           className="select-field"
@@ -489,12 +491,12 @@ export default function ImageParams({
             <option key={f} value={f}>{f}</option>
           ))}
         </select>
-        {spec.formatLocked && <div className="hint">{spec.label} 固定輸出 jpeg</div>}
+        {spec.formatLocked && <div className="hint">{t('image.formatLocked', { model: spec.label })}</div>}
       </div>
 
-      {/* 組圖輸出 — toggle 列（與影片頁「回傳尾幀」等同款）。
-          原生 checkbox 以 .sr-only 隱藏保留（id / aria-label 不變，
-          鍵盤與測試行為與舊版一致），視覺由 .toggle 呈現。 */}
+      {/* 组图输出 — toggle 列（与视频页「返回尾帧」等同款）。
+          原生 checkbox 以 .sr-only 隐藏保留（id / aria-label 不变，
+          键盘与测试行为与旧版一致），视觉由 .toggle 呈现。 */}
       <div>
         <label
           htmlFor="image-sequential"
@@ -504,18 +506,18 @@ export default function ImageParams({
           }}
         >
           <div>
-            <span style={{ fontSize: 14 }}>組圖輸出</span>
+            <span style={{ fontSize: 14 }}>{t('image.sequential')}</span>
             <div className="hint" style={{ marginTop: 2 }}>
               {spec.supportsSequential
-                ? '一次生成一組系列圖'
-                : `${spec.label} 不支援組圖輸出（僅單圖）`}
+                ? t('image.sequentialEnabledHint')
+                : t('image.sequentialUnsupportedHint', { model: spec.label })}
             </div>
           </div>
           <input
             id="image-sequential"
             className="sr-only"
             type="checkbox"
-            aria-label="組圖輸出"
+            aria-label={t('image.sequential')}
             disabled={!spec.supportsSequential}
             checked={store.sequentialEnabled}
             onChange={(e) => store.setSequentialEnabled(e.target.checked)}
@@ -532,7 +534,7 @@ export default function ImageParams({
         {spec.supportsSequential && store.sequentialEnabled && (
           <div style={{ marginTop: 8 }}>
             <label className="label" htmlFor="image-max-images">
-              最多張數（參考圖 + 生成 ≤ {SEQUENTIAL_TOTAL_CAP}）
+              {t('image.maxImages', { cap: SEQUENTIAL_TOTAL_CAP })}
             </label>
             <input
               id="image-max-images"
@@ -547,7 +549,7 @@ export default function ImageParams({
         )}
       </div>
 
-      {/* AI 浮水印 — toggle 列 */}
+      {/* AI 水印 — toggle 列 */}
       <label
         htmlFor="image-watermark"
         style={{
@@ -556,8 +558,8 @@ export default function ImageParams({
         }}
       >
         <div>
-          <span style={{ fontSize: 14 }}>AI 浮水印</span>
-          <div className="hint" style={{ marginTop: 2 }}>在輸出中加入浮水印</div>
+          <span style={{ fontSize: 14 }}>{t('image.watermark')}</span>
+          <div className="hint" style={{ marginTop: 2 }}>{t('image.watermarkHint')}</div>
         </div>
         <input
           id="image-watermark"
@@ -575,7 +577,7 @@ export default function ImageParams({
 
       </div>
 
-      {/* Sticky footer — 生成 CTA + block reason（handoff §C.1，同影片頁結構） */}
+      {/* Sticky footer — 生成 CTA + block reason（handoff §C.1，同视频页结构） */}
       <div
         style={{
           flexShrink: 0,
@@ -595,13 +597,13 @@ export default function ImageParams({
           onClick={() => void generate()}
         >
           <Icon name="image" size={15} />
-          生成圖片
+          {t('image.generate')}
         </button>
         {blockReason && (
           <div className="hint" style={{ color: 'var(--warning)', marginTop: 6 }}>
             {blockReason}
-            {/* 憑證類原因附一鍵開啟抽屜（inference 區含 API 金鑰與圖片接入點） */}
-            {(blockReason.includes('金鑰') || blockReason.includes('接入點')) && (
+            {/* 凭证类原因附一键打开抽屜（inference 区含 API 密钥与图片接入点） */}
+            {(blockReason.includes('Key') || blockReason.includes('密钥') || blockReason.includes('接入点') || blockReason.includes('endpoint')) && (
               <button
                 type="button"
                 onClick={() => useCredentialsUiStore.getState().openDrawer('inference')}
@@ -612,7 +614,7 @@ export default function ImageParams({
                   color: 'var(--accent)', fontSize: 12,
                 }}
               >
-                開啟憑證設定
+                {t('image.openCredentials')}
               </button>
             )}
           </div>

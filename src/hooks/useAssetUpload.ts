@@ -211,16 +211,16 @@ export async function uploadOneAsset(
     void refreshGroupCount(input.groupId)
 
     if (final.status === 'Active') {
-      toast.success(`資產已就緒：${final.name || final.id}`)
+      toast.success(`资产已就绪：${final.name || final.id}`)
     } else {
-      toast.error(`資產處理失敗：${final.error?.message ?? final.id}`)
+      toast.error(`资产处理失败：${final.error?.message ?? final.id}`)
     }
     return final
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     useAssetStore.getState().patchUpload(cid, { stage: 'error', error: msg })
     useAssetStore.getState().finishUpload(cid)
-    toast.error(`上傳失敗（${input.file.name}）：${msg}`)
+    toast.error(`上传失败（${input.file.name}）：${msg}`)
     throw err
   }
 }

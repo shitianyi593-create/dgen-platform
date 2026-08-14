@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
 import toast from 'react-hot-toast'
 import { Icon } from '../common/icons'
+import { useOptionalI18n } from '../../i18n/useOptionalI18n'
 import type { LocalMedia, ImageRole } from '../../types'
 import {
   validateAudioBasic,
@@ -9,6 +10,7 @@ import {
   validateVideoBasic,
   type ValidationResult,
 } from '../../utils/mediaValidation'
+import type { MessageKey } from '../../i18n/locales'
 
 interface Props {
   label: string
@@ -51,6 +53,43 @@ interface Props {
   lockedHint?: string
 }
 
+function fmtMB(bytes: number): string {
+  return (bytes / 1024 / 1024).toFixed(1)
+}
+
+function allowedExtensions(accept: Record<string, string[]>): string {
+  const exts = Object.values(accept)
+    .flat()
+    .map((ext) => ext.replace(/^\./, ''))
+    .filter(Boolean)
+  return exts.join(', ')
+}
+
+function validationErrorMessage(
+  file: File,
+  result: ValidationResult,
+  accept: Record<string, string[]>,
+  t: (key: MessageKey, params?: Record<string, string | number>) => string,
+) {
+  const firstError = result.errors[0] ?? ''
+  if (firstError.includes('不支持的文件格式')) {
+    return t('video.validation.unsupportedFormat', {
+      fileName: file.name,
+      extensions: allowedExtensions(accept),
+    })
+  }
+  if (file.type.startsWith('image/')) {
+    return t('video.validation.imageTooLarge', { fileName: file.name, size: fmtMB(file.size) })
+  }
+  if (file.type.startsWith('video/')) {
+    return t('video.validation.videoTooLarge', { fileName: file.name, size: fmtMB(file.size) })
+  }
+  if (file.type.startsWith('audio/')) {
+    return t('video.validation.audioTooLarge', { fileName: file.name, size: fmtMB(file.size) })
+  }
+  return firstError || t('video.validation.invalidFile', { fileName: file.name })
+}
+
 export default function MediaUploader({
   label,
   accept,
@@ -71,6 +110,7 @@ export default function MediaUploader({
   locked,
   lockedHint,
 }: Props) {
+  const { t } = useOptionalI18n()
   const onDrop = useCallback(
     (files: File[]) => {
       const remaining = maxItems - items.length
@@ -85,14 +125,14 @@ export default function MediaUploader({
         else if (file.type.startsWith('audio/')) result = validateAudioBasic(file)
 
         if (!result.ok) {
-          toast.error(`${file.name}：${result.errors[0]}`)
+          toast.error(validationErrorMessage(file, result, accept, t))
           return
         }
         const preview = URL.createObjectURL(file)
         onAdd({ file, preview, uploading: false })
       })
     },
-    [items.length, maxItems, onAdd],
+    [accept, items.length, maxItems, onAdd, t],
   )
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -158,14 +198,14 @@ export default function MediaUploader({
                     textAlign: 'center',
                     wordBreak: 'break-all',
                   }}
-                  title="重整後失效，請重新上傳"
+                  title={t('video.uploader.staleTitle')}
                 >
                   <Icon name="image" size={16} />
                   <div style={{ marginTop: 2, opacity: 0.9 }}>
                     {(item.filename ?? '').slice(0, 12)}
                   </div>
                   <div style={{ marginTop: 2, color: 'var(--warning)', fontSize: 9 }}>
-                    已失效
+                    {t('video.uploader.stale')}
                   </div>
                 </div>
               ) : item.file?.type.startsWith('image/') ? (
@@ -215,8 +255,8 @@ export default function MediaUploader({
                   <button
                     type="button"
                     data-testid="media-label-badge"
-                    aria-label="插入到提示詞"
-                    title="插入到提示詞"
+                    aria-label={t('video.uploader.insertToPrompt')}
+                    title={t('video.uploader.insertToPrompt')}
                     onClick={(e) => {
                       e.stopPropagation()
                       onLabelClick(labels[idx])
@@ -294,7 +334,7 @@ export default function MediaUploader({
 
               {/* Remove button */}
               <button
-                aria-label="移除"
+                aria-label={t('video.uploader.remove')}
                 onClick={() => {
                   URL.revokeObjectURL(item.preview)
                   onRemove(idx)
@@ -341,7 +381,11 @@ export default function MediaUploader({
               >
                 {(roleChoices ?? ['first_frame', 'last_frame']).map((r) => (
                   <option key={r} value={r}>
-                    {r === 'first_frame' ? '首幀' : r === 'last_frame' ? '尾幀' : '參考'}
+                    {r === 'first_frame'
+                      ? t('video.role.firstFrame')
+                      : r === 'last_frame'
+                        ? t('video.role.lastFrame')
+                        : t('video.role.reference')}
                   </option>
                 ))}
               </select>
@@ -368,7 +412,7 @@ export default function MediaUploader({
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: -2, marginRight: 4 }}>
             <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
           </svg>
-          {lockedHint ?? '此模式不支援'}
+          {lockedHint ?? t('video.modeUnsupported')}
         </div>
       ) : items.length < maxItems && (
         <div
@@ -388,7 +432,7 @@ export default function MediaUploader({
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 4 }}>
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M17 8l-5-5-5 5" /><path d="M12 3v12" />
               </svg>
-              <div>{isDragActive ? '放開以上傳' : '拖拽或點擊上傳'}</div>
+              <div>{isDragActive ? t('video.uploader.dropActive') : t('video.uploader.dropIdle')}</div>
               {hint && <div className="hint" style={{ marginTop: 4 }}>{hint}</div>}
             </>
           )}

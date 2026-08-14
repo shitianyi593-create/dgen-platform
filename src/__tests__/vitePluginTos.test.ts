@@ -1,14 +1,14 @@
 /**
- * vite-plugin-tos 純函式 / handler 單元測試
+ * vite-plugin-tos 纯函数 / handler 单元测试
  *
- * 涵蓋需求：
- * - sanitizeFilename 處理特殊字元、中文、過長檔名
- * - buildObjectKey 落在 prefix/yyyy/MM/uuid-name 結構
- * - createTosHandlers.signPut 呼叫 SDK 並回傳 url+key+expiresAt
- * - createTosHandlers.signGet 預設用 config.defaultGetTtlSeconds
- * - signGet 帶 expiresSec 在合理範圍可覆寫；超過 7 天會拋
- * - signGet 帶非法 expiresSec (0 / 負數) 會拋
- * - signPut 缺 filename / signGet 缺 key 會拋
+ * 涵盖需求：
+ * - sanitizeFilename 处理特殊字符、中文、过长档名
+ * - buildObjectKey 落在 prefix/yyyy/MM/uuid-name 结构
+ * - createTosHandlers.signPut 呼叫 SDK 并回传 url+key+expiresAt
+ * - createTosHandlers.signGet 默认用 config.defaultGetTtlSeconds
+ * - signGet 带 expiresSec 在合理范围可覆写；超过 7 天会抛
+ * - signGet 带非法 expiresSec (0 / 负数) 会抛
+ * - signPut 缺 filename / signGet 缺 key 会抛
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
@@ -51,7 +51,7 @@ describe('sanitizeFilename', () => {
   })
 
   it('replaces non-ASCII (Chinese) characters', () => {
-    const out = sanitizeFilename('參考影片.mp4')
+    const out = sanitizeFilename('参考视频.mp4')
     // Should not contain CJK chars
     expect(out).not.toMatch(/[\u4e00-\u9fff]/)
     expect(out.endsWith('.mp4')).toBe(true)
@@ -84,7 +84,7 @@ describe('buildObjectKey', () => {
 
   it('uses sanitized filename', () => {
     const date = new Date(Date.UTC(2026, 0, 5))
-    const key = buildObjectKey('p/', '參考 video!.mp4', date, 'u1')
+    const key = buildObjectKey('p/', '参考 video!.mp4', date, 'u1')
     expect(key).toMatch(/^p\/2026\/01\/u1-/)
     expect(key).not.toMatch(/[\u4e00-\u9fff() ]/)
   })

@@ -10,8 +10,8 @@ import { overflowMenuItemStyle } from '../common/overflowMenuStyles'
 export const ASSET_GROUP_SIDEBAR_DEFAULT_WIDTH = 260
 
 /**
- * 距底多少 px 開始抓下一頁。200 ≈ 五列的高度：夠早，滑順捲動時下一頁通常在
- * 使用者捲到底前就接上；又不會早到一進畫面就把後面幾頁全拉下來。
+ * 距底多少 px 开始抓下一页。200 ≈ 五列的高度：够早，滑顺滚动时下一页通常在
+ * 用户滚到底前就接上；又不会早到一进画面就把后面几页全拉下来。
  */
 const LOAD_MORE_THRESHOLD_PX = 200
 
@@ -26,33 +26,33 @@ interface Props {
     description?: string,
   ) => Promise<void>
   onDelete: (group: AssetGroup) => void
-  /** 批次刪除。回傳 null = 使用者取消。 */
+  /** 批量删除。返回 null = 用户取消。 */
   onBatchDelete: (ids: string[]) => Promise<{ failedIds: string[] } | null>
-  /** 刪除 job 進行中 — 禁用刪除鈕防重複觸發。 */
+  /** 删除 job 进行中 — 禁用删除钮防重复触发。 */
   deleteBusy?: boolean
   /**
-   * 群組清單載入部分失敗時的橫幅文字（null = 不顯示）。
-   * 橫幅講的是「這一欄的清單不完整」，所以掛在這裡而不是素材區。
+   * 群组清单加载部分失败时的横幅文字（null = 不显示）。
+   * 横幅讲的是「这一栏的清单不完整」，所以挂在这里而不是素材区。
    */
   loadError?: string | null
-  /** 搜尋字串變更回報（伺服器端搜尋模式使用）。 */
+  /** 搜索字符串变更回报（服务器端搜索模式使用）。 */
   onQueryChange?: (q: string) => void
-  /** true = 清單已由呼叫端過濾（伺服器端搜尋），前端不再過濾。 */
+  /** true = 清单已由呼叫端过滤（服务器端搜索），前端不再过滤。 */
   disableClientFilter?: boolean
-  // ── 無限捲動 ──
+  // ── 无限滚动 ──
   /**
-   * 捲近底部（或按下底部重試列）時請求下一頁。
-   * 「搜尋顯示中不該載更多」的抑制在呼叫端（頁面知道目前的查詢字），
-   * 這裡不重複判斷。
+   * 滚近底部（或按下底部重试列）时请求下一页。
+   * 「搜索显示中不该载更多」的抑制在呼叫端（页面知道目前的查询字），
+   * 这里不重复判断。
    */
   onLoadMore: () => void
-  /** 還有未載入的群組（`已載入 < TotalCount`）。 */
+  /** 还有未加载的群组（`已加载 < TotalCount`）。 */
   hasMore: boolean
-  /** 下一頁請求在途。 */
+  /** 下一页请求在途。 */
   loadingMore: boolean
-  /** 載更多失敗的訊息（null = 沒有）—— 走清單底部的行內重試列，不是全頁 error。 */
+  /** 载更多失败的消息（null = 没有）—— 走清单底部的行内重试列，不是全页 error。 */
   loadMoreError: string | null
-  /** 伺服器上的群組總數，供底部「已載入 N / M」的 M；N 直接用 `groups.length`。 */
+  /** 服务器上的群组总数，供底部「已加载 N / M」的 M；N 直接用 `groups.length`。 */
   totalCount: number
   /** Optional override; falls back to ASSET_GROUP_SIDEBAR_DEFAULT_WIDTH. */
   width?: number
@@ -88,7 +88,7 @@ export default function AssetGroupSidebar({
   const [query, setQuery] = useState('')
   const [manageMode, setManageMode] = useState(false)
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set())
-  /** 批刪請求在途（含等待確認 Modal）— 防同一視窗內的連點重入。 */
+  /** 批删请求在途（含等待确认 Modal）— 防同一视窗内的连点重入。 */
   const batchDeleteInFlight = useRef(false)
   const toggleCheckedId = (id: string) =>
     setCheckedIds((prev) => {
@@ -97,39 +97,39 @@ export default function AssetGroupSidebar({
       else next.add(id)
       return next
     })
-  // groups 換清單時修剪勾選：群組被別的路徑刪掉（單筆刪除、其他分頁的
-  // 重新整理、批刪成功項）後，殘留的 id 會讓「刪除選取 (N)」虛胖，而那些列
-  // 已不在畫面上、使用者無從個別取消。採 render 期間比對前次 props 的官方
-  // 寫法（react.dev「You Might Not Need an Effect」），不用 useEffect —
-  // 無多餘 commit，也不觸發 set-state-in-effect lint。
-  // 注意：這裡刻意只吃 props.groups 的變動；搜尋過濾走的是下方的
-  // visibleGroups，不影響 groups，所以「過濾不清勾選」的行為維持不變。
+  // groups 换清单时修剪勾选：群组被别的路径删掉（单笔删除、其他分页的
+  // 刷新、批删成功项）后，残留的 id 会让「删除选择 (N)」虚胖，而那些列
+  // 已不在画面上、用户无从个别取消。采 render 期间比对前次 props 的官方
+  // 写法（react.dev「You Might Not Need an Effect」），不用 useEffect —
+  // 无多余 commit，也不触发 set-state-in-effect lint。
+  // 注意：这里刻意只吃 props.groups 的变动；搜索过滤走的是下方的
+  // visibleGroups，不影响 groups，所以「过滤不清勾选」的行为维持不变。
   //
-  // disableClientFilter（伺服器端搜尋顯示中，或清單尚未捲完）下整段跳過：
-  // 這時 props.groups 可能是「整批抽換的搜尋結果」（只有符合的那幾個，照修
-  // 等於一搜尋就清空勾選，跟 client 模式的行為相反），也可能是「還沒抓完的
-  // 累積前綴」（拿一份不完整的清單去判定「消失」，會誤刪還沒捲到、其實還在
-  // 的勾選）——兩種情況都不該修剪。該模式下多選本來就只能靠一次搜尋 / 一次
+  // disableClientFilter（服务器端搜索显示中，或清单尚未滚完）下整段跳过：
+  // 这时 props.groups 可能是「整批抽换的搜索结果」（只有符合的那几个，照修
+  // 等于一搜索就清空勾选，跟 client 模式的行为相反），也可能是「还没抓完的
+  // 累積前缀」（拿一份不完整的清单去判定「消失」，会误删还没滚到、其实还在
+  // 的勾选）——两種情况都不该修剪。该模式下多选本来就只能靠一次搜索 / 一次
   // 累積慢慢跟上。
-  // 那伺服器模式下「群組真的被刪」誰來修剪？主要靠批刪自己：onBatchDelete 的
-  // 結果直接把 checkedIds 設成「失敗項」（全成功則清空並退出管理模式），比對
-  // 清單更精準。單列選單的刪除入口在管理模式下不渲染，離開管理模式又會清掉
-  // 勾選。
+  // 那服务器模式下「群组真的被删」谁来修剪？主要靠批删自己：onBatchDelete 的
+  // 结果直接把 checkedIds 设成「失败项」（全成功则清空并退出管理模式），比对
+  // 清单更精准。单列选单的删除入口在管理模式下不渲染，离开管理模式又会清掉
+  // 勾选。
   //
-  // 已知的殘留來源（伺服器模式）：頁面上「刪除失敗」Modal 的「重試失敗項」
-  // 直接呼叫 runGroupBatchDelete，結果被丟棄、沒有 resolver 通道回到這裡 ——
-  // 重試成功的群組會留著勾。自癒路徑：下一次批刪帶上這些 id 會拿到 404，而
-  // 404 在 batchDelete 裡算冪等成功（onRemoved 照樣觸發），該輪結束後勾選就被
+  // 已知的残留来源（服务器模式）：页面上「删除失败」Modal 的「重试失败项」
+  // 直接呼叫 runGroupBatchDelete，结果被丢弃、没有 resolver 通道回到这里 ——
+  // 重试成功的群组会留着勾。自癒路径：下一次批删带上这些 id 会拿到 404，而
+  // 404 在 batchDelete 里算幂等成功（onRemoved 照样触发），该轮结束后勾选就被
   // 清掉了。
-  // 代價（abort 語意）：殘留 id 若回的不是 404 而是 400/403 這類非暫時性錯誤，
-  // batchDelete 會判定共因失敗而中止整批 —— 同批其餘群組一個都沒刪，勾選全數
-  // 保留。可以再按一次重來（狀態沒壞），但要知道「一個殘留 id 擋得下整批」。
+  // 代价（abort 语意）：残留 id 若回的不是 404 而是 400/403 这类非暂时性错误，
+  // batchDelete 会判定共因失败而中止整批 —— 同批其余群组一个都没删，勾选全数
+  // 保留。可以再按一次重来（状态没坏），但要知道「一个残留 id 挡得下整批」。
   //
-  // 無限捲動的 append 也會觸發這個 effect（新陣列參考），但只有「這一頁剛好
-  // 補滿、hasMoreGroups 翻假」那次會真的跑到上面的修剪——那個 render 裡
-  // disableClientFilter 已經跟著翻 false。這時已載入的 id 一個都沒少，修剪
-  // 跑完等於沒動，行為正確；成本是多建一個 Set（N 至多數千，可接受）。中途
-  // 的 append（disableClientFilter 仍 true）不會跑到修剪，理由同上一段。
+  // 无限滚动的 append 也会触发这个 effect（新阵列参考），但只有「这一页刚好
+  // 补满、hasMoreGroups 翻假」那次会真的跑到上面的修剪——那个 render 里
+  // disableClientFilter 已经跟著翻 false。这时已加载的 id 一个都没少，修剪
+  // 跑完等于没动，行为正确；成本是多建一个 Set（N 至多数千，可接受）。中途
+  // 的 append（disableClientFilter 仍 true）不会跑到修剪，理由同上一段。
   const [syncedGroups, setSyncedGroups] = useState(groups)
   if (syncedGroups !== groups) {
     setSyncedGroups(groups)
@@ -143,16 +143,16 @@ export default function AssetGroupSidebar({
     }
   }
 
-  // 模式翻轉時補發查詢。disableClientFilter 由呼叫端的 groupTotal 決定，而
-  // groupTotal 要等第一次全量載入回來才有值 —— 在那之前它是 false，使用者提早
-  // 打的字會被呼叫端的「非伺服器模式直接返回」吞掉。等載入完成翻成 true，下方
-  // 的前端過濾同時被關掉：畫面上會是「完整清單配著一個非空的搜尋字」，看起來
-  // 像搜尋壞了，而且要等使用者再敲一鍵才會恢復。翻轉當下補發一次，把這個窗口
-  // 補起來。
-  // 反向（true → false）不補發：那代表清單已完整，下方的前端過濾立刻生效。
-  // 同樣採 render 期間比對前次 props（上方 syncedGroups 的寫法），不用 useEffect。
-  // onQueryChange 在呼叫端是 debounce 的（只排一個 timer、不同步 setState），
-  // 所以這裡呼叫它不會在 render 期間更新別的元件。
+  // 模式翻转时补发查询。disableClientFilter 由呼叫端的 groupTotal 决定，而
+  // groupTotal 要等第一次全量加载回来才有值 —— 在那之前它是 false，用户提早
+  // 打的字会被呼叫端的「非服务器模式直接返回」吞掉。等加载完成翻成 true，下方
+  // 的前端过滤同时被关掉：画面上会是「完整清单配著一个非空的搜索字」，看起来
+  // 像搜索坏了，而且要等用户再敲一键才会恢复。翻转当下补发一次，把这个窗口
+  // 补起来。
+  // 反向（true → false）不补发：那代表清单已完整，下方的前端过滤立刻生效。
+  // 同样采 render 期间比对前次 props（上方 syncedGroups 的写法），不用 useEffect。
+  // onQueryChange 在呼叫端是 debounce 的（只排一个 timer、不同步 setState），
+  // 所以这里呼叫它不会在 render 期间更新别的组件。
   const [syncedFilterMode, setSyncedFilterMode] = useState(disableClientFilter)
   if (syncedFilterMode !== disableClientFilter) {
     setSyncedFilterMode(disableClientFilter)
@@ -210,10 +210,10 @@ export default function AssetGroupSidebar({
     <aside
       className="resizable-panel"
       style={asideStyle}
-      // 無限捲動的觸發點。捲動中這個 handler 每幀都會跑，所以三個旗標先擋：
-      // 已載完 / 已有請求在途 / 上一次失敗（失敗後停在底部不該無限重打同一個
-      // 壞請求 —— 重試改由底部那列的點擊發動）。呼叫端另有 ref guard 讓重覆
-      // 呼叫無害，但那是保險，不是這裡可以亂叫的理由。
+      // 无限滚动的触发点。滚动中这个 handler 每帧都会跑，所以三个旗标先挡：
+      // 已载完 / 已有请求在途 / 上一次失败（失败后停在底部不该无限重打同一个
+      // 坏请求 —— 重试改由底部那列的点击发动）。呼叫端另有 ref guard 让重覆
+      // 呼叫无害，但那是保险，不是这里可以亂叫的理由。
       onScroll={(e) => {
         if (!hasMore || loadingMore || loadMoreError) return
         const el = e.currentTarget
@@ -225,9 +225,9 @@ export default function AssetGroupSidebar({
         }
       }}
     >
-      {/* 部分載入橫幅 — 講的是下方這份清單不完整，所以貼在清單頭上而不是
-          素材區。非阻斷：已抓到的群組照常可用。不 sticky（會永久吃掉窄欄的
-          垂直空間），捲動時隨清單捲走。 */}
+      {/* 部分加载横幅 — 讲的是下方这份清单不完整，所以贴在清单头上而不是
+          素材区。非阻断：已抓到的群组照常可用。不 sticky（会永久吃掉窄栏的
+          垂直空间），滚动时随清单滚走。 */}
       {loadError && (
         <div
           role="alert"
@@ -240,7 +240,7 @@ export default function AssetGroupSidebar({
             color: 'var(--danger)',
             fontSize: scaledFs(11),
             lineHeight: 1.45,
-            overflowWrap: 'anywhere', // 窄欄 + 伺服器錯誤訊息可能是長字串
+            overflowWrap: 'anywhere', // 窄栏 + 服务器错误消息可能是长字符串
           }}
         >
           {loadError}
@@ -263,7 +263,7 @@ export default function AssetGroupSidebar({
             color: 'var(--text-primary)',
           }}
         >
-          素材群組
+          素材群组
         </span>
         <span
           style={{
@@ -273,16 +273,16 @@ export default function AssetGroupSidebar({
             color: 'var(--text-muted)',
           }}
         >
-          MODELARK
+          DGEN
         </span>
         <button
           type="button"
           onClick={() => {
             setManageMode((v) => !v)
-            // 離開管理模式時清掉勾選，避免下次進入沿用舊選取。
+            // 离开管理模式时清掉勾选，避免下次进入沿用旧选择。
             if (manageMode) setCheckedIds(new Set())
-            // 進入時關掉編輯中的表單 — 那一列不渲染 checkbox，
-            // 但「全選」仍會收進它的 id，看不見卻選得到最危險。
+            // 进入时关掉编辑中的表单 — 那一列不渲染 checkbox，
+            // 但「全选」仍会收进它的 id，看不见卻选得到最危险。
             else setEditingId(null)
           }}
           style={{
@@ -300,13 +300,13 @@ export default function AssetGroupSidebar({
         </button>
       </div>
 
-      {/* sticky：清單無限捲動、群組數無上限，捲清單時搜尋框不該被捲走。
-          外層包一層不透明 div 而非直接把 background 加在 input 上 —
-          input 有自己的 --bg-input 底色，且下方 10px 間距要能擋住
-          捲過去的列。offset 用 -16：sticky 的停靠邊是捲動容器的
-          content box（會被 aside 的 16px padding 內縮），用 0 會在
-          搜尋框上方留一條 16px 的縫讓列捲過去（headless Chrome 實測：
-          -16 齊邊零裁切、0 漏 16px 帶）。 */}
+      {/* sticky：清单无限滚动、群组数无上限，滚清单时搜索框不该被滚走。
+          外层包一层不透明 div 而非直接把 background 加在 input 上 —
+          input 有自己的 --bg-input 底色，且下方 10px 间距要能挡住
+          滚过去的列。offset 用 -16：sticky 的停靠边是滚动容器的
+          content box（会被 aside 的 16px padding 内缩），用 0 会在
+          搜索框上方留一条 16px 的缝让列滚过去（headless Chrome 实测：
+          -16 齐边零裁切、0 漏 16px 带）。 */}
       <div
         style={{
           position: 'sticky',
@@ -319,8 +319,8 @@ export default function AssetGroupSidebar({
         <input
           className="input-field"
           type="search"
-          aria-label="搜尋群組"
-          placeholder="搜尋群組…"
+          aria-label="搜索群组"
+          placeholder="搜索群组…"
           value={query}
           onChange={(e) => {
             setQuery(e.target.value)
@@ -329,12 +329,12 @@ export default function AssetGroupSidebar({
         />
       </div>
 
-      {/* 條件用「有輸入搜尋字」而非「groups 非空」：伺服器端搜尋模式
-          （清單尚未載完）零筆符合時 groups 會被設成 []，此時仍該顯示
-          「無符合群組」而不是讓頁面誤入「尚無群組」CTA。 */}
+      {/* 条件用「有输入搜索字」而非「groups 非空」：服务器端搜索模式
+          （清单尚未载完）零笔匹配时 groups 会被设成 []，此时仍该显示
+          「没有匹配的群组」而不是让页面误入「尚无群组」CTA。 */}
       {visibleGroups.length === 0 && query.trim() !== '' && (
         <div
-          // 過濾把清單清空時，讀屏使用者也要知道
+          // 过滤把清单清空时，读屏用户也要知道
           role="status"
           style={{
             padding: '16px 8px',
@@ -343,7 +343,7 @@ export default function AssetGroupSidebar({
             color: 'var(--text-muted)',
           }}
         >
-          無符合群組
+          没有匹配的群组
         </div>
       )}
 
@@ -381,7 +381,7 @@ export default function AssetGroupSidebar({
                     opacity: submitting ? 0.6 : 1,
                   }}
                 >
-                  儲存
+                  存储
                 </button>
                 <button
                   type="button"
@@ -423,10 +423,10 @@ export default function AssetGroupSidebar({
             {manageMode && (
               <input
                 type="checkbox"
-                aria-label={`選取 ${g.name}`}
+                aria-label={`选择 ${g.name}`}
                 checked={checkedIds.has(g.id)}
                 onChange={() => toggleCheckedId(g.id)}
-                // 列本身已處理 toggle，不讓事件冒泡造成雙重切換
+                // 列本身已处理 toggle，不让事件冒泡造成雙重切换
                 onClick={(e) => e.stopPropagation()}
                 style={{ flexShrink: 0, cursor: 'pointer' }}
               />
@@ -450,16 +450,16 @@ export default function AssetGroupSidebar({
             >
               {g.name}
             </span>
-            {/* 逐群組的素材數徽章已移除：它要靠「每個群組一發 ListAssets」的
-                扇出餵，群組上千時那就是打爆 QPM 的一半。改成只在主面板標題
-                顯示「選中群組」的數字（spec §4.3）。 */}
-            {/* 管理模式下隱藏單列選單 — 改名/單筆刪除入口與多選互斥 */}
+            {/* 逐群组的素材数徽章已移除：它要靠「每个群组一发 ListAssets」的
+                扇出喂，群组上千时那就是打爆 QPM 的一半。改成只在主面板标题
+                显示「选中群组」的数字（spec §4.3）。 */}
+            {/* 管理模式下隐藏单列选单 — 改名/单笔删除入口与多选互斥 */}
             {!manageMode && (
               <OverflowMenu
                 testId={`group-overflow-${g.id}`}
-                ariaLabel="群組選項"
+                ariaLabel="群组选项"
                 triggerSize={24}
-                // 鍵盤使用者：focus 也要現形（滑鼠靠 row hover 顯示）
+                // 键盘用户：focus 也要现形（鼠标靠 row hover 显示）
                 onTriggerFocus={() => setHoveredId(g.id)}
                 triggerStyle={{
                   opacity: hoveredId === g.id ? 1 : 0,
@@ -492,7 +492,7 @@ export default function AssetGroupSidebar({
                         color: 'var(--danger)',
                       }}
                     >
-                      刪除
+                      删除
                     </button>
                   </>
                 )}
@@ -502,20 +502,20 @@ export default function AssetGroupSidebar({
         )
       })}
 
-      {/* 清單底部的載入狀態 — 緊貼最後一列（新列就長在這裡），非 sticky，
-          兩種模式都顯示，位置在 sticky 操作列之上。三態互斥：
-          載入中 → 轉圈；剛失敗 → 重試列；還有更多 → 進度小字；
-          全部載完 → 什麼都不畫（清單結束本身就是訊息）。 */}
+      {/* 清单底部的加载状态 — 紧贴最后一列（新列就长在这里），非 sticky，
+          两種模式都显示，位置在 sticky 操作列之上。三态互斥：
+          加载中 → 转圈；刚失败 → 重试列；还有更多 → 进度小字；
+          全部载完 → 什么都不畫（清单结束本身就是消息）。 */}
       {loadingMore ? (
         <div role="status" style={loadMoreRowStyle}>
           <span className="spinner" style={{ width: 12, height: 12 }} />
-          載入中…
+          加载中…
         </div>
       ) : loadMoreError ? (
         <button
           type="button"
-          // 包一層而非直接傳 onLoadMore：後者會把 click event 當第一個引數
-          // 送進一個宣告為無參數的 callback。
+          // 包一层而非直接传 onLoadMore：后者会把 click event 当第一个引数
+          // 送进一个宣告为无参数的 callback。
           onClick={() => onLoadMore()}
           style={{
             ...loadMoreRowStyle,
@@ -526,17 +526,17 @@ export default function AssetGroupSidebar({
             cursor: 'pointer',
           }}
         >
-          載入更多失敗，點擊重試
+          加载更多失败，点击重试
         </button>
       ) : hasMore ? (
-        // 單一字串（而非 `已載入 {n} / {m}`）—— 拆成多個 text node 的話
-        // 讀屏會逐段念，測試也抓不到整句。
-        // role="status" 與上方的載入中列同級：捲動接上新一頁時，看不見列數
-        // 變多的使用者也要聽得到進度前進。
-        <div role="status" style={loadMoreRowStyle}>{`已載入 ${groups.length} / ${totalCount}`}</div>
+        // 单一字符串（而非 `已加载 {n} / {m}`）—— 拆成多个 text node 的话
+        // 读屏会逐段念，测试也抓不到整句。
+        // role="status" 与上方的加载中列同级：滚动接上新一页时，看不见列数
+        // 变多的用户也要聽得到进度前进。
+        <div role="status" style={loadMoreRowStyle}>{`已加载 ${groups.length} / ${totalCount}`}</div>
       ) : null}
 
-      {/* 管理模式下隱藏建立入口 — 底部操作列取而代之 */}
+      {/* 管理模式下隐藏创建入口 — 底部操作列取而代之 */}
       {!manageMode && (creating ? (
         <div
           style={{
@@ -548,13 +548,13 @@ export default function AssetGroupSidebar({
         >
           <input
             className="input-field"
-            placeholder="群組名稱"
+            placeholder="群组名称"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
           />
           <input
             className="input-field"
-            placeholder="描述（選填）"
+            placeholder="描述（选填）"
             value={newDesc}
             onChange={(e) => setNewDesc(e.target.value)}
           />
@@ -566,7 +566,7 @@ export default function AssetGroupSidebar({
               className="btn-primary"
               style={{ flex: 1 }}
             >
-              建立
+              创建
             </button>
             <button
               type="button"
@@ -599,13 +599,13 @@ export default function AssetGroupSidebar({
           }}
         >
           <Icon name="plus" size={14} />
-          建立新 Group
+          创建新群组
         </button>
       ))}
 
-      {/* 底部操作列 — sticky 貼齊 aside 底部（負橫向 margin 讓列滿版；
-          offset 用 -16 抵銷 aside 的 padding，理由同上方搜尋框——用 0
-          會在列下方漏一條 16px 的縫）。 */}
+      {/* 底部操作列 — sticky 贴齐 aside 底部（负横向 margin 让列满版；
+          offset 用 -16 抵銷 aside 的 padding，理由同上方搜索框——用 0
+          会在列下方漏一条 16px 的缝）。 */}
       {manageMode && (
         <div
           style={{
@@ -621,7 +621,7 @@ export default function AssetGroupSidebar({
         >
           <button
             type="button"
-            // 全選 = 把「目前可見」的群組併入勾選（搜尋過濾時不動已勾的隱藏項）
+            // 全选 = 把「目前可见」的群组并入勾选（搜索过滤时不动已勾的隐藏项）
             onClick={() =>
               setCheckedIds((prev) => {
                 const next = new Set(prev)
@@ -631,7 +631,7 @@ export default function AssetGroupSidebar({
             }
             style={{ ...ghostBtnStyle, flex: 1 }}
           >
-            全選
+            全选
           </button>
           <button
             type="button"
@@ -644,20 +644,20 @@ export default function AssetGroupSidebar({
             type="button"
             disabled={checkedIds.size === 0 || deleteBusy}
             onClick={async () => {
-              // deleteBusy 由父層的 job 狀態驅動，而 job 要等使用者在確認
-              // Modal 上按下確認才會起跑 — 中間這段視窗內連點會開出第二個
-              // Modal / 送出第二次請求。本地 in-flight 旗標補上這個缺口。
+              // deleteBusy 由父层的 job 状态驱动，而 job 要等用户在确认
+              // Modal 上按下确认才会起跑 — 中间这段视窗内连点会开出第二个
+              // Modal / 送出第二次请求。本地 in-flight 旗标补上这个缺口。
               if (batchDeleteInFlight.current) return
               batchDeleteInFlight.current = true
               try {
                 const ids = [...checkedIds]
                 const result = await onBatchDelete(ids)
-                if (!result) return // 使用者取消 — 勾選原樣保留
+                if (!result) return // 用户取消 — 勾选原样保留
                 if (result.failedIds.length === 0) {
                   setCheckedIds(new Set())
                   setManageMode(false)
                 } else {
-                  setCheckedIds(new Set(result.failedIds)) // 留失敗項供重試
+                  setCheckedIds(new Set(result.failedIds)) // 留失败项供重试
                 }
               } finally {
                 batchDeleteInFlight.current = false
@@ -672,7 +672,7 @@ export default function AssetGroupSidebar({
                 checkedIds.size === 0 || deleteBusy ? 'not-allowed' : 'pointer',
             }}
           >
-            刪除選取 ({checkedIds.size})
+            删除选择 ({checkedIds.size})
           </button>
         </div>
       )}
@@ -691,7 +691,7 @@ const accentBtnStyle: CSSProperties = {
   fontWeight: 500,
 }
 
-/** 清單底部三態共用的一列（spinner / 重試 / 進度）。 */
+/** 清单底部三态共用的一列（spinner / 重试 / 进度）。 */
 const loadMoreRowStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',

@@ -8,7 +8,7 @@ describe('envImport textEndpoint', () => {
     expect(out.inference?.textEndpoint).toBe('ep-20260101000000-txttx')
   })
 
-  it('別名優先序：SEED_2_0_PRO_ENDPOINT > TEXT_ENDPOINT', () => {
+  it('别名优先序：SEED_2_0_PRO_ENDPOINT > TEXT_ENDPOINT', () => {
     const out = mapToCreds({
       TEXT_ENDPOINT: 'ep-20260101000000-lowpr',
       SEED_2_0_PRO_ENDPOINT: 'ep-20260101000000-highp',
@@ -16,12 +16,12 @@ describe('envImport textEndpoint', () => {
     expect(out.inference?.textEndpoint).toBe('ep-20260101000000-highp')
   })
 
-  it('fallback：SEED_ 前綴的未知 ENDPOINT 變數（如 SEED_2_1_ENDPOINT）也吃得到', () => {
+  it('fallback：SEED_ 前缀的未知 ENDPOINT 变数（如 SEED_2_1_ENDPOINT）也吃得到', () => {
     const out = mapToCreds({ SEED_2_1_ENDPOINT: 'ep-20260101000000-fallb' })
     expect(out.inference?.textEndpoint).toBe('ep-20260101000000-fallb')
   })
 
-  it('fallback 不誤吃 SEEDANCE / SEEDREAM 變數', () => {
+  it('fallback 不误吃 SEEDANCE / SEEDREAM 变数', () => {
     const out = mapToCreds({
       SEEDANCE_2_0_ENDPOINT: 'ep-20260101000000-video',
       SEEDREAM_5_0_ENDPOINT: 'ep-20260101000000-image',
@@ -31,7 +31,7 @@ describe('envImport textEndpoint', () => {
     expect(out.inference?.imageEndpoint).toBe('ep-20260101000000-image')
   })
 
-  it('三個 ep 同時匯入互不干擾（.env.local 實際形狀）', () => {
+  it('三个 ep 同时导入互不干扰（.env.local 实际形状）', () => {
     const out = mapToCreds({
       API_KEY: '12345678-1234-1234-1234-1234567890ab',
       SEEDANCE_2_0_ENDPOINT: 'ep-20260101000000-video',
@@ -48,7 +48,7 @@ describe('envImport textEndpoint', () => {
 })
 
 describe('credentials schema', () => {
-  it('inference 區塊含 textEndpoint 欄位', () => {
+  it('inference 区块含 textEndpoint 栏位', () => {
     const keys = CREDENTIALS_BY_KEY.inference.fields.map((f) => f.key)
     expect(keys).toContain('textEndpoint')
   })

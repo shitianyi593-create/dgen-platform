@@ -1,13 +1,13 @@
 /**
- * videoStore 測試
+ * videoStore 测试
  *
- * 涵蓋需求：
- * - 影片生成參數管理 (prompt, ratio, duration, watermark, generateAudio)
- * - 參考媒體管理 (images, videos, audios)
- * - Asset 參考管理 (image/video/audio 類型)
- * - 併發任務追蹤 (activeTaskIds)
- * - 歷史紀錄管理 (新增、更新、清除)
- * - 預覽面板選擇 (currentTaskId, currentVideoUrl)
+ * 涵盖需求：
+ * - 视频生成参数管理 (prompt, ratio, duration, watermark, generateAudio)
+ * - 参考媒体管理 (images, videos, audios)
+ * - Asset 参考管理 (image/video/audio 类型)
+ * - 并发任务追踪 (activeTaskIds)
+ * - 历史记录管理 (新增、更新、清除)
+ * - 预览面板选择 (currentTaskId, currentVideoUrl)
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -22,7 +22,7 @@ function resetStore() {
 describe('videoStore', () => {
   beforeEach(resetStore)
 
-  // ── 參數管理 ──
+  // ── 参数管理 ──
 
   describe('generation params', () => {
     it('should have correct default values', () => {
@@ -83,7 +83,7 @@ describe('videoStore', () => {
     })
   })
 
-  // ── Asset 參考 ──
+  // ── Asset 参考 ──
 
   describe('asset references', () => {
     it('should add an asset ref', () => {
@@ -123,7 +123,7 @@ describe('videoStore', () => {
     })
   })
 
-  // ── 併發任務追蹤 ──
+  // ── 并发任务追踪 ──
 
   describe('concurrent task tracking', () => {
     it('should start with empty activeTaskIds', () => {
@@ -162,7 +162,7 @@ describe('videoStore', () => {
     })
   })
 
-  // ── 歷史紀錄管理 ──
+  // ── 历史记录管理 ──
 
   describe('history management', () => {
     const makeItem = (id: string, overrides?: Partial<VideoHistoryItem>): VideoHistoryItem => ({
@@ -324,7 +324,7 @@ describe('videoStore', () => {
     })
   })
 
-  // ── 預覽選擇 ──
+  // ── 预览选择 ──
 
   describe('preview selection', () => {
     it('should set currentTaskId', () => {

@@ -1,51 +1,51 @@
 // src/types/chat.ts
-// 文字生成（Chat / Responses API）共用型別。ChatTurn 同時是
-// UI 呈現單元、store 持久化單元、下載 JSON 的單元。
+// 文字生成（Chat / Responses API）共用型别。ChatTurn 同时是
+// UI 呈现单元、store 持久化单元、下载 JSON 的单元。
 
 export type ChatApiMode = 'chat' | 'responses'
 
-/** 系統提示注入方式（僅 Responses 模式有兩種；Chat 一律 system message）。 */
+/** 系统提示注入方式（仅 Responses 模式有两種；Chat 一律 system message）。 */
 export type SystemPromptMode = 'system' | 'instructions'
 
-/** 兩種 API 的 usage 正規化成同一形狀（Chat: prompt/completion；Responses: input/output）。 */
+/** 两種 API 的 usage 正规化成同一形状（Chat: prompt/completion；Responses: input/output）。 */
 export interface ChatUsage {
   promptTokens: number
   completionTokens: number
   totalTokens: number
-  /** usage.prompt_tokens_details.cached_tokens（隱性 cache 命中量；>0 = HIT）。 */
+  /** usage.prompt_tokens_details.cached_tokens（隐性 cache 命中量；>0 = HIT）。 */
   cachedTokens: number
-  /** usage.completion_tokens_details.reasoning_tokens（思維鏈耗用）。 */
+  /** usage.completion_tokens_details.reasoning_tokens（思维链耗用）。 */
   reasoningTokens: number
 }
 
 export interface ChatTiming {
-  /** ISO 字串（送出時間）。 */
+  /** ISO 字符串（送出时间）。 */
   requestAt: string
-  /** Time-to-first-token（僅串流有值）。 */
+  /** Time-to-first-token（仅流式有值）。 */
   ttftMs?: number
   totalMs: number
-  /** completion_tokens ÷ 生成秒數（totalMs − ttftMs）。 */
+  /** completion_tokens ÷ 生成秒数（totalMs − ttftMs）。 */
   tokensPerSec?: number
 }
 
 export interface ChatTurnMeta {
   requestId?: string
-  /** 實際使用的 model 版本（回應的 model 欄位）。 */
+  /** 实际使用的 model 版本（响应的 model 字段）。 */
   model?: string
   serviceTier?: string
   /** Chat: finish_reason；Responses: status（completed / incomplete…）。 */
   finishReason?: string
-  /** Responses 模式：本輪回應 id（下一輪的 previous_response_id）。 */
+  /** Responses 模式：本轮响应 id（下一轮的 previous_response_id）。 */
   responseId?: string
-  /** Responses 模式：回應未完成的原因（incomplete_details.reason）。 */
+  /** Responses 模式：响应未完成的原因（incomplete_details.reason）。 */
   incompleteReason?: string
-  /** Responses 模式：儲存/快取到期（unix 秒）。 */
+  /** Responses 模式：存储/缓存到期（unix 秒）。 */
   expireAt?: number
 }
 
 export interface ChatTurnError {
   status?: number
-  /** 原始 error body（或 Error message 字串）。 */
+  /** 原始 error body（或 Error message 字符串）。 */
   body: unknown
 }
 
@@ -54,24 +54,24 @@ export interface ChatTurn {
   apiMode: ChatApiMode
   userText: string
   assistant: { content: string; reasoning?: string }
-  /** 實際送出的 JSON body（含 ep ID；不含 API key）。 */
+  /** 实际送出的 JSON body（含 ep ID；不含 API key）。 */
   requestBody: unknown
-  /** 非串流：完整回應。串流（Responses）：response.completed 的 response 物件。 */
+  /** 非流式：完整响应。流式（Responses）：response.completed 的 response 对象。 */
   rawResponse?: unknown
-  /** 串流：原始 SSE data 行（含 event: 前綴行與 [DONE]）。 */
+  /** 流式：原始 SSE data 行（含 event: 前缀行与 [DONE]）。 */
   sseChunks?: string[]
   usage?: ChatUsage
   timing: ChatTiming
   meta?: ChatTurnMeta
   error?: ChatTurnError
   aborted?: boolean
-  /** 生成中。rehydrate 後仍為 true = 被頁面重整中斷 → merge 時轉標 aborted。 */
+  /** 生成中。rehydrate 后仍为 true = 被页面刷新中断 → merge 时转标 aborted。 */
   pending?: boolean
-  /** 本輪 request 實際帶的 previous_response_id（responses 模式；重送需要）。 */
+  /** 本轮 request 实际带的 previous_response_id（responses 模式；重送需要）。 */
   previousResponseId?: string
 }
 
-/** 參數面板狀態。數值欄位用字串保留「空 = 不送、用 API 預設」語意。 */
+/** 参数面板状态。数值字段用字符串保留「空 = 不送、用 API 默认」语意。 */
 export interface GenParams {
   temperature: string
   topP: string
@@ -79,7 +79,7 @@ export interface GenParams {
   thinkingType: '' | 'enabled' | 'disabled' | 'auto'
   reasoningEffort: '' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max'
   stream: boolean
-  /** service_tier（推論模式）；空 = 不送（用 API 預設 auto）。僅 Chat API 支援。 */
+  /** service_tier（推理模式）；空 = 不送（用 API 默认 auto）。仅 Chat API 支持。 */
   serviceTier: '' | 'fast' | 'auto' | 'default'
 }
 
@@ -93,7 +93,7 @@ export const DEFAULT_GEN_PARAMS: GenParams = {
   serviceTier: '',
 }
 
-/** api/chat.ts 與 api/responses.ts 的統一回傳形狀。 */
+/** api/chat.ts 与 api/responses.ts 的统一返回形状。 */
 export interface TurnResult {
   content: string
   reasoning?: string

@@ -35,8 +35,8 @@ describe('envImport: TEXT_LLM_SEED_ENDPOINT', () => {
     expect(out.inference?.videoEndpoint25).toBeUndefined()
   })
 
-  // 未來變體（TEXT_LLM_SEED_1_6_ENDPOINT 之類）靠 fallback 掃描接住；
-  // SEEDANCE_/SEEDREAM_ 是 SEED 接字母、不含 "SEED_"，不會被誤抓。
+  // 未来变体（TEXT_LLM_SEED_1_6_ENDPOINT 之类）靠 fallback 扫描接住；
+  // SEEDANCE_/SEEDREAM_ 是 SEED 接字母、不含 "SEED_"，不会被误抓。
   it('fallback scan catches TEXT_*_SEED_*_ENDPOINT variants', () => {
     const out = mapToCreds({ TEXT_LLM_SEED_1_6_ENDPOINT: 'ep-text-next' })
     expect(out.inference?.textEndpoint).toBe('ep-text-next')
@@ -51,9 +51,9 @@ describe('envImport: TEXT_LLM_SEED_ENDPOINT', () => {
   })
 })
 
-/** 鏡射實際 .env.local 的變數組合 — 拖放匯入後四個接入點必須各自歸位。 */
-describe('envImport: 實際 .env 拖放的完整推論憑證組合', () => {
-  it('API_KEY + 四個接入點全部對到正確欄位', () => {
+/** 镜射实际 .env.local 的变数组合 — 拖放导入后四个接入点必须各自歸位。 */
+describe('envImport: 实际 .env 拖放的完整推理凭证组合', () => {
+  it('API_KEY + 四个接入点全部对到正确栏位', () => {
     const out = mapToCreds({
       API_KEY: 'ark-key',
       SEEDANCE_2_0_ENDPOINT: 'ep-20',

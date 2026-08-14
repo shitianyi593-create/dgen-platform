@@ -22,9 +22,9 @@ const TYPE_BADGE: Record<
   Asset['assetType'],
   { label: string; icon: IconName; color: string }
 > = {
-  Image: { label: '圖片', icon: 'image', color: 'var(--type-image)' },
-  Video: { label: '影片', icon: 'video', color: 'var(--border-focus)' },
-  Audio: { label: '音訊', icon: 'music', color: 'var(--success)' },
+  Image: { label: '图片', icon: 'image', color: 'var(--type-image)' },
+  Video: { label: '视频', icon: 'video', color: 'var(--border-focus)' },
+  Audio: { label: '音频', icon: 'music', color: 'var(--success)' },
 }
 
 export default function AssetCard({
@@ -37,7 +37,7 @@ export default function AssetCard({
   onToggleCheck,
 }: Props) {
   const [hovered, setHovered] = useState(false)
-  // 鍵盤使用者 Tab 到 checkbox 時也要現形（滑鼠靠卡片 hover 顯示）。
+  // 键盘用户 Tab 到 checkbox 时也要现形（鼠标靠卡片 hover 显示）。
   const [checkFocused, setCheckFocused] = useState(false)
   const badge = TYPE_BADGE[asset.assetType]
   const checkVisible = hovered || checked || anyChecked || checkFocused
@@ -70,7 +70,7 @@ export default function AssetCard({
       <input
         type="checkbox"
         data-testid="asset-check"
-        aria-label={`選取 ${asset.name || asset.id}`}
+        aria-label={`选择 ${asset.name || asset.id}`}
         checked={checked}
         onClick={(e) => e.stopPropagation()}
         onFocus={() => setCheckFocused(true)}
@@ -140,11 +140,11 @@ export default function AssetCard({
               padding: 12,
               textAlign: 'center',
             }}
-            title={asset.error?.message ?? '處理失敗'}
+            title={asset.error?.message ?? '处理失败'}
           >
             <Icon name="alert-triangle" size={26} />
             <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-              處理失敗
+              处理失败
             </span>
           </div>
         ) : asset.status === 'Processing' ? (
@@ -159,7 +159,7 @@ export default function AssetCard({
           >
             <span className="spinner" />
             <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-              處理中…
+              处理中…
             </span>
           </div>
         ) : asset.assetType === 'Image' && asset.url ? (
@@ -251,7 +251,7 @@ export default function AssetCard({
         {/* status — Active shows nothing; Processing/Failed use StatusPill */}
         {asset.status === 'Processing' && (
           <div style={{ position: 'absolute', top: 8, right: 8 }}>
-            <StatusPill kind="running" label="處理中" testId="status-pill" />
+            <StatusPill kind="running" label="处理中" testId="status-pill" />
           </div>
         )}
         {asset.status === 'Failed' && (
@@ -259,7 +259,7 @@ export default function AssetCard({
             title={asset.error?.message}
             style={{ position: 'absolute', top: 8, right: 8 }}
           >
-            <StatusPill kind="danger" label="失敗" testId="status-pill" />
+            <StatusPill kind="danger" label="失败" testId="status-pill" />
           </div>
         )}
       </div>
@@ -283,7 +283,7 @@ export default function AssetCard({
             textOverflow: 'ellipsis',
           }}
         >
-          {asset.name || '(無名稱)'}
+          {asset.name || '(无名称)'}
         </div>
         <div
           style={{
@@ -309,8 +309,8 @@ export default function AssetCard({
           <button
             type="button"
             className="icon-btn"
-            aria-label="複製 URI"
-            title="複製 asset:// URI"
+            aria-label="复制 URI"
+            title="复制 asset:// URI"
             onClick={(e) => {
               e.stopPropagation()
               onCopyUri(formatAssetUri(asset.id))

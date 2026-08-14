@@ -1,5 +1,5 @@
 // src/components/chat/TurnDebugPanel.tsx
-// 展開後的完整 debug 面板：Token / 延遲（兩欄）/ Metadata / 伺服器端動作 / Raw。
+// 展开后的完整 debug 面板：Token / 延迟（两栏）/ Metadata / 服务器端动作 / Raw。
 import { useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import { copyWithToast } from '../../utils/clipboard'
@@ -39,9 +39,9 @@ function KV({ k, v, copyable, mono }: { k: string; v: React.ReactNode; copyable?
           <button
             onClick={() => void copyWithToast(k, copyable)}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 11, padding: 0 }}
-            aria-label={`複製 ${k}`}
+            aria-label={`复制 ${k}`}
           >
-            複製
+            复制
           </button>
         )}
       </span>
@@ -61,7 +61,7 @@ function RawBlock({ title, value }: { title: string; value: unknown }) {
           onClick={() => void copyWithToast(title, json)}
           style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent)', fontSize: 11, padding: 0, marginBottom: 4 }}
         >
-          複製 JSON
+          复制 JSON
         </button>
         <pre style={{
           margin: 0, padding: 8, background: 'var(--bg-primary)', borderRadius: 6,
@@ -74,14 +74,14 @@ function RawBlock({ title, value }: { title: string; value: unknown }) {
   )
 }
 
-/** 伺服器端動作：取回上下文 / 檢視 response / 刪除（僅 responses 模式且有 responseId）。 */
+/** 服务器端动作：取回上下文 / 查看 response / 删除（仅 responses 模式且有 responseId）。 */
 function ServerActions({ responseId }: { responseId: string }) {
   const [busy, setBusy] = useState<null | 'context' | 'response' | 'delete'>(null)
   const [result, setResult] = useState<{ title: string; value: unknown } | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
-  // 刪除成功後鎖定全部動作：伺服器端物件已不存在，再查詢必然失敗。
+  // 删除成功后锁定全部动作：服务器端对象已不存在，再查询必然失败。
   const [deleted, setDeleted] = useState(false)
-  // 全域忙碌鎖：同時只允許一個進行中的動作，避免並發回應競寫 result。
+  // 全域忙碌锁：同时只允许一个进行中的动作，避免并发响应競写 result。
   const locked = busy !== null || deleted
 
   const run = async (
@@ -95,7 +95,7 @@ function ServerActions({ responseId }: { responseId: string }) {
       setResult({ title, value: data })
     } catch (e) {
       const err = e as Error & { body?: unknown }
-      setResult({ title: '動作失敗', value: err.body ?? err.message ?? String(e) })
+      setResult({ title: '动作失败', value: err.body ?? err.message ?? String(e) })
     } finally {
       setBusy(null)
     }
@@ -106,50 +106,50 @@ function ServerActions({ responseId }: { responseId: string }) {
     setBusy('delete')
     try {
       const data = await deleteResponse(responseId)
-      setResult({ title: '刪除結果', value: data })
+      setResult({ title: '删除结果', value: data })
       if (data.deleted) {
         setDeleted(true)
-        toast.success('已刪除伺服器端 response')
+        toast.success('已删除服务器端 response')
       }
     } catch (e) {
       const err = e as Error & { body?: unknown }
-      setResult({ title: '動作失敗', value: err.body ?? err.message ?? String(e) })
+      setResult({ title: '动作失败', value: err.body ?? err.message ?? String(e) })
     } finally {
       setBusy(null)
     }
   }
 
   return (
-    <Section title="伺服器端動作">
+    <Section title="服务器端动作">
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: result ? 8 : 0 }}>
         <button
           style={{ ...actionBtnStyle, opacity: locked ? 0.5 : 1 }}
           disabled={locked}
-          onClick={() => void run('context', retrieveResponseContext, '伺服器上下文（input_items）')}
+          onClick={() => void run('context', retrieveResponseContext, '服务器上下文（input_items）')}
         >
-          查看伺服器上下文
+          查看服务器上下文
         </button>
         <button
           style={{ ...actionBtnStyle, opacity: locked ? 0.5 : 1 }}
           disabled={locked}
-          onClick={() => void run('response', retrieveResponse, '伺服器端 response')}
+          onClick={() => void run('response', retrieveResponse, '服务器端 response')}
         >
-          檢視 response
+          查看 response
         </button>
         <button
           style={{ ...actionBtnStyle, color: 'var(--danger)', borderColor: 'var(--danger)', opacity: locked ? 0.5 : 1 }}
           disabled={locked}
           onClick={() => setConfirmOpen(true)}
         >
-          刪除 response
+          删除 response
         </button>
       </div>
       {result && <RawBlock title={result.title} value={result.value} />}
       <ConfirmModal
         open={confirmOpen}
-        title="刪除伺服器端 response？"
-        subtitle="此操作無法復原。之後以 previous_response_id 串接此 id 的請求將失敗。"
-        confirmLabel="刪除"
+        title="删除服务器端 response？"
+        subtitle="此操作无法恢复。之后以 previous_response_id 串接此 id 的请求将失败。"
+        confirmLabel="删除"
         cancelLabel="取消"
         variant="danger"
         onConfirm={() => void confirmDelete()}
@@ -167,9 +167,9 @@ export default function TurnDebugPanel({ turn }: { turn: ChatTurn }) {
   const latency = (
     <>
       {turn.timing.ttftMs != null && <KV k="TTFT" v={`${(turn.timing.ttftMs / 1000).toFixed(2)}s`} />}
-      <KV k="總耗時" v={`${(turn.timing.totalMs / 1000).toFixed(2)}s`} />
+      <KV k="总耗时" v={`${(turn.timing.totalMs / 1000).toFixed(2)}s`} />
       {turn.timing.tokensPerSec != null && <KV k="tokens/sec" v={turn.timing.tokensPerSec.toFixed(1)} />}
-      <KV k="送出時間" v={turn.timing.requestAt} />
+      <KV k="送出时间" v={turn.timing.requestAt} />
     </>
   )
 
@@ -198,14 +198,14 @@ export default function TurnDebugPanel({ turn }: { turn: ChatTurn }) {
             />
             {belowThreshold && (
               <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 4 }}>
-                ⚠ prompt 未達隱性 cache 最低門檻（1024 tokens），不可能命中
+                ⚠ prompt 未达隐性 cache 最低门槛（1024 tokens），不可能命中
               </div>
             )}
           </Section>
-          <Section title="延遲">{latency}</Section>
+          <Section title="延迟">{latency}</Section>
         </div>
       ) : (
-        <Section title="延遲">{latency}</Section>
+        <Section title="延迟">{latency}</Section>
       )}
       {turn.meta && (
         <Section title="Metadata">

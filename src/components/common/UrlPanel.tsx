@@ -1,17 +1,18 @@
 import { Icon } from './icons'
 import { copyWithToast } from '../../utils/clipboard'
+import { useOptionalI18n } from '../../i18n/useOptionalI18n'
 
 /**
- * 共用 URL 面板（handoff 共用新元件）。
- * 取代 VideoPreview 的 UrlRow 與 ImagePreview 的 inline 版本：
- * 每列 label + readonly mono URL 框 + 複製鈕（± 開啟連結），底部可附 hint。
+ * 共用 URL 面板（handoff 共用新组件）。
+ * 取代 VideoPreview 的 UrlRow 与 ImagePreview 的 inline 版本：
+ * 每列 label + readonly mono URL 框 + 复制钮（± 打开连结），底部可附 hint。
  */
 export interface UrlPanelRow {
   label: string
   url: string
   /** 落在列容器 data-testid（沿用 video-url-row / last-frame-url-row 等既有 testid）。 */
   testId?: string
-  /** true 時多渲染一顆「開啟」連結（target _blank）。 */
+  /** true 时多渲染一颗「打开」连结（target _blank）。 */
   openable?: boolean
 }
 
@@ -21,6 +22,7 @@ interface UrlPanelProps {
 }
 
 export default function UrlPanel({ rows, hint }: UrlPanelProps) {
+  const { t } = useOptionalI18n()
   return (
     <div
       style={{
@@ -87,7 +89,7 @@ export default function UrlPanel({ rows, hint }: UrlPanelProps) {
             }}
           >
             <Icon name="copy" size={12} />
-            複製
+            {t('common.copy')}
           </button>
           {row.openable && (
             <a
@@ -101,7 +103,7 @@ export default function UrlPanel({ rows, hint }: UrlPanelProps) {
                 flexShrink: 0,
               }}
             >
-              開啟
+              {t('common.open')}
             </a>
           )}
         </div>

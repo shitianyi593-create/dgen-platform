@@ -1,16 +1,16 @@
 /**
- * useVideoGeneration hook 測試
+ * useVideoGeneration hook 测试
  *
  * Create-only contract: generate() resolves immediately after createVideoTask
  * registers the task; polling is owned by useBackgroundPoller.
  *
- * 涵蓋需求：
- * - 任務建立後加入 activeTaskIds + history（status=queued）
- * - History 帶有 executionExpiresAfter
- * - request body 帶有 execution_expires_after
- * - base64 轉換後作為 content 送出
- * - asset:// URI 根據 type 生成正確的 content item 格式
- * - 缺少 apiKey / endpoint / prompt 時顯示錯誤提示
+ * 涵盖需求：
+ * - 任务创建后加入 activeTaskIds + history（status=queued）
+ * - History 带有 executionExpiresAfter
+ * - request body 带有 execution_expires_after
+ * - base64 转换后作为 content 送出
+ * - asset:// URI 根据 type 生成正确的 content item 格式
+ * - 缺少 apiKey / endpoint / prompt 时显示错误提示
  */
 
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest'
@@ -64,7 +64,7 @@ describe('useVideoGeneration', () => {
       const { result } = renderHook(() => useVideoGeneration())
       await act(() => result.current.generate())
 
-      expect(toast.error).toHaveBeenCalledWith('請先輸入 API 金鑰')
+      expect(toast.error).toHaveBeenCalledWith('请输入 API Key')
       expect(mockedCreate).not.toHaveBeenCalled()
     })
 
@@ -75,7 +75,7 @@ describe('useVideoGeneration', () => {
       const { result } = renderHook(() => useVideoGeneration())
       await act(() => result.current.generate())
 
-      expect(toast.error).toHaveBeenCalledWith('請先輸入影片生成接入點 (Endpoint)')
+      expect(toast.error).toHaveBeenCalledWith('请输入视频生成接入点')
     })
 
     it('should show error when prompt is empty', async () => {
@@ -84,7 +84,7 @@ describe('useVideoGeneration', () => {
       const { result } = renderHook(() => useVideoGeneration())
       await act(() => result.current.generate())
 
-      expect(toast.error).toHaveBeenCalledWith('請輸入提示詞')
+      expect(toast.error).toHaveBeenCalledWith('请输入提示词')
     })
   })
 
@@ -351,7 +351,7 @@ describe('useVideoGeneration', () => {
       const { result } = renderHook(() => useVideoGeneration())
       await act(() => result.current.generate())
 
-      expect(toast.error).toHaveBeenCalledWith(expect.stringMatching(/上傳中/))
+      expect(toast.error).toHaveBeenCalledWith(expect.stringMatching(/上传中/))
       expect(mockedCreate).not.toHaveBeenCalled()
     })
 
@@ -366,7 +366,7 @@ describe('useVideoGeneration', () => {
       const { result } = renderHook(() => useVideoGeneration())
       await act(() => result.current.generate())
 
-      expect(toast.error).toHaveBeenCalledWith(expect.stringMatching(/上傳中/))
+      expect(toast.error).toHaveBeenCalledWith(expect.stringMatching(/上传中/))
       expect(mockedCreate).not.toHaveBeenCalled()
     })
 
@@ -382,7 +382,7 @@ describe('useVideoGeneration', () => {
       const { result } = renderHook(() => useVideoGeneration())
       await act(() => result.current.generate())
 
-      expect(toast.error).toHaveBeenCalledWith(expect.stringMatching(/影片尚未取得 URL/))
+      expect(toast.error).toHaveBeenCalledWith(expect.stringMatching(/视频尚未获取 URL/))
       expect(mockedCreate).not.toHaveBeenCalled()
     })
 
@@ -398,7 +398,7 @@ describe('useVideoGeneration', () => {
       const { result } = renderHook(() => useVideoGeneration())
       await act(() => result.current.generate())
 
-      expect(toast.error).toHaveBeenCalledWith(expect.stringMatching(/音訊尚未取得 URL/))
+      expect(toast.error).toHaveBeenCalledWith(expect.stringMatching(/音频尚未获取 URL/))
       expect(mockedCreate).not.toHaveBeenCalled()
     })
 
@@ -591,7 +591,7 @@ describe('useVideoGeneration', () => {
       expect(entry.requestContent?.ratio).toBe('16:9')
       expect(entry.requestContent?.duration).toBe(5)
 
-      expect(toast.error).toHaveBeenCalledWith('錯誤: 500 Internal Server Error')
+      expect(toast.error).toHaveBeenCalledWith('错误: 500 Internal Server Error')
     })
 
     it('uses "Unknown error" when a non-Error value is thrown', async () => {

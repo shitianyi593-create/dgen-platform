@@ -57,19 +57,19 @@ interface ImageState {
   updateHistory: (id: string, patch: Partial<ImageHistoryItem>) => void
   removeHistory: (id: string) => void
   clearHistory: () => void
-  /** 把一筆歷史的參數回填到表單（參考圖除外 — 檔案無法還原）。 */
+  /** 把一笔历史的参数回填到表单（参考图除外 — 文件无法还原）。 */
   loadParamsFromHistory: (item: ImageHistoryItem) => void
   resetForNewTask: () => void
 }
 
-/** 釋放單一 blob: objectURL（guard：測試環境可能沒有 URL.revokeObjectURL）。 */
+/** 释放单一 blob: objectURL（guard：测试环境可能没有 URL.revokeObjectURL）。 */
 function revokeBlobUrl(url: string): void {
   if (url.startsWith('blob:') && typeof URL !== 'undefined' && URL.revokeObjectURL) {
     try { URL.revokeObjectURL(url) } catch { /* test env */ }
   }
 }
 
-/** imported 項目的 blob: objectURL 需要手動釋放，避免記憶體洩漏。 */
+/** imported 项目的 blob: objectURL 需要手动释放，避免记憶体泄漏。 */
 function revokeImportedImageUrls(item: ImageHistoryItem): void {
   if (!item.imported) return
   for (const img of item.images) revokeBlobUrl(img.url)
@@ -96,7 +96,7 @@ export const useImageStore = create<ImageState>()(
       currentEntryId: null,
       history: [],
 
-      // 切換模型：把不相容的當前值修正為該模型的合法值。
+      // 切换模型：把不相容的当前值修正为该模型的合法值。
       setModelKey: (modelKey) =>
         set((s) => {
           const spec = SEEDREAM_MODELS[modelKey]
@@ -158,8 +158,8 @@ export const useImageStore = create<ImageState>()(
 
       loadParamsFromHistory: (item) =>
         set((s) => {
-          // 回填會丟棄表單上的參考圖 → 先釋放它們的 blob preview，
-          // 與 removeRefImage / resetForNewTask 的不變量一致。
+          // 回填会丢弃表单上的参考图 → 先释放它们的 blob preview，
+          // 与 removeRefImage / resetForNewTask 的不变量一致。
           for (const m of s.refImages) revokeBlobUrl(m.preview)
           const spec = SEEDREAM_MODELS[item.modelKey]
           const size = item.params.size ?? ''
@@ -216,9 +216,9 @@ export const useImageStore = create<ImageState>()(
         maxImages: state.maxImages,
         refUrls: state.refUrls,
         currentEntryId: state.currentEntryId,
-        // imported 項目的 blob: URL 重整後必死，不持久化（同 videoStore 理由）。
+        // imported 项目的 blob: URL 刷新后必死，不持久化（同 videoStore 理由）。
         history: state.history.filter((h) => !h.imported),
-        // File 不能 JSON 序列化 → 存檔名 stub，rehydrate 標記 stale。
+        // File 不能 JSON 序列化 → 存档名 stub，rehydrate 标记 stale。
         refImages: state.refImages.map((m) => ({
           filename: m.filename ?? m.file?.name ?? 'unknown',
         })),

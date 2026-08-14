@@ -125,7 +125,7 @@ function buildHistoryPatch(task: VideoTask): Partial<VideoHistoryItem> {
     patch.fps = task.framespersecond;
   }
   if (task.status === 'failed') {
-    patch.error = task.error?.message ?? '未知錯誤';
+    patch.error = task.error?.message ?? '未知错误';
   }
   return patch;
 }

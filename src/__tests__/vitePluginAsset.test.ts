@@ -1,5 +1,5 @@
 /**
- * vite-plugin-asset 純函式 / handler 單元測試
+ * vite-plugin-asset 纯函数 / handler 单元测试
  *
  * Covers: signing primitives, signRequest, createAssetHandlers, route table.
  */

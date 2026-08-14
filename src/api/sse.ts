@@ -1,22 +1,22 @@
-// SSE（Server-Sent Events）最小解析器 + 串流 POST。
-// axios 在瀏覽器拿不到增量回應 → 串流一律走 fetch + ReadableStream。
-// Bearer key 與 apiClient 同源（authStore），走同一個 /api proxy。
+// SSE（Server-Sent Events）最小解析器 + 流式 POST。
+// axios 在浏览器拿不到增量响应 → 流式一律走 fetch + ReadableStream。
+// Bearer key 与 apiClient 同源（authStore），走同一个 /api proxy。
 import { BASE_URL } from './client'
 import { useAuthStore } from '../stores/authStore'
 
 export const SSE_DONE = '[DONE]'
 
 export interface SseEvent {
-  /** SSE `event:` 欄位（Chat API 沒有；Responses API 有事件名）。 */
+  /** SSE `event:` 字段（Chat API 没有；Responses API 有事件名）。 */
   event?: string
-  /** `data:` 欄位的 payload（尚未 JSON.parse；可能是 [DONE]）。 */
+  /** `data:` 字段的 payload（尚未 JSON.parse；可能是 [DONE]）。 */
   data: string
 }
 
 /**
- * 逐行狀態機：feed() 餵任意切割的文字，吐出完成的事件。
- * 簡化假設（符合 ARK 的實際輸出）：每個事件一行 data；event: 行（若有）
- * 緊接在它的 data 行之前。其他欄位（id:、retry:、註解）忽略。
+ * 逐行状态机：feed() 喂任意切割的文字，吐出完成的事件。
+ * 簡化假设（符合 ARK 的实际输出）：每个事件一行 data；event: 行（若有）
+ * 紧接在它的 data 行之前。其他字段（id:、retry:、注解）忽略。
  */
 export function createSseParser() {
   let buffer = ''
@@ -35,11 +35,11 @@ export function createSseParser() {
           out.push({ event: pendingEvent, data: line.slice(5).trim() })
           pendingEvent = undefined
         }
-        // 空行與其他欄位：忽略
+        // 空行与其他字段：忽略
       }
       return out
     },
-    /** 串流結束後吐出殘留（無結尾換行的最後一行）。 */
+    /** 流式结束后吐出残留（无结尾换行的最后一行）。 */
     flush(): SseEvent[] {
       const line = buffer.replace(/\r$/, '')
       buffer = ''
@@ -55,13 +55,13 @@ export function createSseParser() {
 
 export interface PostSseOptions {
   signal?: AbortSignal
-  /** 每個 data 事件回呼一次（[DONE] 也會，data === SSE_DONE）。拋錯會中斷讀取並外傳。 */
+  /** 每个 data 事件回呼一次（[DONE] 也会，data === SSE_DONE）。抛错会中断读取并外传。 */
   onEvent: (e: SseEvent) => void
 }
 
 /**
- * POST + 讀 SSE 直到串流結束。回傳所有原始 data 行（含 event: 前綴、含 [DONE]），
- * 供 debug 面板的 chunk log 顯示。
+ * POST + 读 SSE 直到流式结束。返回所有原始 data 行（含 event: 前缀、含 [DONE]），
+ * 供 debug 面板的 chunk log 显示。
  */
 export async function postSse(
   path: string,
@@ -92,7 +92,7 @@ export async function postSse(
     err.body = parsed
     throw err
   }
-  if (!res.body) throw new Error('串流回應沒有 body')
+  if (!res.body) throw new Error('流式响应没有 body')
 
   const reader = res.body.getReader()
   const decoder = new TextDecoder()
@@ -113,14 +113,14 @@ export async function postSse(
     dispatch(parser.feed(decoder.decode()))
     dispatch(parser.flush())
   } catch (err) {
-    // abort / onEvent 拋錯：把「到目前為止已收到的原始 chunk」掛在錯誤上外傳，
-    // 讓上層能保留部分內容的 chunk log 並標記 aborted。
+    // abort / onEvent 抛错：把「到目前为止已收到的原始 chunk」挂在错误上外传，
+    // 让上层能保留部分内容的 chunk log 并标记 aborted。
     if (err && typeof err === 'object') {
       ;(err as Error & { sseChunks?: string[] }).sseChunks = raw
     }
     throw err
   } finally {
-    // onEvent 拋錯 / abort 時確保連線釋放
+    // onEvent 抛错 / abort 时确保连接释放
     try { await reader.cancel() } catch { /* already closed */ }
   }
   return raw

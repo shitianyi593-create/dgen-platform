@@ -1,12 +1,12 @@
 /**
  * VideoPreview component test
  *
- * 涵蓋需求：
- * - 影片元素「不」帶 autoplay attribute（使用者必須手動按播放鍵）
- * - 影片元素帶 controls 屬性（提供標準播放控制）
- * - 無 currentVideoUrl 時顯示 placeholder（不渲染 <video>）
- * - 有 objectUrl 時優先用 objectUrl 而非 videoUrl 作為 source
- * - 切換 videoSrc 時 <video> 用 key 強制 remount，避免快取問題
+ * 涵盖需求：
+ * - 视频元素「不」带 autoplay attribute（用户必须手动按播放键）
+ * - 视频元素带 controls 属性（提供标准播放控制）
+ * - 无 currentVideoUrl 时显示 placeholder（不渲染 <video>）
+ * - 有 objectUrl 时优先用 objectUrl 而非 videoUrl 作为 source
+ * - 切换 videoSrc 时 <video> 用 key 强制 remount，避免缓存问题
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, cleanup, screen, within } from '@testing-library/react'
@@ -57,7 +57,7 @@ describe('VideoPreview — placeholder', () => {
   it('shows the empty placeholder when there is no current video', () => {
     const { container, getByText } = render(<VideoPreview />)
     expect(container.querySelector('video')).toBeNull()
-    expect(getByText('生成的影片將顯示於此。')).toBeInTheDocument()
+    expect(getByText('生成的视频将显示在这里。')).toBeInTheDocument()
   })
 })
 
@@ -198,7 +198,7 @@ describe('VideoPreview — URL section + copy', () => {
     expect(frameInput.value).toBe('https://cdn/last.png')
   })
 
-  it('複製 button copies the row URL (via shared copyWithToast)', async () => {
+  it('复制 button copies the row URL (via shared copyWithToast)', async () => {
     selectTaskWithUrls()
     const { copyWithToast } = await import('../utils/clipboard')
     vi.mocked(copyWithToast).mockClear()
@@ -207,12 +207,12 @@ describe('VideoPreview — URL section + copy', () => {
     render(<VideoPreview />)
 
     const videoRow = screen.getByTestId('video-url-row')
-    await user.click(within(videoRow).getByRole('button', { name: '複製' }))
-    expect(copyWithToast).toHaveBeenCalledWith('影片 URL', 'https://cdn/v.mp4')
+    await user.click(within(videoRow).getByRole('button', { name: '复制' }))
+    expect(copyWithToast).toHaveBeenCalledWith('视频 URL', 'https://cdn/v.mp4')
 
     const frameRow = screen.getByTestId('last-frame-url-row')
-    await user.click(within(frameRow).getByRole('button', { name: '複製' }))
-    expect(copyWithToast).toHaveBeenCalledWith('尾幀 URL', 'https://cdn/last.png')
+    await user.click(within(frameRow).getByRole('button', { name: '复制' }))
+    expect(copyWithToast).toHaveBeenCalledWith('尾帧 URL', 'https://cdn/last.png')
   })
 
   it('hides the URL section entirely when neither URL is present', () => {

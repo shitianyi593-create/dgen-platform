@@ -1,10 +1,10 @@
 import type { ReactNode, SVGProps } from 'react'
 
 /**
- * 全站共用 stroke-SVG icons（handoff 全站共用改動 §3）。
- * Feather-icons 相容規格，與 Header 齒輪同風格：
+ * 全站共用 stroke-SVG icons（handoff 全站共用改动 §3）。
+ * Feather-icons 相容规格，与 Header 齒轮同风格：
  * viewBox 24、fill none、stroke currentColor、width 2、round caps/joins。
- * path 取自 design_handoff_ui_optimization/mockups（各稿可直接複製）。
+ * path 取自 design_handoff_ui_optimization/mockups（各稿可直接复制）。
  */
 export type IconName =
   | 'copy'
@@ -129,7 +129,7 @@ const PATHS: Record<IconName, ReactNode> = {
 
 interface IconProps extends SVGProps<SVGSVGElement> {
   name: IconName
-  /** width = height；預設 14（小按鈕內），依規格用 size 覆寫。 */
+  /** width = height；默认 14（小按钮内），依规格用 size 覆写。 */
   size?: number
 }
 

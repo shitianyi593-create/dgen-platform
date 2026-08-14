@@ -53,7 +53,7 @@ export default function AssetLibraryPage() {
   if (!credsReady) {
     return (
       <div style={{ textAlign: 'center', padding: '64px 24px', color: 'var(--text-muted)', fontSize: 14 }}>
-        <p>請先在側邊面板「② 私有素材庫憑證」區塊填入並驗證後使用。</p>
+        <p>请先在侧栏面板「② 私有素材库凭证」区块填入并验证后使用。</p>
       </div>
     )
   }
@@ -98,46 +98,46 @@ function AssetLibraryPageInner() {
   )
   const [pendingGroupDelete, setPendingGroupDelete] =
     useState<AssetGroup | null>(null)
-  // Sidebar 的「刪除選取」與它的確認 Modal 之間的橋樑：resolve 一路帶回
-  // sidebar，讓它知道該清勾選（成功）、留失敗項、還是原樣保留（取消）。
+  // Sidebar 的「删除选择」与它的确认 Modal 之间的橋樑：resolve 一路带回
+  // sidebar，让它知道该清勾选（成功）、留失败项、还是原样保留（取消）。
   const [pendingGroupBatch, setPendingGroupBatch] = useState<{
     ids: string[]
     resolve: (r: { failedIds: string[] } | null) => void
   } | null>(null)
-  // ── 群組清單的分頁累積狀態（spec §3）──
-  // 伺服器回報的群組總數（不是 groups.length — 那是「目前累積到的」）。
+  // ── 群组清单的分页累積状态（spec §3）──
+  // 服务器回报的群组总数（不是 groups.length — 那是「目前累積到的」）。
   const [groupTotal, setGroupTotal] = useState(0)
-  /** 下一次「載更多」要抓的頁碼；初載成功後是 2。 */
+  /** 下一次「载更多」要抓的页码；初载成功后是 2。 */
   const [nextPageNumber, setNextPageNumber] = useState(1)
   const [loadingMore, setLoadingMore] = useState(false)
-  /** 載更多失敗的訊息 —— 刻意不併進全頁 `error`（已載入的清單照常可用）。 */
+  /** 载更多失败的消息 —— 刻意不并进全页 `error`（已加载的清单照常可用）。 */
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null)
-  // 已累積的群組 id。Desc 排序下抓頁期間若有群組被建立，視窗整個往下位移，
-  // 頁尾項目會在下一頁重複回傳 —— append 前逐項比對，避免 React duplicate
-  // key 與管理模式的勾選數錯亂。
+  // 已累積的群组 id。Desc 排序下抓页期间若有群组被创建，视窗整个往下位移，
+  // 页尾项目会在下一页重复返回 —— append 前逐项比对，避免 React duplicate
+  // key 与管理模式的勾选数错亂。
   const seenGroupIds = useRef<Set<string>>(new Set())
   const hasMoreGroups = groups.length < groupTotal
-  // 「已載入 < 總數」同時也是搜尋門檻：前端手上的清單不完整時，搜尋必須改走
-  // 伺服器端 Name 過濾，否則搜不到還沒捲到的那些群組。刻意寫成別名而非重複
-  // 一次表達式 —— 兩者語意上綁定，不該各自漂移。
+  // 「已加载 < 总数」同时也是搜索门槛：前端手上的清单不完整时，搜索必须改走
+  // 服务器端 Name 过滤，否则搜不到还没滚到的那些群组。刻意写成别名而非重复
+  // 一次表达式 —— 两者语意上绑定，不该各自漂移。
   const serverSearchMode = hasMoreGroups
   /**
-   * 目前劫持著清單的伺服器端查詢字（null = 畫面上是累積清單）。
-   * 不變式：非 null ⟹ `groups` 裝的是一次搜尋的結果（反向不保證 —— 搜尋失敗時
-   * `groups` 仍是累積清單，此時旗標刻意維持非 null，見下）。
-   * 三個消費者：載更多互斥、底部 footer 靜音、批刪收尾要重跑哪個查詢。
+   * 目前劫持著清单的服务器端查询字（null = 画面上是累積清单）。
+   * 不变式：非 null ⟹ `groups` 装的是一次搜索的结果（反向不保证 —— 搜索失败时
+   * `groups` 仍是累積清单，此时旗标刻意维持非 null，见下）。
+   * 三个消费者：载更多互斥、底部 footer 静音、批删收尾要重跑哪个查询。
    *
-   * 刻意不吃 sidebar 每個按鍵的 `onQueryChange`：那時 debounce 還沒到期、清單
-   * 也還沒被換掉，此刻停掉無限捲動只會讓「打字打到一半順手捲一下」失效。
-   * 寫入/還原時機見 `runGroupSearch`，清除見 `refreshGroups`。
+   * 刻意不吃 sidebar 每个按键的 `onQueryChange`：那时 debounce 还没到期、清单
+   * 也还没被换掉，此刻停掉无限滚动只会让「打字打到一半顺手滚一下」失效。
+   * 写入/还原时机见 `runGroupSearch`，清除见 `refreshGroups`。
    *
-   * 讀哪一份看消費者是誰：footer 靜音是 render-time 的 JSX prop 計算，
-   * 必須讀下面這個 state（ref 改變不會觸發 re-render，UI 不會跟著更新）；
-   * 載更多互斥（`loadMoreGroups`）與批刪收尾（`runGroupBatchDelete`）都是
-   * 事件觸發的非同步守門，必須讀 `activeGroupQueryRef`——state 要等 React
-   * commit 完那次 re-render 才追上，這兩個消費者的觸發時機（使用者捲動、
-   * batchDelete 的 await 鏈）都跟 render 週期沒有同步關係，留讀 state 會
-   * 開一個「已經送出新查詢、還沒 commit」的窗口。
+   * 读哪一份看消费者是谁：footer 静音是 render-time 的 JSX prop 计算，
+   * 必须读下面这个 state（ref 改变不会触发 re-render，UI 不会跟著更新）；
+   * 载更多互斥（`loadMoreGroups`）与批删收尾（`runGroupBatchDelete`）都是
+   * 事件触发的非同步守门，必须读 `activeGroupQueryRef`——state 要等 React
+   * commit 完那次 re-render 才追上，这两个消费者的触发时机（用户滚动、
+   * batchDelete 的 await 链）都跟 render 周期没有同步关系，留读 state 会
+   * 开一个「已经送出新查询、还没 commit」的窗口。
    */
   const [activeGroupQuery, setActiveGroupQueryState] = useState<string | null>(
     null,
@@ -179,14 +179,14 @@ function AssetLibraryPageInner() {
     [groups, selectedGroupId],
   )
   /**
-   * 主面板標題旁的素材數（spec §4.3）。讀 `groupCounts`（伺服器端的群組總數）
-   * 而非 `assets.length` —— 後者只是「這次載進來的那一頁」，上限 100 且會被
-   * 狀態篩選縮小，大群組的標題會永遠停在「100 個素材」，而換一下狀態篩選數字
-   * 就跳動。列上的逐群組徽章已隨 count 扇出刪除，選中這一個是唯一還會發
+   * 主面板标题旁的素材数（spec §4.3）。读 `groupCounts`（服务器端的群组总数）
+   * 而非 `assets.length` —— 后者只是「这次载进来的那一页」，上限 100 且会被
+   * 状态筛选缩小，大群组的标题会永远停在「100 个素材」，而换一下状态筛选数字
+   * 就跳动。列上的逐群组徽章已随 count 扇出删除，选中这一个是唯一还会发
    * `countAssetsInGroup` 的地方。
    *
-   * undefined（還沒回來、或那一發被吞掉的失敗）→ '—'，不退化成 0：空群組與
-   * 「還不知道」在畫面上必須分得出來，否則使用者會以為素材沒上傳成功。
+   * undefined（还没回来、或那一发被吞掉的失败）→ '—'，不退化成 0：空群组与
+   * 「还不知道」在画面上必须分得出来，否则用户会以为素材没上传成功。
    */
   const selectedGroupCountLabel =
     selectedGroupId !== null && groupCounts[selectedGroupId] !== undefined
@@ -201,20 +201,20 @@ function AssetLibraryPageInner() {
     [groups, previewAsset],
   )
 
-  // 跨清單抽換累積的 id → 名稱快取。
+  // 跨清单抽换累積的 id → 名称缓存。
   //
-  // 伺服器端搜尋模式（清單尚未載完）下 `groups` 是「這次搜尋的可見清單」而非現存
-  // 群組的全集，而該模式下的多選本來就只能靠一次搜尋一個累積 —— 只查 `groups`
-  // 的話，先前搜尋勾到的群組在批刪確認 Modal 上會退化成裸 id
-  //（「將刪除以下群組：g-0」），在 batchDelete 的 failed[].name 上也一樣。
-  // 級聯刪除（群組內素材一併永久刪除）前的那份名單是最後一道防線，不能只剩 id。
+  // 服务器端搜索模式（清单尚未载完）下 `groups` 是「这次搜索的可见清单」而非现存
+  // 群组的全集，而该模式下的多选本来就只能靠一次搜索一个累積 —— 只查 `groups`
+  // 的话，先前搜索勾到的群组在批删确认 Modal 上会退化成裸 id
+  //（「将删除以下群组：g-0」），在 batchDelete 的 failed[].name 上也一样。
+  // 级联删除（群组内素材一并永久删除）前的那份名单是最后一道防线，不能只剩 id。
   //
-  // 不用清：查得到就是好事，而被刪掉的 id 之後不會再被查（removeGroup +
-  // refreshGroups 之後它不會再出現在任何勾選裡）。上限是 tenant 的群組數。
+  // 不用清：查得到就是好事，而被删掉的 id 之后不会再被查（removeGroup +
+  // refreshGroups 之后它不会再出现在任何勾选里）。上限是 tenant 的群组数。
   const groupNameCache = useRef(new Map<string, string>())
   const groupNameOf = useMemo(() => {
-    // merge-on-change（而非每次 render 都掃）：只在 groups 換身分時付出成本。
-    // 對同一份 cache 的寫入是冪等的，StrictMode 的雙次 render 也安全。
+    // merge-on-change（而非每次 render 都扫）：只在 groups 换身分时付出成本。
+    // 对同一份 cache 的写入是幂等的，StrictMode 的雙次 render 也安全。
     const cache = groupNameCache.current
     for (const g of groups) if (g.name) cache.set(g.id, g.name)
     return (id: string) => cache.get(id) ?? id
@@ -256,7 +256,7 @@ function AssetLibraryPageInner() {
       if (a) counts[a.assetType]++
     }
     return [
-      counts.Image && `${counts.Image} 圖`,
+      counts.Image && `${counts.Image} 图`,
       counts.Video && `${counts.Video} 影`,
       counts.Audio && `${counts.Audio} 音`,
     ]
@@ -265,28 +265,28 @@ function AssetLibraryPageInner() {
   }, [pendingBatchDelete, displayedAssets])
 
   // ── Fetchers ──
-  // 重入序號：StrictMode 的 mount effect 雙觸發、或連點刪除，會讓兩次載入
-  // 並發。交錯時晚到的 setGroups 會覆蓋新狀態（甚至復活剛刪掉的群組），所以
-  // 只有最後一次啟動的 refresh 才准寫入。
+  // 重入序号：StrictMode 的 mount effect 雙触发、或连点删除，会让两次加载
+  // 并发。交错时晚到的 setGroups 会覆盖新状态（甚至复活刚删掉的群组），所以
+  // 只有最后一次启动的 refresh 才准写入。
   const refreshSeq = useRef(0)
-  // 「目前有幾輪整份清單重載（refreshGroups 或 runGroupSearch）在途」的計數器
-  // ——不是布林，因為 StrictMode 雙掛載、或重載與搜尋前後腳起跑，都可能讓兩輪
-  // 同時在途，用計數器才能在「先完成的那輪」不會誤把旗標關掉。
+  // 「目前有几轮整份清单重载（refreshGroups 或 runGroupSearch）在途」的计数器
+  // ——不是布林，因为 StrictMode 雙挂载、或重载与搜索前后腳起跑，都可能让两轮
+  // 同时在途，用计数器才能在「先完成的那轮」不会误把旗标关掉。
   //
-  // loadMoreGroups 起跑時會檢查這個計數器。單靠 seq 不夠：seq 只能偵測「已經
-  // bump 過的」，擋不住「重載才剛起跑、都還沒 bump 完，load-more 就在同一輪
-  // 搶跑」這個窗口——這時兩者持有同一個 seq，各自的 seq 檢查都會通過，
-  // load-more 會用重載前殘留的 nextPageNumber 抓一頁，等重載把清單換掉之後才
-  // append 上去，結果就是漏掉一整頁、或把不連續的兩段拼在一起。
+  // loadMoreGroups 起跑时会检查这个计数器。单靠 seq 不够：seq 只能侦测「已经
+  // bump 过的」，挡不住「重载才刚起跑、都还没 bump 完，load-more 就在同一轮
+  // 搶跑」这个窗口——这时两者持有同一个 seq，各自的 seq 检查都会通过，
+  // load-more 会用重载前残留的 nextPageNumber 抓一页，等重载把清单换掉之后才
+  // append 上去，结果就是漏掉一整页、或把不连续的两段拼在一起。
   const listReloadDepth = useRef(0)
 
   /**
-   * 群組清單的第 1 頁（無限捲動的起點）。舊的全量走訪（10 頁 burst）在此刪除：
-   * 5,881 群組的帳戶會在第 6 頁撞上 AccountFlowLimitExceeded，而後面的頁碼
-   * 使用者八成永遠不會捲到。第 2 頁起改由 `loadMoreGroups` 按需接上。
+   * 群组清单的第 1 页（无限滚动的起点）。旧的全量走訪（10 页 burst）在此删除：
+   * 5,881 群组的账户会在第 6 页撞上 AccountFlowLimitExceeded，而后面的页码
+   * 用户八成永远不会滚到。第 2 页起改由 `loadMoreGroups` 按需接上。
    *
-   * 排序顯式送 CreateTime Desc：走訪刪除後這是唯一保證分頁全序的地方，
-   * 不能仰賴伺服器未明載的預設（否則第 2 頁與第 1 頁會重疊或漏項）。
+   * 排序显式送 CreateTime Desc：走訪删除后这是唯一保证分页全序的地方，
+   * 不能依赖服务器未明载的默认（否则第 2 页与第 1 页会重叠或漏项）。
    */
   const refreshGroups = useCallback(async () => {
     const seq = ++refreshSeq.current
@@ -299,18 +299,18 @@ function AssetLibraryPageInner() {
         { pageNumber: 1, pageSize: GROUP_PAGE_SIZE_MAX },
         { sortBy: 'CreateTime', sortOrder: 'Desc' },
       )
-      if (seq !== refreshSeq.current) return // 過期：更新的一輪已接手
-      // 重建（而非併入）：這是一輪全新的累積，舊的 id 不該擋掉重新回傳的項目。
+      if (seq !== refreshSeq.current) return // 过期：更新的一轮已接手
+      // 重建（而非并入）：这是一轮全新的累積，旧的 id 不该挡掉重新返回的项目。
       seenGroupIds.current = new Set(items.map((g) => g.id))
       setGroups(items)
       setGroupTotal(page.totalCount)
       setNextPageNumber(2)
-      // 上一輪的載更多錯誤講的是一份剛被換掉的清單，留著就是對著不存在的
-      // 捲動位置報錯。
+      // 上一轮的载更多错误讲的是一份刚被换掉的清单，留着就是对著不存在的
+      // 滚动位置报错。
       setLoadMoreError(null)
-      // 累積清單重新接管畫面 → 搜尋結果不再顯示中。刻意放在成功分支（而非
-      // 開頭）：第 1 頁失敗時 `groups` 原封不動 —— 那時畫面上仍是搜尋結果，
-      // 清掉旗標等於重新開放無限捲動去接未過濾的下一頁，正是要擋的那件事。
+      // 累積清单重新接管画面 → 搜索结果不再显示中。刻意放在成功分支（而非
+      // 开头）：第 1 页失败时 `groups` 原封不动 —— 那时画面上仍是搜索结果，
+      // 清掉旗标等于重新开放无限滚动去接未过滤的下一页，正是要挡的那件事。
       setActiveGroupQuery(null)
     } catch (e) {
       if (seq === refreshSeq.current) {
@@ -318,45 +318,45 @@ function AssetLibraryPageInner() {
       }
     } finally {
       if (seq === refreshSeq.current) setLoadingGroups(false)
-      // 無條件遞減（不綁 seq）：這一輪不管是不是過期、成功還是失敗，它的
-      // 「在途」狀態都結束了。綁 seq 的話，一輪過期的重載會少扣一次，計數器
-      // 卡在 >0，load-more 就永久打不開。
+      // 无条件递減（不绑 seq）：这一轮不管是不是过期、成功还是失败，它的
+      // 「在途」状态都结束了。绑 seq 的话，一轮过期的重载会少扣一次，计数器
+      // 卡在 >0，load-more 就永久打不开。
       listReloadDepth.current -= 1
     }
   }, [setGroups, setLoadingGroups, setActiveGroupQuery])
 
   /**
-   * 接上下一頁（側欄捲近底部時觸發）。失敗只寫 `loadMoreError` —— 已載入的
-   * 清單照常可用，錯誤以清單底部的行內重試列呈現（UI 是 Task 3），不去動
-   * 會讓整頁翻成診斷畫面的 `error`。
+   * 接上下一页（侧栏滚近底部时触发）。失败只写 `loadMoreError` —— 已加载的
+   * 清单照常可用，错误以清单底部的行内重试列呈现（UI 是 Task 3），不去动
+   * 会让整页翻成诊断画面的 `error`。
    */
-  // 在途旗標用 ref 而非 loadingMore state：捲動事件一個 frame 可以連發多次，
-  // state 在同一個 tick 內讀到的都是舊值，兩次呼叫會各自過關、重複抓同一頁
-  //（第二次 append 因 seen 全中而寫回空集，還會把第一次的成果蓋掉）。
-  // state 留給 UI 渲染，守門靠 ref。
+  // 在途旗标用 ref 而非 loadingMore state：滚动事件一个 frame 可以连发多次，
+  // state 在同一个 tick 内读到的都是旧值，两次呼叫会各自过关、重复抓同一页
+  //（第二次 append 因 seen 全中而写回空集，还会把第一次的成果盖掉）。
+  // state 留给 UI 渲染，守门靠 ref。
   const loadMoreInFlight = useRef(false)
   const loadMoreGroups = useCallback(async () => {
     if (loadMoreInFlight.current || !hasMoreGroups) return
-    // 搜尋顯示中不接下一頁：那時 groups 是搜尋結果（≤100 筆），而
-    // `hasMoreGroups` 算的是「累積 < 總數」，兩者拼起來就是「1 筆結果 + 未過濾
-    // 的第 2 頁」這種對不上搜尋字的清單 —— 而伺服器搜尋模式下前端過濾是關的
-    //（disableClientFilter），沒有東西會把多出來的列藏起來。sidebar 那邊
-    // `hasMore` 也已被呼叫端算成 false，這裡是第二道（重試列、未來的呼叫端）。
+    // 搜索显示中不接下一页：那时 groups 是搜索结果（≤100 笔），而
+    // `hasMoreGroups` 算的是「累積 < 总数」，两者拼起来就是「1 笔结果 + 未过滤
+    // 的第 2 页」这種对不上搜索字的清单 —— 而服务器搜索模式下前端过滤是关的
+    //（disableClientFilter），没有东西会把多出来的列藏起来。sidebar 那边
+    // `hasMore` 也已被呼叫端算成 false，这里是第二道（重试列、未来的呼叫端）。
     //
-    // 讀 ref 不讀 state：runGroupSearch 在送出請求當下就同步寫入 ref（見那
-    // 裡的註解），state 版本要等 React commit 完那次 re-render 才追上。兩者
-    // 在一般操作下幾乎同時到，但 load-more 是由使用者滑鼠捲動觸發、與
-    // React 的 render 週期沒有同步關係——讀 state 版本留了一個「search 已經
-    // 送出、ref 已經是新查詢字，但這個 render 還沒 commit」的窗口，
-    // 期間如果剛好有 scroll 事件命中，就會用舊的 activeGroupQuery（null）
-    // 通過這道檢查，讓未過濾的下一頁接到搜尋結果上。
+    // 读 ref 不读 state：runGroupSearch 在送出请求当下就同步写入 ref（见那
+    // 里的注解），state 版本要等 React commit 完那次 re-render 才追上。两者
+    // 在一般操作下几乎同时到，但 load-more 是由用户鼠标滚动触发、与
+    // React 的 render 周期没有同步关系——读 state 版本留了一个「search 已经
+    // 送出、ref 已经是新查询字，但这个 render 还没 commit」的窗口，
+    // 期间如果刚好有 scroll 事件命中，就会用旧的 activeGroupQuery（null）
+    // 通过这道检查，让未过滤的下一页接到搜索结果上。
     if (activeGroupQueryRef.current !== null) return
-    // 一輪整份清單重載（refreshGroups/runGroupSearch）在途時完全不准起跑：
-    // 見 `listReloadDepth` 宣告處的窗口說明——這不是 seq 能擋的那種過期，
-    // 是「重載都還沒 bump 完，load-more 就搶跑」那種同一輪誤判。
+    // 一轮整份清单重载（refreshGroups/runGroupSearch）在途时完全不准起跑：
+    // 见 `listReloadDepth` 宣告处的窗口说明——这不是 seq 能挡的那種过期，
+    // 是「重载都还没 bump 完，load-more 就搶跑」那種同一轮误判。
     if (listReloadDepth.current > 0) return
-    // 刻意不 bump seq：載更多是「延續當前這一輪累積」而不是新的一輪。只捕捉
-    // 當下的序號，重載/搜尋一 bump 就讓這次在途的 append 作廢。
+    // 刻意不 bump seq：载更多是「延续当前这一轮累積」而不是新的一轮。只捕捉
+    // 当下的序号，重载/搜索一 bump 就让这次在途的 append 作废。
     const seq = refreshSeq.current
     loadMoreInFlight.current = true
     setLoadingMore(true)
@@ -366,24 +366,24 @@ function AssetLibraryPageInner() {
         { pageNumber: nextPageNumber, pageSize: GROUP_PAGE_SIZE_MAX },
         { sortBy: 'CreateTime', sortOrder: 'Desc' },
       )
-      if (seq !== refreshSeq.current) return // 過期：清單已被重載/搜尋換掉
+      if (seq !== refreshSeq.current) return // 过期：清单已被重载/搜索换掉
       const seen = seenGroupIds.current
       const fresh = items.filter((g) => !seen.has(g.id))
       for (const g of fresh) seen.add(g.id)
-      // 讀 store 的即時清單而非閉包快照：seq 只擋會 bump 的路徑（重載/搜尋），
-      // 單刪與批刪走 removeGroup、不 bump —— 在途期間拿舊快照 append 會把
-      // 剛刪掉的群組復活。批刪一跑數秒、退避重試又拉長在途窗口，這不是理論案例。
+      // 读 store 的即时清单而非閉包快照：seq 只挡会 bump 的路径（重载/搜索），
+      // 单删与批删走 removeGroup、不 bump —— 在途期间拿旧快照 append 会把
+      // 刚删掉的群组复活。批删一跑数秒、退避重试又拉长在途窗口，这不是理论案例。
       setGroups([...useAssetStore.getState().groups, ...fresh])
       setNextPageNumber(nextPageNumber + 1)
-      setGroupTotal(page.totalCount) // 抓頁期間的增刪，順手校正
+      setGroupTotal(page.totalCount) // 抓页期间的增删，顺手校正
       setLoadMoreError(null)
     } catch (e) {
       if (seq === refreshSeq.current) {
-        setLoadMoreError(e instanceof Error ? e.message : '載入更多群組失敗')
+        setLoadMoreError(e instanceof Error ? e.message : '加载更多群组失败')
       }
     } finally {
-      // 無條件解鎖：seq 過期代表這次 append 作廢，但「在途」也跟著結束了 ——
-      // 綁上 seq 判斷的話，一次重載就會讓載更多永久卡在 loading。
+      // 无条件解锁：seq 过期代表这次 append 作废，但「在途」也跟著结束了 ——
+      // 绑上 seq 判断的话，一次重载就会让载更多永久卡在 loading。
       loadMoreInFlight.current = false
       setLoadingMore(false)
     }
@@ -415,58 +415,58 @@ function AssetLibraryPageInner() {
     [setAssets, setLoadingAssets],
   )
 
-  // refreshGroupCount（含每 groupId 的請求序號保護）現在是 api/asset.ts 的
-  // 匯出函式，不再是這個元件的 local useCallback —— useAssetUpload.ts 的
-  // 上傳收尾也要呼叫同一份，序號保護若各自持有一份 ref，兩邊互相看不到
-  // 對方的在途請求，形同沒有保護（上傳併發 5 個到同一群組時尤其會撞見）。
+  // refreshGroupCount（含每 groupId 的请求序号保护）现在是 api/asset.ts 的
+  // 导出函数，不再是这个组件的 local useCallback —— useAssetUpload.ts 的
+  // 上传收尾也要呼叫同一份，序号保护若各自持有一份 ref，两边互相看不到
+  // 对方的在途请求，形同没有保护（上传并发 5 个到同一群组时尤其会撞见）。
 
   /**
-   * 跑一次伺服器端 Name 搜尋，讓結果整批接管清單。debounce 後的搜尋與批刪
-   * 收尾的「重跑當前查詢」共用這一份 —— 兩邊都要 bump seq、都要記下
-   * `activeGroupQuery`，各寫一次遲早會漂移。
+   * 跑一次服务器端 Name 搜索，让结果整批接管清单。debounce 后的搜索与批删
+   * 收尾的「重跑当前查询」共用这一份 —— 两边都要 bump seq、都要记下
+   * `activeGroupQuery`，各写一次迟早会漂移。
    */
   const runGroupSearch = useCallback(
     async (trimmed: string) => {
-      // 與 refreshGroups 共用重入序號：搜尋同樣是一次「群組清單載入」。
-      // 先 bump 再送請求，讓仍在途的初載/載更多失效 —— 否則稍後完成的
-      // 那一頁會蓋掉（或接在）搜尋結果上，使用者剛搜到的群組又不見。
+      // 与 refreshGroups 共用重入序号：搜索同样是一次「群组清单加载」。
+      // 先 bump 再送请求，让仍在途的初载/载更多失效 —— 否则稍后完成的
+      // 那一页会盖掉（或接在）搜索结果上，用户刚搜到的群组又不见。
       const seq = ++refreshSeq.current
       setLoadingGroups(true)
-      // 失敗時要還原成搜尋前的值，不是硬清成 null：這裡的 groups 尚未被換掉
-      // （還是舊搜尋結果，或還是累積清單），旗標得照實反映畫面上是哪一種。
+      // 失败时要还原成搜索前的值，不是硬清成 null：这里的 groups 尚未被换掉
+      // （还是旧搜索结果，或还是累積清单），旗标得照实反映画面上是哪一種。
       const prevQuery = activeGroupQueryRef.current
-      // 請求一送出就記帳，不等結果回來：在途這幾百毫秒清單即將被換掉，這時
-      // 放行的載更多會拿著「已經作廢的累積」去抓下一頁，回來正好接在搜尋
-      // 結果後面（seq 擋得住它寫入，但擋不住它多打一個請求）。
+      // 请求一送出就记账，不等结果回来：在途这几百毫秒清单即将被换掉，这时
+      // 放行的载更多会拿著「已经作废的累積」去抓下一页，回来正好接在搜索
+      // 结果后面（seq 挡得住它写入，但挡不住它多打一个请求）。
       setActiveGroupQuery(trimmed)
-      // 清掉前一輪載入留下的橫幅（refreshGroups 的開頭也是這樣做的）：那份
-      // 清單正要被搜尋結果整批換掉，留著就是對著一份已經不在畫面上的清單
-      // 報錯。更要緊的是 error 非 null 會參與下方的整頁接管判斷，搜尋零筆時
-      // 把 sidebar（含搜尋框）一起卸載。
+      // 清掉前一轮加载留下的横幅（refreshGroups 的开头也是这样做的）：那份
+      // 清单正要被搜索结果整批换掉，留着就是对著一份已经不在画面上的清单
+      // 报错。更要紧的是 error 非 null 会参与下方的整页接管判断，搜索零笔时
+      // 把 sidebar（含搜索框）一起卸载。
       setError(null)
-      // 同理的載更多錯誤：留著就是讓「載入更多失敗，點擊重試」掛在搜尋結果
-      // 底下，講的卻是另一份清單的第 N 頁。
+      // 同理的载更多错误：留着就是让「加载更多失败，点击重试」挂在搜索结果
+      // 底下，讲的卻是另一份清单的第 N 页。
       setLoadMoreError(null)
       try {
         const { items } = await listAssetGroups(
           { name: trimmed },
           { pageNumber: 1, pageSize: 100 },
         )
-        if (seq !== refreshSeq.current) return // 過期：更新的一輪已接手
-        // counts 刻意不扇出（列上徽章已整個移除）：搜尋只打一次 API 就
-        // 出結果。真正要看數量時點進群組即可（Task 5 的標題單發）。
-        // 也刻意不動 groupTotal — 這裡的 totalCount 是「過濾後」的筆數，
-        // 拿去更新會把 serverSearchMode 關掉，下一個按鍵就搜不動了。
+        if (seq !== refreshSeq.current) return // 过期：更新的一轮已接手
+        // counts 刻意不扇出（列上徽章已整个移除）：搜索只打一次 API 就
+        // 出结果。真正要看数量时点进群组即可（Task 5 的标题单发）。
+        // 也刻意不动 groupTotal — 这里的 totalCount 是「过滤后」的笔数，
+        // 拿去更新会把 serverSearchMode 关掉，下一个按键就搜不动了。
         setGroups(items)
       } catch (e) {
         if (seq === refreshSeq.current) {
-          // 還原而非清空：這次搜尋沒有換掉畫面上的 groups（還是 prevQuery
-          // 代表的那份 —— null＝累積清單，或前一個搜尋字的結果），旗標要
-          // 照實反映，不能停在剛剛樂觀寫入的 trimmed。停在 trimmed 上會讓
-          // 載更多/批刪收尾之後對著累積清單去跑一個使用者從沒看過結果、
-          // 早就失敗的查詢。
+          // 还原而非清空：这次搜索没有换掉画面上的 groups（还是 prevQuery
+          // 代表的那份 —— null＝累積清单，或前一个搜索字的结果），旗标要
+          // 照实反映，不能停在刚刚乐观写入的 trimmed。停在 trimmed 上会让
+          // 载更多/批删收尾之后对著累積清单去跑一个用户从没看过结果、
+          // 早就失败的查询。
           setActiveGroupQuery(prevQuery)
-          toast.error(e instanceof Error ? e.message : '群組搜尋失敗')
+          toast.error(e instanceof Error ? e.message : '群组搜索失败')
         }
       } finally {
         if (seq === refreshSeq.current) setLoadingGroups(false)
@@ -475,9 +475,9 @@ function AssetLibraryPageInner() {
     [setGroups, setLoadingGroups, setActiveGroupQuery],
   )
 
-  // 伺服器端搜尋（清單還沒捲完時的後盾）。debounce 300ms — 每個按鍵都打
-  // ListAssetGroups 會直接吃掉 QPM 配額。非伺服器模式直接返回：清單已完整，
-  // sidebar 的前端過濾即時且免費。
+  // 服务器端搜索（清单还没滚完时的后盾）。debounce 300ms — 每个按键都打
+  // ListAssetGroups 会直接吃掉 QPM 配额。非服务器模式直接返回：清单已完整，
+  // sidebar 的前端过滤即时且免费。
   const handleGroupQuery = useCallback(
     (q: string) => {
       if (!serverSearchMode) return
@@ -485,8 +485,8 @@ function AssetLibraryPageInner() {
       groupSearchTimer.current = window.setTimeout(() => {
         void (async () => {
           const trimmed = q.trim()
-          // 清空搜尋 → 重載第 1 頁：seen 重建、nextPage 回到 2、groupTotal
-          // 更新、activeGroupQuery 清掉 —— 累積清單與無限捲動一起回來。
+          // 清空搜索 → 重载第 1 页：seen 重建、nextPage 回到 2、groupTotal
+          // 更新、activeGroupQuery 清掉 —— 累積清单与无限滚动一起回来。
           if (!trimmed) await refreshGroups()
           else await runGroupSearch(trimmed)
         })()
@@ -495,7 +495,7 @@ function AssetLibraryPageInner() {
     [serverSearchMode, refreshGroups, runGroupSearch],
   )
 
-  // 卸載時清掉待觸發的 debounce（否則會對已卸載的元件 setState）
+  // 卸载时清掉待触发的 debounce（否则会对已卸载的组件 setState）
   useEffect(
     () => () => {
       if (groupSearchTimer.current) window.clearTimeout(groupSearchTimer.current)
@@ -513,25 +513,25 @@ function AssetLibraryPageInner() {
     setTypeFilter('all')
   }, [selectedGroupId, statusFilter, refreshAssets])
 
-  // 選中群組的素材總數（spec §4.3）。刻意只吃 `selectedGroupId`，不吃
-  // `statusFilter` —— 標題的數字是「這個群組裡有幾個素材」，與正在看哪個狀態
-  // 無關，跟著篩選重跑只是白白多打 ListAssets。
+  // 选中群组的素材总数（spec §4.3）。刻意只吃 `selectedGroupId`，不吃
+  // `statusFilter` —— 标题的数字是「这个群组里有几个素材」，与正在看哪个状态
+  // 无关，跟著筛选重跑只是白白多打 ListAssets。
   //
-  // 初載自動選第一個、批刪把 selectedGroupId 修復到別的群組，走的都是同一條
-  // 「selectedGroupId 變了」的路，所以那些時機不必各自接線。上傳/單刪/批刪
-  // 後的既有 refreshGroupCount 呼叫點照舊（那些是「選取沒變但內容變了」）。
+  // 初载自动选第一个、批删把 selectedGroupId 修复到别的群组，走的都是同一条
+  // 「selectedGroupId 变了」的路，所以那些时机不必各自接线。上传/单删/批删
+  // 后的既有 refreshGroupCount 呼叫点照旧（那些是「选择没变但内容变了」）。
   //
-  // effect body 只負責「把請求發出去」：唯一的狀態寫入是 refreshGroupCount
-  // 裡的 setGroupCount，寫的是 store 動作而非 useState setter，
-  // react-hooks/set-state-in-effect 沒有東西可抓（實測：同一個 async 形狀換成
-  // useState setter 一樣會被抓到——規則盯的是「setter 是誰」，不是「有沒有
-  // await」）。`refreshGroupCount` 現在是 `api/asset.ts` 的匯出函式（模組層級
-  // 的穩定參照），不需要、也不應該進 deps——它不是這個元件裡定義的值。
+  // effect body 只负责「把请求发出去」：唯一的状态写入是 refreshGroupCount
+  // 里的 setGroupCount，写的是 store 动作而非 useState setter，
+  // react-hooks/set-state-in-effect 没有东西可抓（实测：同一个 async 形状换成
+  // useState setter 一样会被抓到——规则盯的是「setter 是谁」，不是「有没有
+  // await」）。`refreshGroupCount` 现在是 `api/asset.ts` 的导出函数（模块层级
+  // 的稳定参照），不需要、也不应该进 deps——它不是这个组件里定义的值。
   //
-  // 順序有意義：必須留在上面的 refreshAssets effect 之後。
-  // assetLibraryPage.test.tsx 用的是 FIFO 的 fetch mock 佇列，這一發往前挪
-  // 會吃掉 ListAssets 的 mock，讓一票看似無關的斷言（批刪、狀態切換……）
-  // 一起變紅，卻完全看不出跟這個 effect 有關係。
+  // 顺序有意义：必须留在上面的 refreshAssets effect 之后。
+  // assetLibraryPage.test.tsx 用的是 FIFO 的 fetch mock 队列，这一发往前挪
+  // 会吃掉 ListAssets 的 mock，让一票看似无关的断言（批删、状态切换……）
+  // 一起变红，卻完全看不出跟这个 effect 有关系。
   useEffect(() => {
     if (!selectedGroupId) return
     void refreshGroupCount(selectedGroupId)
@@ -546,7 +546,7 @@ function AssetLibraryPageInner() {
     description?: string
   }) {
     const out = await createAssetGroup(input)
-    toast.success(`群組已建立：${input.name}`)
+    toast.success(`群组已创建：${input.name}`)
     await refreshGroups()
     selectGroup(out.id)
     return { id: out.id, name: input.name }
@@ -558,7 +558,7 @@ function AssetLibraryPageInner() {
     description?: string,
   ) {
     await updateAssetGroup(g.id, { name, description })
-    toast.success('群組已更新')
+    toast.success('群组已更新')
     await refreshGroups()
   }
 
@@ -572,7 +572,7 @@ function AssetLibraryPageInner() {
     try {
       await deleteAssetGroup(g.id)
       removeGroup(g.id)
-      toast.success('群組已刪除')
+      toast.success('群组已删除')
       await refreshGroups()
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Delete failed')
@@ -581,16 +581,16 @@ function AssetLibraryPageInner() {
     }
   }
 
-  // Sidebar 的「刪除選取」→ 開啟 typed-confirm Modal；回傳的 Promise 讓
-  // sidebar 知道結果（null = 取消保留勾選、failedIds = 失敗項留勾）。
+  // Sidebar 的「删除选择」→ 打开 typed-confirm Modal；返回的 Promise 让
+  // sidebar 知道结果（null = 取消保留勾选、failedIds = 失败项留勾）。
   const requestGroupBatchDelete = useCallback(
     (ids: string[]) =>
       new Promise<{ failedIds: string[] } | null>((resolve) => {
-        // 純防禦：今天到不了（sidebar 的 in-flight ref 讓同一時間只有一個
-        // 請求在途）。但若前一個 pending 尚未解決就被這裡覆蓋，舊的 resolver
-        // 會隨著 state 一起被丟掉 —— sidebar 那邊的 await 永遠不 settle，
-        // in-flight 旗標卡在 true，刪除鈕從此按不動。以「取消」語意收斂舊的
-        // promise（勾選原樣保留）再換上新的。
+        // 纯防御：今天到不了（sidebar 的 in-flight ref 让同一时间只有一个
+        // 请求在途）。但若前一个 pending 尚未解决就被这里覆盖，旧的 resolver
+        // 会随著 state 一起被丢掉 —— sidebar 那边的 await 永远不 settle，
+        // in-flight 旗标卡在 true，删除钮从此按不动。以「取消」语意收敛旧的
+        // promise（勾选原样保留）再换上新的。
         pendingGroupBatch?.resolve(null)
         setPendingGroupBatch({ ids, resolve })
       }),
@@ -603,37 +603,37 @@ function AssetLibraryPageInner() {
     const removed = new Set<string>()
     startDeleteJob(ids.length, 'group')
     await batchDelete(ids, {
-      // DeleteAssetGroup 級聯刪素材、大群組耗時 — QPS 收斂到 4。
+      // DeleteAssetGroup 级联删素材、大群组耗时 — QPS 收敛到 4。
       deleteFn: deleteAssetGroup,
       qps: 4,
-      // 走 cache 而非當前 groups：伺服器搜尋模式下先前搜尋勾到的群組不在
-      // groups 裡，失敗清單只印 id 的話使用者無從判斷該不該重試。
+      // 走 cache 而非当前 groups：服务器搜索模式下先前搜索勾到的群组不在
+      // groups 里，失败清单只印 id 的话用户无从判断该不该重试。
       getName: groupNameOf,
-      // store 的 removeGroup 會一併修復 selectedGroupId 與清 counts。
+      // store 的 removeGroup 会一并修复 selectedGroupId 与清 counts。
       onRemoved: (id) => {
         removed.add(id)
         removeGroup(id)
       },
       onProgress: (p) => patchDeleteJob(p),
     })
-    // 收尾（spec §4.2）：搜尋顯示中就重跑那個查詢，否則重載第 1 頁。一律
-    // refreshGroups 的話，剛在搜尋結果裡刪掉幾個群組的使用者會被丟回清單
-    // 開頭 —— 同一輪還想刪的其餘項目得重打一次搜尋字才找得回來，而伺服器
-    // 模式下多選本來就只能一次搜尋一個慢慢累積。
+    // 收尾（spec §4.2）：搜索显示中就重跑那个查询，否则重载第 1 页。一律
+    // refreshGroups 的话，刚在搜索结果里删掉几个群组的用户会被丢回清单
+    // 开头 —— 同一轮还想删的其余项目得重打一次搜索字才找得回来，而服务器
+    // 模式下多选本来就只能一次搜索一个慢慢累積。
     //
-    // 讀 ref 不讀 state：`runGroupBatchDelete` 是一般函式，被呼叫當下就把
-    // 這個 render 的 closure 定住了。`batchDelete` 跑好幾秒（QPS 4 + 個別
-    // 重試退避），期間元件會因進度更新而重渲染很多次，但這個 await 撐著
-    // 的仍是最初那個 closure —— state 讀到的是「批刪開始那一刻」的搜尋字，
-    // ref 讀到的才是「現在」。用 state 的話，批刪期間使用者換了搜尋字（或
-    // 清空了搜尋），收尾會重跑一個搜尋框早就不顯示的查詢字，畫面對不上。
+    // 读 ref 不读 state：`runGroupBatchDelete` 是一般函数，被呼叫当下就把
+    // 这个 render 的 closure 定住了。`batchDelete` 跑好几秒（QPS 4 + 个别
+    // 重试退避），期间组件会因进度更新而重渲染很多次，但这个 await 撐著
+    // 的仍是最初那个 closure —— state 读到的是「批删开始那一刻」的搜索字，
+    // ref 读到的才是「现在」。用 state 的话，批删期间用户换了搜索字（或
+    // 清空了搜索），收尾会重跑一个搜索框早就不显示的查询字，画面对不上。
     const queryAtFinish = activeGroupQueryRef.current
     if (queryAtFinish !== null) await runGroupSearch(queryAtFinish)
     else await refreshGroups()
-    // 回報「還在 ARK 上的」而非 result.failed — 共因錯誤（403/400）會中止整批，
-    // 此時 failed[] 是空的但幾乎沒刪成，用 failed[] 會讓 sidebar 誤判全成功而
-    // 清掉勾選。素材版的 performBatchDelete 同樣把 aborted 排除在 clearChecked
-    // 之外。done 的情況兩者等價（沒被移除的就是重試耗盡的那些）。
+    // 回报「还在 ARK 上的」而非 result.failed — 共因错误（403/400）会中止整批，
+    // 此时 failed[] 是空的但几乎没删成，用 failed[] 会让 sidebar 误判全成功而
+    // 清掉勾选。素材版的 performBatchDelete 同样把 aborted 排除在 clearChecked
+    // 之外。done 的情况两者等价（没被移除的就是重试耗盡的那些）。
     return { failedIds: ids.filter((id) => !removed.has(id)) }
   }
 
@@ -644,10 +644,10 @@ function AssetLibraryPageInner() {
     try {
       pending.resolve(await runGroupBatchDelete(pending.ids))
     } catch (e) {
-      // 不預期會走到（batchDelete 自行吸收單項錯誤、refreshGroups 也自帶
-      // catch）。但 resolver 一旦漏掉，sidebar 的 in-flight guard 會永久
-      // 卡住刪除鈕、進度 toast 也會停在「刪除中」— 兩者都在這裡收斂。
-      // 整批留勾供重試（無從得知哪幾個真的成功了）。
+      // 不预期会走到（batchDelete 自行吸收单项错误、refreshGroups 也自带
+      // catch）。但 resolver 一旦漏掉，sidebar 的 in-flight guard 会永久
+      // 卡住删除钮、进度 toast 也会停在「删除中」— 两者都在这里收敛。
+      // 整批留勾供重试（无从得知哪几个真的成功了）。
       patchDeleteJob({
         status: 'aborted',
         abortReason: e instanceof Error ? e.message : String(e),
@@ -668,7 +668,7 @@ function AssetLibraryPageInner() {
       removeAsset(a.id)
       setSelectedAssetId((cur) => (cur === a.id ? null : cur))
       void refreshGroupCount(a.groupId)
-      toast.success('資產已刪除')
+      toast.success('资产已删除')
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Delete failed')
     } finally {
@@ -678,15 +678,15 @@ function AssetLibraryPageInner() {
 
   function requestBatchDelete(ids: string[]) {
     if (ids.length === 0) return
-    // 素材批刪與群組批刪共用同一個 deleteJob slot，而群組批刪跑起來之後
-    // 確認 Modal 就關了 —— 底部的素材 pill bar 這時是按得到的。若讓它起跑，
-    // 兩個 job 會互相踩：終態記錄的是群組批次、kind 卻變成 asset，「重試
-    // 失敗項」就把群組 id 送進 DeleteAsset（404 被當成冪等成功）→ 使用者
-    // 看到「已刪除」但群組還在。store 的 startDeleteJob 有最後防線，但
-    // 靜默 no-op 沒法解釋為什麼沒反應，所以在這裡明講。
-    // （反向不需要擋：群組確認 Modal 開著時，它的遮罩蓋住了 pill bar。）
+    // 素材批删与群组批删共用同一个 deleteJob slot，而群组批删跑起来之后
+    // 确认 Modal 就关了 —— 底部的素材 pill bar 这时是按得到的。若让它起跑，
+    // 两个 job 会互相踩：终态记录的是群组批次、kind 卻变成 asset，「重试
+    // 失败项」就把群组 id 送进 DeleteAsset（404 被当成幂等成功）→ 用户
+    // 看到「已删除」但群组还在。store 的 startDeleteJob 有最后防线，但
+    // 静默 no-op 没法解释为什么没反应，所以在这里明讲。
+    // （反向不需要挡：群组确认 Modal 开著时，它的遮罩盖住了 pill bar。）
     if (deleteJob?.status === 'running') {
-      toast.error('已有刪除工作進行中，請等待完成')
+      toast.error('已有删除工作进行中，请等待完成')
       return
     }
     setPendingBatchDelete(ids)
@@ -724,19 +724,19 @@ function AssetLibraryPageInner() {
     await updateAsset(a.id, { name })
     const fresh = await getAsset(a.id)
     upsertAsset(fresh)
-    toast.success('資產名稱已更新')
+    toast.success('资产名称已更新')
   }
 
   async function handleRefreshUrl(a: Asset) {
     const fresh = await getAsset(a.id)
     upsertAsset(fresh)
-    toast.success('URL 已重新取得')
+    toast.success('URL 已重新获取')
   }
 
   async function handleCopy(uri: string) {
     const ok = await copyToClipboard(uri)
-    if (ok) toast.success('已複製到剪貼簿')
-    else toast.error('複製失敗，請手動選取')
+    if (ok) toast.success('已复制到剪贴簿')
+    else toast.error('复制失败，请手动选择')
   }
 
   // Full-page takeover only when there is nothing to show (page-1 failure /
@@ -744,19 +744,19 @@ function AssetLibraryPageInner() {
   // screen, and blanking it would hide groups we did fetch — that case never
   // touches `error` at all (it goes to `loadMoreError`, spec §5).
   //
-  // groupTotal === 0 是同一個「伺服器上真的一個群組都沒有」判準（素材區的
-  // 「尚無群組」CTA 也用它）。少了它，伺服器搜尋模式下的空 groups 會被誤讀成
-  // 「什麼都沒有」：搜尋零筆 → groups 為 [] → 只要手上還有一條錯誤（例如稍早
-  // 的部分載入、或清空搜尋後全量重載第 1 頁失敗），整頁就翻成憑證診斷畫面、
-  // 連同 sidebar 的搜尋框一起卸載 —— 使用者改搜尋字都做不到，只剩重新整理。
+  // groupTotal === 0 是同一个「服务器上真的一个群组都没有」判准（素材区的
+  // 「尚无群组」CTA 也用它）。少了它，服务器搜索模式下的空 groups 会被误读成
+  // 「什么都没有」：搜索零笔 → groups 为 [] → 只要手上还有一条错误（例如稍早
+  // 的部分加载、或清空搜索后全量重载第 1 页失败），整页就翻成凭证诊断画面、
+  // 连同 sidebar 的搜索框一起卸载 —— 用户改搜索字都做不到，只剩刷新。
   if (error && groups.length === 0 && groupTotal === 0) {
     return (
       <div style={{ padding: 32, color: 'var(--error, #dc2626)' }}>
-        <h3>無法連線到 ARK Asset API</h3>
+        <h3>无法连接到素材库 API</h3>
         <p>{error}</p>
         <p style={{ color: 'var(--text-muted)' }}>
-          請先在側邊面板「② 私有素材庫憑證」區塊填入並驗證後再使用。
-          憑證驗證通過後重新整理此頁面。
+          请先在侧栏面板「② 私有素材库凭证」区块填入并验证后再使用。
+          凭证验证通过后刷新此页面。
         </p>
       </div>
     )
@@ -780,17 +780,17 @@ function AssetLibraryPageInner() {
         loadError={error}
         onQueryChange={handleGroupQuery}
         disableClientFilter={serverSearchMode}
-        // 無限捲動的接線：sidebar 的 onScroll 與底部載入列吃這四個，
-        // totalCount 只餵「已載入 N / M」的 M。
+        // 无限滚动的接线：sidebar 的 onScroll 与底部加载列吃这四个，
+        // totalCount 只喂「已加载 N / M」的 M。
         //
-        // 搜尋顯示中三態一起靜音（在呼叫端算，sidebar 不必知道有搜尋這回事）：
-        // 那時 groups 是搜尋結果，「已載入 N / M」的 N 會變成命中筆數
-        //（「已載入 1 / 1500」讀起來像清單只載到 1 筆；零筆時更會和「無符合
-        // 群組」疊成自相矛盾的一對）。spinner 同理 —— 搜尋前起跑、此刻仍在途
-        // 的那一頁已被 seq 作廢，它的轉圈不代表這份清單正在長。
-        // 重試列則靠 runGroupSearch 開頭就把 loadMoreError 清掉（和
-        // refreshGroups 一樣）；這裡一併擋是為了讓「搜尋顯示中 footer 不出聲」
-        // 是版面上的結構保證，而不是要讀者順著 seq 推導一遍才敢相信。
+        // 搜索显示中三态一起静音（在呼叫端算，sidebar 不必知道有搜索这回事）：
+        // 那时 groups 是搜索结果，「已加载 N / M」的 N 会变成命中笔数
+        //（「已加载 1 / 1500」读起来像清单只载到 1 笔；零笔时更会和「没有匹配
+        // 的群组」叠成自相矛盾的一对）。spinner 同理 —— 搜索前起跑、此刻仍在途
+        // 的那一页已被 seq 作废，它的转圈不代表这份清单正在长。
+        // 重试列则靠 runGroupSearch 开头就把 loadMoreError 清掉（和
+        // refreshGroups 一样）；这里一并挡是为了让「搜索显示中 footer 不出声」
+        // 是版面上的结构保证，而不是要读者顺著 seq 推导一遍才敢相信。
         onLoadMore={() => void loadMoreGroups()}
         hasMore={activeGroupQuery === null && hasMoreGroups}
         loadingMore={activeGroupQuery === null && loadingMore}
@@ -800,7 +800,7 @@ function AssetLibraryPageInner() {
       />
       <ResizeHandle
         side="left"
-        ariaLabel="拖曳調整群組欄寬度"
+        ariaLabel="拖拽调整群组栏宽度"
         getCurrentWidth={() => sidebarWidth}
         onResize={setSidebarWidth}
         resetWidth={ASSET_GROUP_SIDEBAR_DEFAULT_WIDTH}
@@ -845,7 +845,7 @@ function AssetLibraryPageInner() {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {selectedGroupCountLabel} 個素材
+                {selectedGroupCountLabel} 个素材
               </span>
             </>
           )}
@@ -854,7 +854,7 @@ function AssetLibraryPageInner() {
             type="button"
             disabled={!selectedGroupId || !tosReady}
             onClick={() => setShowUpload(true)}
-            title={tosReady ? undefined : '請先設定物件儲存憑證'}
+            title={tosReady ? undefined : '请先设置对象存储凭证'}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -874,11 +874,11 @@ function AssetLibraryPageInner() {
             }}
           >
             <Icon name="upload" size={14} />
-            上傳素材
+            上传素材
           </button>
         </div>
 
-        {/* toolbar: 類型 chips + status dropdown in a single row (spec §A.2) */}
+        {/* toolbar: 类型 chips + status dropdown in a single row (spec §A.2) */}
         <div
           style={{
             display: 'flex',
@@ -899,7 +899,7 @@ function AssetLibraryPageInner() {
                   whiteSpace: 'nowrap',
                 }}
               >
-                類型
+                类型
               </span>
               <AssetTypeFilterChips
                 counts={chipCounts}
@@ -921,7 +921,7 @@ function AssetLibraryPageInner() {
             </>
           ) : (
             <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-              請從左側選擇一個群組
+              请从左侧选择一个群组
             </span>
           )}
         </div>
@@ -936,21 +936,21 @@ function AssetLibraryPageInner() {
 
         {/* grid */}
         <div style={{ flex: 1, overflowY: 'auto' }}>
-          {/* 條件是「伺服器上一個群組都沒有」而非「清單目前是空的」：
-              伺服器端搜尋模式下零筆符合會把 groups 設成 []，那時要留在一般
-              版面（sidebar 顯示「無符合群組」），不能誤導成空 tenant 而叫
-              使用者去建立第一個群組。 */}
+          {/* 条件是「服务器上一个群组都没有」而非「清单目前是空的」：
+              服务器端搜索模式下零笔匹配会把 groups 设成 []，那时要留在一般
+              版面（sidebar 显示「没有匹配的群组」），不能误导成空 tenant 而叫
+              用户去创建第一个群组。 */}
           {groups.length === 0 && groupTotal === 0 ? (
             <div style={{ padding: 64, textAlign: 'center' }}>
               <div style={{ marginBottom: 16, color: 'var(--text-muted)' }}>
-                尚無群組
+                尚无群组
               </div>
               <button
                 type="button"
                 className="btn-primary"
                 onClick={() => setPendingFirstGroup(true)}
               >
-                建立第一個群組
+                创建第一个群组
               </button>
             </div>
           ) : (
@@ -990,7 +990,7 @@ function AssetLibraryPageInner() {
       {previewAsset && (
         <ResizeHandle
           side="right"
-          ariaLabel="拖曳調整詳細資料寬度"
+          ariaLabel="拖拽调整详细数据宽度"
           getCurrentWidth={() => drawerWidth}
           onResize={setDrawerWidth}
           resetWidth={ASSET_PREVIEW_DRAWER_DEFAULT_WIDTH}
@@ -1009,7 +1009,7 @@ function AssetLibraryPageInner() {
 
       <ConfirmModal
         open={singleDeleteAsset !== null}
-        title="刪除資產？"
+        title="删除资产？"
         subtitle={singleDeleteAsset?.name || singleDeleteAsset?.id}
         thumbs={
           singleDeleteAsset
@@ -1021,7 +1021,7 @@ function AssetLibraryPageInner() {
               ]
             : []
         }
-        confirmLabel="刪除"
+        confirmLabel="删除"
         variant="danger"
         onConfirm={() => void confirmSingleDelete()}
         onCancel={() => setSingleDeleteAsset(null)}
@@ -1029,8 +1029,8 @@ function AssetLibraryPageInner() {
 
       <ConfirmModal
         open={showFailDetails && (deleteJob?.failed.length ?? 0) > 0}
-        title="刪除失敗"
-        subtitle={`${deleteJob?.failed.length ?? 0} 個項目刪除失敗`}
+        title="删除失败"
+        subtitle={`${deleteJob?.failed.length ?? 0} 个项目删除失败`}
         body={
           <div style={{ maxHeight: 200, overflowY: 'auto' }}>
             {deleteJob?.failed.map((f) => (
@@ -1062,7 +1062,7 @@ function AssetLibraryPageInner() {
             ))}
           </div>
         }
-        confirmLabel="重試失敗項"
+        confirmLabel="重试失败项"
         variant="danger"
         onConfirm={() => {
           const ids = deleteJob?.failed.map((f) => f.id) ?? []
@@ -1080,15 +1080,15 @@ function AssetLibraryPageInner() {
 
       <ConfirmModal
         open={pendingBatchDelete !== null}
-        title={`刪除 ${pendingBatchDelete?.length ?? 0} 個 asset？`}
+        title={`删除 ${pendingBatchDelete?.length ?? 0} 个 asset？`}
         subtitle={
           batchDeleteSummary
             ? `${batchDeleteSummary} · 此操作不可逆`
             : '此操作不可逆'
         }
         thumbs={batchDeleteThumbs}
-        meta="將以 8 QPS 並行刪除"
-        confirmLabel={`刪除 ${pendingBatchDelete?.length ?? 0} 個`}
+        meta="将以 8 QPS 并行删除"
+        confirmLabel={`删除 ${pendingBatchDelete?.length ?? 0} 个`}
         variant="danger"
         onConfirm={() => {
           const ids = pendingBatchDelete
@@ -1100,21 +1100,21 @@ function AssetLibraryPageInner() {
 
       <ConfirmModal
         open={pendingGroupDelete !== null}
-        title="刪除群組？"
+        title="删除群组？"
         subtitle={
           pendingGroupDelete
-            ? `「${pendingGroupDelete.name}」會級聯刪除組內所有資產，且不可復原。`
+            ? `「${pendingGroupDelete.name}」会级联删除组内所有资产，且不可恢复。`
             : ''
         }
         typedConfirmation={
           pendingGroupDelete
             ? {
                 requiredText: pendingGroupDelete.name,
-                placeholder: '輸入群組名稱以確認',
+                placeholder: '输入群组名称以确认',
               }
             : undefined
         }
-        confirmLabel="刪除群組"
+        confirmLabel="删除群组"
         variant="danger"
         onConfirm={() => void confirmGroupDelete()}
         onCancel={() => setPendingGroupDelete(null)}
@@ -1122,13 +1122,13 @@ function AssetLibraryPageInner() {
 
       <ConfirmModal
         open={pendingGroupBatch !== null}
-        title={`刪除 ${pendingGroupBatch?.ids.length ?? 0} 個群組？`}
-        subtitle="群組內所有素材將一併永久刪除，無法復原。"
+        title={`删除 ${pendingGroupBatch?.ids.length ?? 0} 个群组？`}
+        subtitle="群组内所有素材将一并永久删除，无法恢复。"
         body={
-          // 勾選刻意在搜尋過濾下保留（spec §4），所以使用者不一定看得到全部
-          // 被勾的列 — 這份名單而非單一數字，才是誤刪前的最後一道防線。
-          // 名稱查 groupNameOf（跨搜尋累積的 cache）而非當前 groups：伺服器
-          // 搜尋模式下前一次搜尋勾到的群組已不在 groups 裡。
+          // 勾选刻意在搜索过滤下保留（spec §4），所以用户不一定看得到全部
+          // 被勾的列 — 这份名单而非单一数字，才是误删前的最后一道防线。
+          // 名称查 groupNameOf（跨搜索累積的 cache）而非当前 groups：服务器
+          // 搜索模式下前一次搜索勾到的群组已不在 groups 里。
           <div style={{ maxHeight: 180, overflowY: 'auto', fontSize: 12 }}>
             <div
               style={{
@@ -1137,7 +1137,7 @@ function AssetLibraryPageInner() {
                 fontWeight: 600,
               }}
             >
-              將刪除以下群組：
+              将删除以下群组：
             </div>
             {(pendingGroupBatch?.ids ?? []).slice(0, 12).map((id) => (
               <div
@@ -1149,16 +1149,16 @@ function AssetLibraryPageInner() {
             ))}
             {(pendingGroupBatch?.ids.length ?? 0) > 12 && (
               <div style={{ padding: '3px 0', color: 'var(--text-muted)' }}>
-                …等共 {pendingGroupBatch?.ids.length} 個群組
+                …等共 {pendingGroupBatch?.ids.length} 个群组
               </div>
             )}
           </div>
         }
         typedConfirmation={{
-          requiredText: '刪除',
-          placeholder: '輸入「刪除」以確認',
+          requiredText: '删除',
+          placeholder: '输入「删除」以确认',
         }}
-        confirmLabel="永久刪除"
+        confirmLabel="永久删除"
         variant="danger"
         onConfirm={() => void confirmGroupBatchDelete()}
         onCancel={() => {
@@ -1169,13 +1169,13 @@ function AssetLibraryPageInner() {
 
       <ConfirmModal
         open={pendingFirstGroup}
-        title="建立第一個群組"
+        title="创建第一个群组"
         subtitle="例如：my-assets"
         body={
           <input
             value={firstGroupName}
             onChange={(e) => setFirstGroupName(e.target.value)}
-            placeholder="群組名稱"
+            placeholder="群组名称"
             style={{
               width: '100%',
               padding: '8px 10px',
@@ -1187,7 +1187,7 @@ function AssetLibraryPageInner() {
             }}
           />
         }
-        confirmLabel="建立"
+        confirmLabel="创建"
         variant="accent"
         onConfirm={async () => {
           const name = firstGroupName.trim()
@@ -1209,7 +1209,7 @@ function AssetLibraryPageInner() {
         show={checkedIds.size > 0}
         badge={
           <>
-            已選{' '}
+            已选{' '}
             <strong
               style={{
                 color: '#fff',
@@ -1225,12 +1225,12 @@ function AssetLibraryPageInner() {
         }
         actions={[
           {
-            label: '全選本頁',
+            label: '全选本页',
             onClick: () => checkPageRange(displayedAssets.map((a) => a.id)),
           },
           { label: '清除', onClick: clearChecked },
           {
-            label: `刪除 ${checkedIds.size} 個`,
+            label: `删除 ${checkedIds.size} 个`,
             onClick: () => requestBatchDelete([...checkedIds]),
             variant: 'danger',
           },

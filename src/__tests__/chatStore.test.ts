@@ -25,20 +25,20 @@ describe('chatStore', () => {
     expect(t.pending).toBe(false)
   })
 
-  it('有輪次後 setApiMode 無效（模式鎖定）；newConversation 後解鎖', async () => {
+  it('有轮次后 setApiMode 无效（模式锁定）；newConversation 后解锁', async () => {
     const { useChatStore } = await freshStore()
     useChatStore.getState().setApiMode('responses')
     expect(useChatStore.getState().apiMode).toBe('responses')
     useChatStore.getState().addTurn(turn({ id: 'a', apiMode: 'responses' }))
     useChatStore.getState().setApiMode('chat')
-    expect(useChatStore.getState().apiMode).toBe('responses')  // 鎖定
+    expect(useChatStore.getState().apiMode).toBe('responses')  // 锁定
     useChatStore.getState().newConversation()
     expect(useChatStore.getState().turns).toEqual([])
     useChatStore.getState().setApiMode('chat')
     expect(useChatStore.getState().apiMode).toBe('chat')
   })
 
-  it('newConversation 保留參數設定', async () => {
+  it('newConversation 保留参数设置', async () => {
     const { useChatStore } = await freshStore()
     useChatStore.getState().setParam('temperature', '0.5')
     useChatStore.getState().addTurn(turn({ id: 'a' }))
@@ -46,7 +46,7 @@ describe('chatStore', () => {
     expect(useChatStore.getState().params.temperature).toBe('0.5')
   })
 
-  it('lastResponseId：跳過 error 輪、取最後一個有 responseId 的輪', async () => {
+  it('lastResponseId：跳过 error 轮、取最后一个有 responseId 的轮', async () => {
     const { useChatStore, lastResponseId } = await freshStore()
     useChatStore.getState().addTurn(turn({ id: 'a', meta: { responseId: 'resp_1' } }))
     useChatStore.getState().addTurn(turn({ id: 'b', meta: { responseId: 'resp_2' } }))
@@ -54,7 +54,7 @@ describe('chatStore', () => {
     expect(lastResponseId(useChatStore.getState().turns)).toBe('resp_2')
   })
 
-  it('rehydrate：pending 中被重整的輪標記 aborted', async () => {
+  it('rehydrate：pending 中被重整的轮标记 aborted', async () => {
     sessionStorage.setItem('byteplus-ai-gen-platform-chat', JSON.stringify({
       version: 1,
       state: {
@@ -69,19 +69,19 @@ describe('chatStore', () => {
     expect(useChatStore.getState().isGenerating).toBe(false)
   })
 
-  it('setSystemPrompt / setSystemPromptMode：有輪次後鎖定（no-op）；newConversation 後保留並解鎖', async () => {
+  it('setSystemPrompt / setSystemPromptMode：有轮次后锁定（no-op）；newConversation 后保留并解锁', async () => {
     const { useChatStore } = await freshStore()
     useChatStore.getState().setSystemPrompt('你是助理')
     useChatStore.getState().setSystemPromptMode('instructions')
     expect(useChatStore.getState().systemPrompt).toBe('你是助理')
     expect(useChatStore.getState().systemPromptMode).toBe('instructions')
     useChatStore.getState().addTurn(turn({ id: 'a' }))
-    // 鎖定：改不動
+    // 锁定：改不动
     useChatStore.getState().setSystemPrompt('改掉')
     useChatStore.getState().setSystemPromptMode('system')
     expect(useChatStore.getState().systemPrompt).toBe('你是助理')
     expect(useChatStore.getState().systemPromptMode).toBe('instructions')
-    // newConversation 保留系統提示設定並解鎖
+    // newConversation 保留系统提示设置并解锁
     useChatStore.getState().newConversation()
     expect(useChatStore.getState().systemPrompt).toBe('你是助理')
     expect(useChatStore.getState().systemPromptMode).toBe('instructions')
@@ -89,7 +89,7 @@ describe('chatStore', () => {
     expect(useChatStore.getState().systemPrompt).toBe('新的')
   })
 
-  it('truncateFromTurn：截斷中間輪只保留較早的輪', async () => {
+  it('truncateFromTurn：截断中间轮只保留较早的轮', async () => {
     const { useChatStore } = await freshStore()
     useChatStore.getState().addTurn(turn({ id: 'a' }))
     useChatStore.getState().addTurn(turn({ id: 'b' }))
@@ -98,33 +98,33 @@ describe('chatStore', () => {
     expect(useChatStore.getState().turns.map((t: ChatTurn) => t.id)).toEqual(['a'])
   })
 
-  it('truncateFromTurn：截斷首輪清空對話並解鎖模式切換', async () => {
+  it('truncateFromTurn：截断首轮清空对话并解锁模式切换', async () => {
     const { useChatStore } = await freshStore()
     useChatStore.getState().setApiMode('responses')
     useChatStore.getState().addTurn(turn({ id: 'a', apiMode: 'responses' }))
     useChatStore.getState().setApiMode('chat')
-    expect(useChatStore.getState().apiMode).toBe('responses')  // 鎖定
+    expect(useChatStore.getState().apiMode).toBe('responses')  // 锁定
     useChatStore.getState().truncateFromTurn('a')
     expect(useChatStore.getState().turns).toEqual([])
     useChatStore.getState().setApiMode('chat')
-    expect(useChatStore.getState().apiMode).toBe('chat')       // 解鎖
+    expect(useChatStore.getState().apiMode).toBe('chat')       // 解锁
   })
 
-  it('truncateFromTurn：未知 id 為 no-op', async () => {
+  it('truncateFromTurn：未知 id 为 no-op', async () => {
     const { useChatStore } = await freshStore()
     useChatStore.getState().addTurn(turn({ id: 'a' }))
     useChatStore.getState().truncateFromTurn('zzz')
     expect(useChatStore.getState().turns.map((t: ChatTurn) => t.id)).toEqual(['a'])
   })
 
-  it('setComposerDraft：草稿讀寫（生成中也可寫）', async () => {
+  it('setComposerDraft：草稿读写（生成中也可写）', async () => {
     const { useChatStore } = await freshStore()
     expect(useChatStore.getState().composerDraft).toBe('')
-    useChatStore.getState().setComposerDraft('救回的輸入')
-    expect(useChatStore.getState().composerDraft).toBe('救回的輸入')
+    useChatStore.getState().setComposerDraft('救回的输入')
+    expect(useChatStore.getState().composerDraft).toBe('救回的输入')
   })
 
-  it('migrate v1→v2：補齊 systemPrompt/systemPromptMode/composerDraft 與 params.serviceTier', async () => {
+  it('migrate v1→v2：补齐 systemPrompt/systemPromptMode/composerDraft 与 params.serviceTier', async () => {
     sessionStorage.setItem('byteplus-ai-gen-platform-chat', JSON.stringify({
       version: 1,
       state: {

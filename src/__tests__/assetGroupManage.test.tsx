@@ -26,7 +26,7 @@ function makeProps(
     onRename: vi.fn(async () => {}),
     onDelete: vi.fn(),
     onBatchDelete: vi.fn(async () => null as { failedIds: string[] } | null),
-    // 管理模式的測試與分頁無關 —— 清單當作已全載完（底部只剩操作列）。
+    // 管理模式的测试与分页无关 —— 清单当作已全载完（底部只剩操作列）。
     onLoadMore: vi.fn(),
     hasMore: false,
     loadingMore: false,
@@ -42,23 +42,23 @@ describe('AssetGroupSidebar manage mode', () => {
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: '管理' }))
     expect(screen.getAllByRole('checkbox')).toHaveLength(3)
-    expect(screen.queryByText('建立新 Group')).not.toBeInTheDocument()
+    expect(screen.queryByText('创建新群组')).not.toBeInTheDocument()
     expect(screen.queryByTestId('group-overflow-a')).not.toBeInTheDocument()
-    // 完成離開管理模式
+    // 完成离开管理模式
     fireEvent.click(screen.getByRole('button', { name: '完成' }))
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
-    expect(screen.getByText('建立新 Group')).toBeInTheDocument()
+    expect(screen.getByText('创建新群组')).toBeInTheDocument()
   })
 
   it('entering manage mode closes an in-progress rename form', () => {
     render(<AssetGroupSidebar {...makeProps()} />)
     fireEvent.click(screen.getByTestId('group-overflow-a'))
     fireEvent.click(screen.getByText('重新命名'))
-    expect(screen.getByRole('button', { name: '儲存' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '存储' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: '管理' }))
-    // 編輯中的列不會渲染 checkbox，但 id 仍會被「全選」收進去 —
-    // 進管理模式時關掉編輯表單，讓每一列都選得到也看得見。
-    expect(screen.queryByRole('button', { name: '儲存' })).not.toBeInTheDocument()
+    // 编辑中的列不会渲染 checkbox，但 id 仍会被「全选」收进去 —
+    // 进管理模式时关掉编辑表单，让每一列都选得到也看得见。
+    expect(screen.queryByRole('button', { name: '存储' })).not.toBeInTheDocument()
     expect(screen.getAllByRole('checkbox')).toHaveLength(3)
   })
 
@@ -69,33 +69,33 @@ describe('AssetGroupSidebar manage mode', () => {
     fireEvent.click(screen.getByTestId('group-row-a'))
     expect(props.onSelect).not.toHaveBeenCalled()
     expect(
-      screen.getByRole('button', { name: /刪除選取 \(1\)/ }),
+      screen.getByRole('button', { name: /删除选择 \(1\)/ }),
     ).toBeInTheDocument()
   })
 
-  it('全選 checks all visible rows; 清除 empties; delete disabled at 0', () => {
+  it('全选 checks all visible rows; 清除 empties; delete disabled at 0', () => {
     render(<AssetGroupSidebar {...makeProps()} />)
     fireEvent.click(screen.getByRole('button', { name: '管理' }))
     const deleteBtn = () =>
-      screen.getByRole('button', { name: /刪除選取/ }) as HTMLButtonElement
+      screen.getByRole('button', { name: /删除选择/ }) as HTMLButtonElement
     expect(deleteBtn().disabled).toBe(true)
-    fireEvent.click(screen.getByRole('button', { name: '全選' }))
+    fireEvent.click(screen.getByRole('button', { name: '全选' }))
     expect(
-      screen.getByRole('button', { name: /刪除選取 \(3\)/ }),
+      screen.getByRole('button', { name: /删除选择 \(3\)/ }),
     ).toBeInTheDocument()
     expect(deleteBtn().disabled).toBe(false)
     fireEvent.click(screen.getByRole('button', { name: '清除' }))
     expect(deleteBtn().disabled).toBe(true)
   })
 
-  it('全選 under a search filter only absorbs the VISIBLE rows', () => {
+  it('全选 under a search filter only absorbs the VISIBLE rows', () => {
     render(<AssetGroupSidebar {...makeProps()} />)
     fireEvent.click(screen.getByRole('button', { name: '管理' }))
-    fireEvent.change(screen.getByLabelText('搜尋群組'), { target: { value: '乙' } })
-    fireEvent.click(screen.getByRole('button', { name: '全選' }))
-    // 只有被過濾出的「乙」被收進勾選 — 看不見的列不得被全選吸入
+    fireEvent.change(screen.getByLabelText('搜索群组'), { target: { value: '乙' } })
+    fireEvent.click(screen.getByRole('button', { name: '全选' }))
+    // 只有被过滤出的「乙」被收进勾选 — 看不见的列不得被全选吸入
     expect(
-      screen.getByRole('button', { name: /刪除選取 \(1\)/ }),
+      screen.getByRole('button', { name: /删除选择 \(1\)/ }),
     ).toBeInTheDocument()
   })
 
@@ -103,12 +103,12 @@ describe('AssetGroupSidebar manage mode', () => {
     render(<AssetGroupSidebar {...makeProps()} />)
     fireEvent.click(screen.getByRole('button', { name: '管理' }))
     fireEvent.click(screen.getByTestId('group-row-a'))
-    fireEvent.change(screen.getByLabelText('搜尋群組'), {
+    fireEvent.change(screen.getByLabelText('搜索群组'), {
       target: { value: '乙' },
     })
-    // a 被過濾隱藏但仍在勾選集合
+    // a 被过滤隐藏但仍在勾选集合
     expect(
-      screen.getByRole('button', { name: /刪除選取 \(1\)/ }),
+      screen.getByRole('button', { name: /删除选择 \(1\)/ }),
     ).toBeInTheDocument()
   })
 
@@ -117,7 +117,7 @@ describe('AssetGroupSidebar manage mode', () => {
     render(<AssetGroupSidebar {...props} />)
     fireEvent.click(screen.getByRole('button', { name: '管理' }))
     fireEvent.click(screen.getByTestId('group-row-a'))
-    fireEvent.click(screen.getByRole('button', { name: /刪除選取 \(1\)/ }))
+    fireEvent.click(screen.getByRole('button', { name: /删除选择 \(1\)/ }))
     expect(props.onBatchDelete).toHaveBeenCalledWith(['a'])
     await waitFor(() => {
       expect(screen.queryByRole('checkbox')).not.toBeInTheDocument() // 已退出管理模式
@@ -132,16 +132,16 @@ describe('AssetGroupSidebar manage mode', () => {
     fireEvent.click(screen.getByRole('button', { name: '管理' }))
     fireEvent.click(screen.getByTestId('group-row-a'))
     fireEvent.click(screen.getByTestId('group-row-b'))
-    fireEvent.click(screen.getByRole('button', { name: /刪除選取 \(2\)/ }))
+    fireEvent.click(screen.getByRole('button', { name: /删除选择 \(2\)/ }))
     await waitFor(() => {
       expect(
-        screen.getByRole('button', { name: /刪除選取 \(1\)/ }),
+        screen.getByRole('button', { name: /删除选择 \(1\)/ }),
       ).toBeInTheDocument()
     })
-    // 留在管理模式讓使用者重試失敗項
+    // 留在管理模式让用户重试失败项
     expect(screen.getAllByRole('checkbox')).toHaveLength(3)
     expect(
-      screen.getByRole('checkbox', { name: '選取 乙' }),
+      screen.getByRole('checkbox', { name: '选择 乙' }),
     ).toBeChecked()
   })
 
@@ -150,10 +150,10 @@ describe('AssetGroupSidebar manage mode', () => {
     render(<AssetGroupSidebar {...props} />)
     fireEvent.click(screen.getByRole('button', { name: '管理' }))
     fireEvent.click(screen.getByTestId('group-row-a'))
-    fireEvent.click(screen.getByRole('button', { name: /刪除選取 \(1\)/ }))
+    fireEvent.click(screen.getByRole('button', { name: /删除选择 \(1\)/ }))
     await waitFor(() => expect(props.onBatchDelete).toHaveBeenCalledWith(['a']))
     expect(
-      screen.getByRole('button', { name: /刪除選取 \(1\)/ }),
+      screen.getByRole('button', { name: /删除选择 \(1\)/ }),
     ).toBeInTheDocument()
     expect(screen.getAllByRole('checkbox')).toHaveLength(3)
   })
@@ -162,15 +162,15 @@ describe('AssetGroupSidebar manage mode', () => {
     const props = makeProps()
     const { rerender } = render(<AssetGroupSidebar {...props} />)
     fireEvent.click(screen.getByRole('button', { name: '管理' }))
-    fireEvent.click(screen.getByRole('button', { name: '全選' }))
+    fireEvent.click(screen.getByRole('button', { name: '全选' }))
     expect(
-      screen.getByRole('button', { name: /刪除選取 \(3\)/ }),
+      screen.getByRole('button', { name: /删除选择 \(3\)/ }),
     ).toBeInTheDocument()
-    // 群組被別的路徑刪掉（單筆刪除、其他分頁的重新整理）→ 勾選必須跟著修剪，
-    // 否則計數虛胖，而且那些列已不在畫面上、使用者無從個別取消勾選。
+    // 群组被别的路径删掉（单笔删除、其他分页的刷新）→ 勾选必须跟著修剪，
+    // 否则计数虚胖，而且那些列已不在画面上、用户无从个别取消勾选。
     rerender(<AssetGroupSidebar {...props} groups={[g('a', '甲')]} />)
     expect(
-      screen.getByRole('button', { name: /刪除選取 \(1\)/ }),
+      screen.getByRole('button', { name: /删除选择 \(1\)/ }),
     ).toBeInTheDocument()
   })
 
@@ -178,12 +178,12 @@ describe('AssetGroupSidebar manage mode', () => {
     const props = makeProps({ disableClientFilter: true })
     const { rerender } = render(<AssetGroupSidebar {...props} />)
     fireEvent.click(screen.getByRole('button', { name: '管理' }))
-    fireEvent.click(screen.getByRole('button', { name: '全選' }))
-    // disableClientFilter = 伺服器端搜尋（>1000 群組）：props.groups 是整批
-    // 抽換的「可見清單」而非現存群組全集，照修會把搜尋前的勾選全清掉。
-    rerender(<AssetGroupSidebar {...props} groups={[g('z', '搜尋結果')]} />)
+    fireEvent.click(screen.getByRole('button', { name: '全选' }))
+    // disableClientFilter = 服务器端搜索（>1000 群组）：props.groups 是整批
+    // 抽换的「可见清单」而非现存群组全集，照修会把搜索前的勾选全清掉。
+    rerender(<AssetGroupSidebar {...props} groups={[g('z', '搜索结果')]} />)
     expect(
-      screen.getByRole('button', { name: /刪除選取 \(3\)/ }),
+      screen.getByRole('button', { name: /删除选择 \(3\)/ }),
     ).toBeInTheDocument()
   })
 
@@ -198,12 +198,12 @@ describe('AssetGroupSidebar manage mode', () => {
     render(<AssetGroupSidebar {...makeProps({ onBatchDelete })} />)
     fireEvent.click(screen.getByRole('button', { name: '管理' }))
     fireEvent.click(screen.getByTestId('group-row-a'))
-    const btn = screen.getByRole('button', { name: /刪除選取 \(1\)/ })
-    // deleteBusy 由父層的 job 狀態驅動，翻真前的視窗內連點會開兩個 Modal。
+    const btn = screen.getByRole('button', { name: /删除选择 \(1\)/ })
+    // deleteBusy 由父层的 job 状态驱动，翻真前的视窗内连点会开两个 Modal。
     fireEvent.click(btn)
     fireEvent.click(btn)
     expect(onBatchDelete).toHaveBeenCalledTimes(1)
-    // guard 在結果回來後釋放 — 不是一次性鎖死
+    // guard 在结果回来后释放 — 不是一次性锁死
     settle?.({ failedIds: [] })
     await waitFor(() =>
       expect(screen.queryByRole('checkbox')).not.toBeInTheDocument(),
@@ -215,7 +215,7 @@ describe('AssetGroupSidebar manage mode', () => {
     fireEvent.click(screen.getByRole('button', { name: '管理' }))
     fireEvent.click(screen.getByTestId('group-row-a'))
     expect(
-      (screen.getByRole('button', { name: /刪除選取/ }) as HTMLButtonElement)
+      (screen.getByRole('button', { name: /删除选择/ }) as HTMLButtonElement)
         .disabled,
     ).toBe(true)
   })

@@ -127,11 +127,11 @@ export default function AssetUploadDialog(props: Props) {
             borderBottom: '1px solid var(--border)',
           }}
         >
-          <h3 style={{ margin: 0, fontSize: 16 }}>上傳資產</h3>
+          <h3 style={{ margin: 0, fontSize: 16 }}>上传资产</h3>
           <button
             type="button"
             className="icon-btn"
-            aria-label="關閉"
+            aria-label="关闭"
             onClick={onClose}
             style={{ width: 28, height: 28 }}
           >
@@ -152,7 +152,7 @@ export default function AssetUploadDialog(props: Props) {
         >
           {/* group selector */}
           <div>
-            <label style={fieldLabel}>目標群組</label>
+            <label style={fieldLabel}>目标群组</label>
             <select
               className="select-field"
               value={groupId}
@@ -160,7 +160,7 @@ export default function AssetUploadDialog(props: Props) {
               style={{ width: '100%' }}
             >
               {groups.length === 0 && (
-                <option value="">尚無群組 — 先到左側建立</option>
+                <option value="">尚无群组 — 先到左侧创建</option>
               )}
               {groups.map((g) => (
                 <option key={g.id} value={g.id}>
@@ -172,7 +172,7 @@ export default function AssetUploadDialog(props: Props) {
 
           {/* file picker */}
           <div>
-            <label style={fieldLabel}>選擇檔案</label>
+            <label style={fieldLabel}>选择文件</label>
             <input
               data-testid="upload-file-input"
               ref={fileInputRef}
@@ -192,20 +192,20 @@ export default function AssetUploadDialog(props: Props) {
                 onClick={() => fileInputRef.current?.click()}
                 style={pickButtonStyle}
               >
-                📂 從電腦選擇…
+                📂 从电脑选择…
               </button>
               <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                 {items.length === 0
-                  ? '尚未選擇任何檔案'
-                  : `已選 ${items.length} 個檔案${
+                  ? '尚未选择任何文件'
+                  : `已选 ${items.length} 个文件${
                       validCount === items.length
                         ? ''
-                        : `（${validCount} 個可上傳）`
+                        : `（${validCount} 个可上传）`
                     }`}
               </span>
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>
-              支援 圖片 ≤30 MB / 影片 ≤50 MB / 音訊 ≤15 MB
+              支持 图片 ≤30 MB / 视频 ≤50 MB / 音频 ≤15 MB
             </div>
           </div>
 
@@ -321,7 +321,7 @@ export default function AssetUploadDialog(props: Props) {
             disabled={validCount === 0 || !groupId}
             style={primaryButtonStyle(validCount === 0 || !groupId)}
           >
-            開始上傳{validCount > 0 ? `（${validCount}）` : ''}
+            开始上传{validCount > 0 ? `（${validCount}）` : ''}
           </button>
         </footer>
       </div>

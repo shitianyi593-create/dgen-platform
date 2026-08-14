@@ -43,7 +43,7 @@ export async function refreshGroupCount(groupId: string): Promise<void> {
   groupCountSeq.set(groupId, seq)
   try {
     const n = await countAssetsInGroup(groupId)
-    if (groupCountSeq.get(groupId) !== seq) return // 過期：更新的一次已接手
+    if (groupCountSeq.get(groupId) !== seq) return // 过期：更新的一次已接手
     useAssetStore.getState().setGroupCount(groupId, n)
   } catch {
     // best-effort — don't crash the UI on a stale count

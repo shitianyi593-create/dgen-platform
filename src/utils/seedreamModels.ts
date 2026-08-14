@@ -1,8 +1,8 @@
 /**
- * Seedream 模型能力表 — 單一事實來源。
- * 依據 Seedream-api-reference/seedream-4.0-5.0-tutorial.md（官方 tutorial，
- * 2026-07-09 擷取）。所有 UI 鎖定（解析度檔位、組圖、輸出格式、參考圖上限、
- * 自訂像素範圍）都從這裡讀，不要在元件裡散落魔術數字。
+ * Seedream 模型能力表 — 单一事实来源。
+ * 依据 Seedream-api-reference/seedream-4.0-5.0-tutorial.md（官方 tutorial，
+ * 2026-07-09 截取）。所有 UI 锁定（分辨率档位、组图、输出格式、参考图上限、
+ * 自定义像素范围）都从这里读，不要在组件里散落魔术数字。
  */
 
 export type SeedreamModelKey =
@@ -17,17 +17,17 @@ export type OutputFormat = 'png' | 'jpeg'
 export interface SeedreamModelSpec {
   key: SeedreamModelKey
   label: string
-  /** 官方各模型可用的解析度檔位（method 2 的 size 值）。 */
+  /** 官方各模型可用的分辨率档位（method 2 的 size 值）。 */
   sizeLevels: readonly SizeLevel[]
-  /** 可選輸出格式。formatLocked=true 時 UI 停用選擇且 payload 不送 output_format。 */
+  /** 可选输出格式。formatLocked=true 时 UI 停用选择且 payload 不送 output_format。 */
   outputFormats: readonly OutputFormat[]
-  /** 4-5 / 4-0 固定 jpeg 且「不支援自訂設定」→ 不送 output_format 欄位。 */
+  /** 4-5 / 4-0 固定 jpeg 且「不支持自定义设置」→ 不送 output_format 字段。 */
   formatLocked: boolean
-  /** 組圖輸出（sequential_image_generation）。5.0 Pro 僅支援單圖。 */
+  /** 组图输出（sequential_image_generation）。5.0 Pro 仅支持单图。 */
   supportsSequential: boolean
-  /** 參考圖上限：5.0 Pro = 10，其他 = 14。 */
+  /** 参考图上限：5.0 Pro = 10，其他 = 14。 */
   maxRefImages: number
-  /** 自訂像素（method 1）允許的總像素範圍（寬×高）。 */
+  /** 自定义像素（method 1）允许的总像素范围（宽×高）。 */
   minTotalPx: number
   maxTotalPx: number
 }
@@ -79,7 +79,7 @@ export const SEEDREAM_MODELS: Record<SeedreamModelKey, SeedreamModelSpec> = {
   },
 }
 
-/** 下拉選單順序：新 → 舊。 */
+/** 下拉选单顺序：新 → 旧。 */
 export const SEEDREAM_MODEL_OPTIONS: ReadonlyArray<{
   value: SeedreamModelKey
   label: string
@@ -92,23 +92,23 @@ export const SEEDREAM_MODEL_OPTIONS: ReadonlyArray<{
 
 export const DEFAULT_SEEDREAM_MODEL: SeedreamModelKey = 'seedream-5-0-pro'
 
-/** 檔位模式的比例選項。'auto' = 不附加比例描述，交給模型 / prompt 決定。 */
+/** 档位模式的比例选项。'auto' = 不附加比例描述，交给模型 / prompt 决定。 */
 export const ASPECT_RATIO_OPTIONS = [
-  { value: 'auto', label: '自動（由 prompt 決定）' },
+  { value: 'auto', label: '自动（由 prompt 决定）' },
   { value: '1:1', label: '1:1 (方形)' },
   { value: '4:3', label: '4:3' },
   { value: '3:4', label: '3:4' },
-  { value: '16:9', label: '16:9 (橫向)' },
-  { value: '9:16', label: '9:16 (直向)' },
+  { value: '16:9', label: '16:9 (横向)' },
+  { value: '9:16', label: '9:16 (竖向)' },
   { value: '3:2', label: '3:2' },
   { value: '2:3', label: '2:3' },
-  { value: '21:9', label: '21:9 (超寬)' },
+  { value: '21:9', label: '21:9 (超宽)' },
 ] as const
 
-/** 參考圖數 + 生成張數 ≤ 15（官方限制，適用支援組圖的模型）。 */
+/** 参考图数 + 生成张数 ≤ 15（官方限制，适用支持组图的模型）。 */
 export const SEQUENTIAL_TOTAL_CAP = 15
 
-/** 官方輸入圖限制：邊長需 > 14px。 */
+/** 官方输入图限制：边长需 > 14px。 */
 const MIN_EDGE_PX = 15
 const RATIO_MIN = 1 / 16
 const RATIO_MAX = 16
@@ -118,7 +118,7 @@ export interface CustomSizeResult {
   error?: string
 }
 
-/** 自訂像素（method 1）驗證：邊長、比例、總像素範圍。 */
+/** 自定义像素（method 1）验证：边长、比例、总像素范围。 */
 export function validateCustomSize(
   modelKey: SeedreamModelKey,
   width: number,
@@ -126,32 +126,32 @@ export function validateCustomSize(
 ): CustomSizeResult {
   const spec = SEEDREAM_MODELS[modelKey]
   if (!Number.isInteger(width) || !Number.isInteger(height) || width < MIN_EDGE_PX || height < MIN_EDGE_PX) {
-    return { ok: false, error: `寬與高需為大於 ${MIN_EDGE_PX - 1}px 的整數` }
+    return { ok: false, error: `宽与高需为大于 ${MIN_EDGE_PX - 1}px 的整数` }
   }
   const ratio = width / height
   if (ratio < RATIO_MIN || ratio > RATIO_MAX) {
-    return { ok: false, error: '寬高比例需在 1/16 – 16 之間' }
+    return { ok: false, error: '宽高比例需在 1/16 – 16 之间' }
   }
   const total = width * height
   if (total < spec.minTotalPx || total > spec.maxTotalPx) {
     return {
       ok: false,
-      error: `${spec.label} 總像素需在 ${spec.minTotalPx.toLocaleString()} – ${spec.maxTotalPx.toLocaleString()} 之間（目前 ${total.toLocaleString()}）`,
+      error: `${spec.label} 总像素需在 ${spec.minTotalPx.toLocaleString()} – ${spec.maxTotalPx.toLocaleString()} 之间（目前 ${total.toLocaleString()}）`,
     }
   }
   return { ok: true }
 }
 
-/** 組圖張數上限：15 − 參考圖數，至少 1。 */
+/** 组图张数上限：15 − 参考图数，至少 1。 */
 export function clampMaxImages(refCount: number, desired: number): number {
   const cap = Math.max(1, SEQUENTIAL_TOTAL_CAP - refCount)
   return Math.min(Math.max(1, desired), cap)
 }
 
 /**
- * 檔位+比例模式（官方 method 2）：size 送檔位字串（如 "2K"），比例以自然語言
- * 附加到 prompt。不採「比例換算確切像素以 method 1 傳送」— 官方對照表像素
- * （如 5-0-pro 2K 16:9 = 2848×1600）會超出該模型 method 1 的總像素上限。
+ * 档位+比例模式（官方 method 2）：size 送档位字符串（如 "2K"），比例以自然语言
+ * 附加到 prompt。不采「比例换算确切像素以 method 1 传送」— 官方对照表像素
+ * （如 5-0-pro 2K 16:9 = 2848×1600）会超出该模型 method 1 的总像素上限。
  */
 export function buildPromptWithRatio(prompt: string, ratio: string): string {
   if (ratio === 'auto') return prompt

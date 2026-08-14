@@ -1,15 +1,17 @@
 // src/components/video25/PromptOptimizeModal.tsx
-// 提示詞優化預覽 Modal（spec §6.3）。樣式比照 ConfirmModal。
+// 提示词优化预览 Modal（spec §6.3）。样式比照 ConfirmModal。
 import { useEffect, useId, useState } from 'react'
 import type { Sd25TaskType } from '../../utils/sd25PromptOptimizer'
+import { useOptionalI18n } from '../../i18n/useOptionalI18n'
+import type { MessageKey } from '../../i18n/locales'
 
-const TASK_TYPE_LABEL: Record<Sd25TaskType, string> = {
-  t2v: '文生影片',
-  reference: '參考生影片',
-  edit: '影片編輯',
-  extend: '影片延長',
-  frames: '首尾幀生成',
-  unknown: '未能判定',
+const TASK_TYPE_LABEL_KEY: Record<Sd25TaskType, MessageKey> = {
+  t2v: 'video25.taskType.t2v',
+  reference: 'video25.taskType.reference',
+  edit: 'video25.taskType.edit',
+  extend: 'video25.taskType.extend',
+  frames: 'video25.taskType.frames',
+  unknown: 'video25.taskType.unknown',
 }
 
 export interface PromptOptimizeModalProps {
@@ -19,21 +21,22 @@ export interface PromptOptimizeModalProps {
   taskType: Sd25TaskType
   originalPrompt: string
   optimizedPrompt: string
-  /** describeParamFixes 產出的修正說明；null = 無修正。 */
+  /** describeParamFixes 产出的修正说明；null = 无修正。 */
   fixNote: string | null
   onConfirm: (finalPrompt: string) => void
   onUseOriginal: () => void
   /**
-   * 放棄本次優化（取消鍵 / Escape / 點擊遮罩）。
-   * 注意：loading 為 true 時也可能觸發（loading 態同時提供取消鍵與 Escape），
-   * 呼叫端須 abort 進行中的 optimizePrompt 請求，
-   * 否則回應抵達後會把已關閉的 Modal 再打開。
+   * 放弃本次优化（取消键 / Escape / 点击遮罩）。
+   * 注意：loading 为 true 时也可能触发（loading 态同时提供取消键与 Escape），
+   * 呼叫端须 abort 进行中的 optimizePrompt 请求，
+   * 否则响应抵达后会把已关闭的 Modal 再打开。
    */
   onCancel: () => void
   onRetry: () => void
 }
 
 export default function PromptOptimizeModal(props: PromptOptimizeModalProps) {
+  const { t } = useOptionalI18n()
   const {
     open, loading, error, taskType, originalPrompt, optimizedPrompt,
     fixNote, onConfirm, onUseOriginal, onCancel, onRetry,
@@ -46,11 +49,11 @@ export default function PromptOptimizeModal(props: PromptOptimizeModalProps) {
   const [text, setText] = useState(optimizedPrompt)
   const [showOriginal, setShowOriginal] = useState(false)
 
-  // 每次開啟、以及優化結果抵達 / 重試成功時，重設編輯區內容與原文對照。
-  // 關閉時元件僅 return null 而未卸載，若只依賴 optimizedPrompt，
-  // 同一結果再次開啟會殘留上一輪已放棄的手動編輯（被誤當成本次結果送出）。
-  // 採 render 期間比對前次 props 的官方寫法（react.dev「You Might Not Need an
-  // Effect」）而非 useEffect：無多餘 commit，也不觸發 set-state-in-effect lint。
+  // 每次打开、以及优化结果抵达 / 重试成功时，重设编辑区内容与原文对照。
+  // 关闭时组件仅 return null 而未卸载，若只依赖 optimizedPrompt，
+  // 同一结果再次打开会残留上一轮已放弃的手动编辑（被误当成本次结果送出）。
+  // 采 render 期间比对前次 props 的官方写法（react.dev「You Might Not Need an
+  // Effect」）而非 useEffect：无多余 commit，也不触发 set-state-in-effect lint。
   const [syncedProps, setSyncedProps] = useState({ open, optimizedPrompt })
   if (syncedProps.open !== open || syncedProps.optimizedPrompt !== optimizedPrompt) {
     setSyncedProps({ open, optimizedPrompt })
@@ -62,7 +65,7 @@ export default function PromptOptimizeModal(props: PromptOptimizeModalProps) {
 
   useEffect(() => {
     if (!open) return
-    // 刻意不受 loading 影響：loading 態同樣要能退出（另有取消鍵供滑鼠使用者）。
+    // 刻意不受 loading 影响：loading 态同样要能退出（另有取消键供鼠标用户）。
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -106,20 +109,20 @@ export default function PromptOptimizeModal(props: PromptOptimizeModalProps) {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-          <span id={titleId} style={{ fontSize: 16, fontWeight: 600 }}>提示詞優化結果</span>
+          <span id={titleId} style={{ fontSize: 16, fontWeight: 600 }}>{t('video25.optimize.title')}</span>
           {!loading && !error && (
             <span style={{
               fontSize: 11, padding: '2px 8px', borderRadius: 999,
               background: 'var(--bg-input)', color: 'var(--accent)',
               border: '1px solid var(--accent)',
             }}>
-              {TASK_TYPE_LABEL[taskType]}
+              {t(TASK_TYPE_LABEL_KEY[taskType])}
             </span>
           )}
         </div>
 
-        {/* error 先於 loading：{loading:true, error:'…'} 若先判 loading，
-            會顯示永久 spinner 並吞掉錯誤。錯誤永遠比 spinner 更可行動。 */}
+        {/* error 先于 loading：{loading:true, error:'…'} 若先判 loading，
+            会显示永久 spinner 并吞掉错误。错误永远比 spinner 更可行动。 */}
         {error ? (
           <>
             <div role="alert" style={{
@@ -128,20 +131,20 @@ export default function PromptOptimizeModal(props: PromptOptimizeModalProps) {
               border: '1px solid rgba(248, 81, 73, 0.4)',
               color: '#fca5a5', fontSize: 12, wordBreak: 'break-word',
             }}>
-              優化失敗：{error}
+              {t('video25.optimize.failed', { message: error })}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button type="button" onClick={onCancel}
                 style={{ ...btnBase, flex: 1, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-primary)' }}>
-                取消
+                {t('common.cancel')}
               </button>
               <button type="button" onClick={onUseOriginal}
                 style={{ ...btnBase, flex: 1, border: '1px solid var(--border)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}>
-                用原文生成
+                {t('video25.optimize.useOriginal')}
               </button>
               <button type="button" onClick={onRetry}
                 style={{ ...btnBase, flex: 1, border: 'none', background: 'var(--accent)', color: '#fff', fontWeight: 600 }}>
-                重試
+                {t('common.retry')}
               </button>
             </div>
           </>
@@ -149,24 +152,24 @@ export default function PromptOptimizeModal(props: PromptOptimizeModalProps) {
           <>
             <div role="status" style={{ padding: '32px 0', textAlign: 'center', color: 'var(--text-secondary)' }}>
               <span className="spinner" style={{ width: 24, height: 24, display: 'inline-block', marginBottom: 12 }} />
-              <div>正在優化提示詞…</div>
+              <div>{t('video25.optimize.optimizing')}</div>
             </div>
-            {/* 遮罩點擊在 loading 時被擋下，若此處不給按鈕，
-                純滑鼠使用者遇到卡住的 LLM 呼叫將完全無法離開。 */}
+            {/* 遮罩点击在 loading 时被挡下，若此处不给按钮，
+                纯鼠标用户遇到卡住的 LLM 呼叫将完全无法离开。 */}
             <div style={{ display: 'flex', gap: 8 }}>
               <button type="button" onClick={onCancel}
                 style={{ ...btnBase, flex: 1, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-primary)' }}>
-                取消
+                {t('common.cancel')}
               </button>
             </div>
           </>
         ) : (
           <>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>
-              可直接編輯後送出；「用原文生成」則忽略優化結果。
+              {t('video25.optimize.description')}
             </div>
 
-            <label htmlFor={textareaId} className="sr-only">優化後提示詞</label>
+            <label htmlFor={textareaId} className="sr-only">{t('video25.optimize.optimizedPrompt')}</label>
             <textarea
               id={textareaId}
               className="input-field"
@@ -197,7 +200,7 @@ export default function PromptOptimizeModal(props: PromptOptimizeModalProps) {
                 cursor: 'pointer', fontSize: 12, padding: 0, marginBottom: 8,
               }}
             >
-              {showOriginal ? '隱藏原文' : '對照原文'}
+              {showOriginal ? t('video25.optimize.hideOriginal') : t('video25.optimize.compareOriginal')}
             </button>
             {showOriginal && (
               <div style={{
@@ -212,11 +215,11 @@ export default function PromptOptimizeModal(props: PromptOptimizeModalProps) {
             <div style={{ display: 'flex', gap: 8 }}>
               <button type="button" onClick={onCancel}
                 style={{ ...btnBase, flex: 1, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-primary)' }}>
-                取消
+                {t('common.cancel')}
               </button>
               <button type="button" onClick={onUseOriginal}
                 style={{ ...btnBase, flex: 1, border: '1px solid var(--border)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}>
-                用原文生成
+                {t('video25.optimize.useOriginal')}
               </button>
               <button type="button" onClick={() => onConfirm(text)}
                 disabled={confirmDisabled}
@@ -226,7 +229,7 @@ export default function PromptOptimizeModal(props: PromptOptimizeModalProps) {
                   cursor: confirmDisabled ? 'not-allowed' : 'pointer',
                   opacity: confirmDisabled ? 0.5 : 1,
                 }}>
-                確認生成
+                {t('video25.optimize.confirmGenerate')}
               </button>
             </div>
           </>

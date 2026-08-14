@@ -40,7 +40,7 @@ export interface DeleteJob {
   failed: { id: string; name: string; reason: string }[]
   status: 'running' | 'done' | 'aborted'
   abortReason?: string
-  /** 'asset'（預設，素材批刪）| 'group'（群組批刪）— 重試失敗項時分流用。 */
+  /** 'asset'（默认，素材批删）| 'group'（群组批删）— 重试失败项时分流用。 */
   kind: 'asset' | 'group'
 }
 
@@ -137,22 +137,22 @@ export const useAssetStore = create<AssetState>((set, get) => ({
   ...initial(),
 
   /**
-   * 換上一份群組清單。選取的群組若不在新清單裡就改指 groups[0]（或 null）。
+   * 换上一份群组清单。选择的群组若不在新清单里就改指 groups[0]（或 null）。
    *
-   * **選取真的被改指時，素材層的 checkedIds 一併清空。** checkedIds 裝的是
-   * 「目前這個群組裡被勾的素材 id」（selectGroup 也是這樣清的），選取一被改
-   * 指，那些 id 指的就是一個已經看不見的群組的素材 —— 浮動操作列還亮著
-   * 「刪除 N 個」，而確認 Modal 的縮圖與摘要是對著新群組的素材解析的，於是
-   * 名單空白、只剩「刪除 N 個？不可逆」。使用者按下去，刪掉的是別的群組裡
-   * 他已經看不到的東西。
+   * **选择真的被改指时，素材层的 checkedIds 一并清空。** checkedIds 装的是
+   * 「目前这个群组里被勾的素材 id」（selectGroup 也是这样清的），选择一被改
+   * 指，那些 id 指的就是一个已经看不见的群组的素材 —— 浮动操作列还亮著
+   * 「删除 N 个」，而确认 Modal 的缩图与摘要是对著新群组的素材解析的，于是
+   * 名单空白、只剩「删除 N 个？不可逆」。用户按下去，删掉的是别的群组里
+   * 他已经看不到的东西。
    *
-   * 走到這條路徑的方式：伺服器端群組搜尋（清單尚未捲完，已載入 < 總數時）
-   * 用 setGroups(搜尋結果) 整批抽換可見清單，選取的群組通常不在結果裡；
-   * 另外還有「選中的群組被別人
-   * 刪掉，下一次 refresh 才發現」這條罕見路徑。
+   * 走到这条路径的方式：服务器端群组搜索（清单尚未滚完，已加载 < 总数时）
+   * 用 setGroups(搜索结果) 整批抽换可见清单，选择的群组通常不在结果里；
+   * 另外还有「选中的群组被别人
+   * 删掉，下一次 refresh 才发现」这条罕见路径。
    *
-   * 只在「改指」時清：單純的 refresh（選取仍在新清單內）不得動使用者進行中
-   * 的勾選 —— 背景 refreshGroups 剛好在勾到一半時完成是常態。
+   * 只在「改指」时清：单纯的 refresh（选择仍在新清单内）不得动用户进行中
+   * 的勾选 —— 背景 refreshGroups 刚好在勾到一半时完成是常态。
    */
   setGroups: (groups) =>
     set((s) => {
@@ -183,15 +183,15 @@ export const useAssetStore = create<AssetState>((set, get) => ({
     }),
 
   /**
-   * 移除一個群組：清掉它的素材與 count，選取若正指著它就改指剩下的第一個。
+   * 移除一个群组：清掉它的素材与 count，选择若正指著它就改指剩下的第一个。
    *
-   * **選取真的被改指時，素材層的 checkedIds 一併清空** —— 與 `setGroups` 上方
-   * 那段是同一條不變式（checkedIds 裝的是「目前這個群組裡被勾的素材 id」，選取
-   * 一改指就全變成死 id）。兩個入口都要守，否則批刪自己選中的群組就會踩到：
-   * 在 A 群組勾了 2 個素材 → 管理模式批刪 A → 這裡把選取改指 B，但 checkedIds
-   * 還留著 A 的素材 id → 浮動列照亮「刪除 2 個」，確認 Modal 的名單與摘要對著
-   * B 的 displayedAssets 解析成空白 → 確認後 DeleteAsset 全數 404，而 404 在
-   * batchDelete 裡算冪等成功 → toast 報「已刪除 2 個」。什麼都沒刪的假成功。
+   * **选择真的被改指时，素材层的 checkedIds 一并清空** —— 与 `setGroups` 上方
+   * 那段是同一条不变式（checkedIds 装的是「目前这个群组里被勾的素材 id」，选择
+   * 一改指就全变成死 id）。两个入口都要守，否则批删自己选中的群组就会踩到：
+   * 在 A 群组勾了 2 个素材 → 管理模式批删 A → 这里把选择改指 B，但 checkedIds
+   * 还留着 A 的素材 id → 浮动列照亮「删除 2 个」，确认 Modal 的名单与摘要对著
+   * B 的 displayedAssets 解析成空白 → 确认后 DeleteAsset 全数 404，而 404 在
+   * batchDelete 里算幂等成功 → toast 报「已删除 2 个」。什么都没删的假成功。
    */
   removeGroup: (id) =>
     set((s) => {
@@ -248,20 +248,20 @@ export const useAssetStore = create<AssetState>((set, get) => ({
   clearChecked: () => set({ checkedIds: new Set<string>() }),
 
   /**
-   * 起一個新的批刪 job。**進行中的 job 不可被覆蓋** —— 覆蓋會靜默失敗
+   * 起一个新的批删 job。**进行中的 job 不可被覆盖** —— 覆盖会静默失败
    * （no-op），不 throw。
    *
-   * 素材批刪與群組批刪共用這一個 slot，而覆蓋並不會讓舊的批次停下來：它的
-   * onProgress 會繼續 patch 同一個 slot，於是終態的 total/failed 描述的是甲
-   * 批次、kind 卻是乙批次的 —— 「重試失敗項」照 kind 分流，就會把群組 id 送
-   * 進 DeleteAsset（全數 404，而 404 被視為冪等成功）→ toast 報「已刪除」但
-   * 群組還在。毀滅性操作上的假成功，所以不變式住在 store 這一層，將來多一種
-   * kind 也不會重開這個洞。
+   * 素材批删与群组批删共用这一个 slot，而覆盖并不会让旧的批次停下来：它的
+   * onProgress 会继续 patch 同一个 slot，于是终态的 total/failed 描述的是甲
+   * 批次、kind 卻是乙批次的 —— 「重试失败项」照 kind 分流，就会把群组 id 送
+   * 进 DeleteAsset（全数 404，而 404 被视为幂等成功）→ toast 报「已删除」但
+   * 群组还在。毀滅性操作上的假成功，所以不变式住在 store 这一层，将来多一種
+   * kind 也不会重开这个洞。
    *
-   * 呼叫端本來就該先擋（AssetLibraryPage.requestBatchDelete 的 running 檢查、
-   * sidebar 的 deleteBusy），並負責告訴使用者；這裡是最後防線，因此只靜默
-   * 忽略。註記：真正保證兩條管線不並行的是呼叫端；本層只保證 slot 的身分
-   * （kind/total）屬於先起跑的那個 job。
+   * 呼叫端本来就该先挡（AssetLibraryPage.requestBatchDelete 的 running 检查、
+   * sidebar 的 deleteBusy），并负责告诉用户；这里是最后防线，因此只静默
+   * 忽略。注记：真正保证两条管线不并行的是呼叫端；本层只保证 slot 的身分
+   * （kind/total）属于先起跑的那个 job。
    */
   startDeleteJob: (total, kind = 'asset') =>
     set((s) =>

@@ -32,7 +32,7 @@ export default function ResizeHandle({
   getCurrentWidth,
   onResize,
   resetWidth,
-  ariaLabel = '拖曳調整寬度',
+  ariaLabel = '拖拽调整宽度',
 }: ResizeHandleProps) {
   const [active, setActive] = useState(false)
   const [hover, setHover] = useState(false)

@@ -16,7 +16,7 @@ const baseAsset: Asset = {
 }
 
 describe('AssetCard v2', () => {
-  it('renders 圖片 type badge for image asset', () => {
+  it('renders 图片 type badge for image asset', () => {
     render(
       <AssetCard
         asset={baseAsset}
@@ -25,11 +25,11 @@ describe('AssetCard v2', () => {
         onCopyUri={vi.fn()}
       />,
     )
-    expect(screen.getByTestId('type-badge')).toHaveTextContent('圖片')
+    expect(screen.getByTestId('type-badge')).toHaveTextContent('图片')
     expect(screen.getByRole('img')).toHaveAttribute('src', baseAsset.url)
   })
 
-  it('renders 影片 type badge + play overlay for video asset', () => {
+  it('renders 视频 type badge + play overlay for video asset', () => {
     render(
       <AssetCard
         asset={{ ...baseAsset, assetType: 'Video', name: 'a.mp4' }}
@@ -38,11 +38,11 @@ describe('AssetCard v2', () => {
         onCopyUri={vi.fn()}
       />,
     )
-    expect(screen.getByTestId('type-badge')).toHaveTextContent('影片')
+    expect(screen.getByTestId('type-badge')).toHaveTextContent('视频')
     expect(screen.getByTestId('video-play-overlay')).toBeInTheDocument()
   })
 
-  it('renders 音訊 type badge + waveform for audio asset', () => {
+  it('renders 音频 type badge + waveform for audio asset', () => {
     render(
       <AssetCard
         asset={{ ...baseAsset, assetType: 'Audio', name: 'a.mp3' }}
@@ -51,7 +51,7 @@ describe('AssetCard v2', () => {
         onCopyUri={vi.fn()}
       />,
     )
-    expect(screen.getByTestId('type-badge')).toHaveTextContent('音訊')
+    expect(screen.getByTestId('type-badge')).toHaveTextContent('音频')
     expect(screen.getByTestId('audio-waveform')).toBeInTheDocument()
   })
 
@@ -115,7 +115,7 @@ describe('AssetCard v2', () => {
         onCopyUri={onCopyUri}
       />,
     )
-    fireEvent.click(screen.getByLabelText(/複製 URI/))
+    fireEvent.click(screen.getByLabelText(/复制 URI/))
     expect(onCopyUri).toHaveBeenCalledWith('asset://asset-20260506-x')
     expect(onClick).not.toHaveBeenCalled()
   })
@@ -129,7 +129,7 @@ describe('AssetCard v2', () => {
         onCopyUri={vi.fn()}
       />,
     )
-    expect(screen.queryByLabelText(/^刪除$/)).toBeNull()
+    expect(screen.queryByLabelText(/^删除$/)).toBeNull()
   })
 })
 
@@ -154,13 +154,13 @@ describe('AssetCard — status visualization', () => {
     const a = makeAsset({ status: 'Processing' })
     render(<AssetCard asset={a} selected={false} onClick={() => {}} onCopyUri={() => {}} />)
     const pill = screen.getByTestId('status-pill')
-    expect(pill).toHaveTextContent('處理中')
+    expect(pill).toHaveTextContent('处理中')
   })
 
   it('renders a red failed pill when status is Failed', () => {
     const a = makeAsset({ status: 'Failed', error: { code: 'X', message: 'bad upload' } })
     render(<AssetCard asset={a} selected={false} onClick={() => {}} onCopyUri={() => {}} />)
-    expect(screen.getByTestId('status-pill')).toHaveTextContent('失敗')
+    expect(screen.getByTestId('status-pill')).toHaveTextContent('失败')
   })
 
   it('renders an error placeholder (not the image) when status is Failed', () => {

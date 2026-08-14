@@ -242,8 +242,8 @@ export async function listAssetGroups(
 }
 
 /**
- * ListAssetGroups PageSize 的 API 上限 — 無限捲動每一頁都照這個大小抓，
- * 讓「一頁」在初載與載更多之間是同一個單位（分頁位移的前提）。
+ * ListAssetGroups PageSize 的 API 上限 — 无限滚动每一页都照这个大小抓，
+ * 让「一页」在初载与载更多之间是同一个单位（分页位移的前提）。
  */
 export const GROUP_PAGE_SIZE_MAX = 100
 

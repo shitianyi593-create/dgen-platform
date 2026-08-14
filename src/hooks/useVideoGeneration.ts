@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/authStore';
 import { createVideoTask } from '../api/video';
 import { fileToBase64DataUri } from '../api/fileUtils';
 import { computeCompatibility } from '../utils/videoMode';
+import { useOptionalI18n } from '../i18n/useOptionalI18n';
 import type {
   ContentItem,
   ImageUrlContent,
@@ -19,6 +20,7 @@ import type {
  * without blocking subsequent submissions.
  */
 export function useVideoGeneration() {
+  const { t } = useOptionalI18n();
   const generate = useCallback(async () => {
     const store = useVideoStore.getState();
     const {
@@ -41,15 +43,15 @@ export function useVideoGeneration() {
     const { apiKey, endpoint: ep } = useAuthStore.getState();
 
     if (!apiKey) {
-      toast.error('請先輸入 API 金鑰');
+      toast.error(t('video.block.apiKey'));
       return;
     }
     if (!ep) {
-      toast.error('請先輸入影片生成接入點 (Endpoint)');
+      toast.error(t('video.block.endpoint'));
       return;
     }
     if (!prompt.trim()) {
-      toast.error('請輸入提示詞');
+      toast.error(t('video.block.prompt'));
       return;
     }
 
@@ -62,7 +64,7 @@ export function useVideoGeneration() {
     // Refs rehydrated from sessionStorage have no File object — block
     // submission until the user removes + re-attaches.
     if ([...imgSnapshot, ...vidSnapshot, ...audSnapshot].some((m) => m.stale)) {
-      toast.error('部分參考檔案因頁面重整失效，請移除後重新上傳');
+      toast.error(t('video.toast.staleReferences'));
       return;
     }
 
@@ -71,15 +73,15 @@ export function useVideoGeneration() {
     // clicks generate. Block with a clear message instead of silently sending
     // base64 (which the API would reject anyway).
     if (vidSnapshot.some((m) => m.uploading) || audSnapshot.some((m) => m.uploading)) {
-      toast.error('參考影片/音訊仍在上傳中，請稍候');
+      toast.error(t('video.toast.referencesUploading'));
       return;
     }
     if (vidSnapshot.some((m) => !m.uploadedUrl)) {
-      toast.error('參考影片尚未取得 URL，請重新上傳');
+      toast.error(t('video.toast.videoMissingUrl'));
       return;
     }
     if (audSnapshot.some((m) => !m.uploadedUrl)) {
-      toast.error('參考音訊尚未取得 URL，請重新上傳');
+      toast.error(t('video.toast.audioMissingUrl'));
       return;
     }
 
@@ -95,13 +97,13 @@ export function useVideoGeneration() {
       assetSnapshot,
     );
     if (!compat.canGenerate) {
-      let reason = '存在與目前模式不相容的項目';
-      if (!compat.imageCountOK) reason = '圖片數量與模式不符';
-      else if (!compat.roleSetOK) reason = '首尾幀模式需要恰好一張首幀與一張尾幀';
-      else if (compat.incompatibleImageIndexes.length) reason = '部分圖片 role 與模式不符';
-      else if (compat.incompatibleVideosFlag) reason = '此模式不允許參考影片';
-      else if (compat.incompatibleAudiosFlag) reason = '此模式不允許參考音訊';
-      else if (compat.incompatibleAssetRefIndexes.length) reason = '部分 asset 參考與模式不符';
+      let reason = t('video.block.incompatible');
+      if (!compat.imageCountOK) reason = t('video.block.imageCount');
+      else if (!compat.roleSetOK) reason = t('video.block.roleSet');
+      else if (compat.incompatibleImageIndexes.length) reason = t('video.block.imageRole');
+      else if (compat.incompatibleVideosFlag) reason = t('video.block.videoNotAllowed');
+      else if (compat.incompatibleAudiosFlag) reason = t('video.block.audioNotAllowed');
+      else if (compat.incompatibleAssetRefIndexes.length) reason = t('video.block.assetRef');
       toast.error(reason);
       return;
     }
@@ -195,7 +197,7 @@ export function useVideoGeneration() {
       }
 
       // ── Step 2: Create task ──
-      toast('正在提交生成任務...');
+      toast(t('video.toast.submitting'));
 
       requestBody.content = contentItems;
 
@@ -221,7 +223,7 @@ export function useVideoGeneration() {
       };
       addHistory(historyItem);
 
-      toast.success(`任務已建立: ${taskId}`);
+      toast.success(t('video.toast.taskCreated', { taskId }));
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       // Synthetic taskId. Mimics ARK's `cgt-YYYYMMDDhhmmss-xxxxx` shape so
@@ -241,9 +243,9 @@ export function useVideoGeneration() {
         error: message,
       };
       useVideoStore.getState().addHistory(failedItem);
-      toast.error(`錯誤: ${message}`);
+      toast.error(t('video.toast.error', { message }));
     }
-  }, []);
+  }, [t]);
 
   return { generate };
 }

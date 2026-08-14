@@ -8,29 +8,29 @@ describe('ActionPillBar', () => {
     render(
       <ActionPillBar
         show={false}
-        badge="已選 0"
+        badge="已选 0"
         actions={[{ label: 'do', onClick: vi.fn() }]}
       />,
     )
-    expect(screen.queryByText('已選 0')).not.toBeInTheDocument()
+    expect(screen.queryByText('已选 0')).not.toBeInTheDocument()
   })
 
   it('renders badge and actions when show=true', () => {
     render(
       <ActionPillBar
         show
-        badge="已選 3"
+        badge="已选 3"
         actions={[
-          { label: '全選本頁', onClick: vi.fn() },
+          { label: '全选本页', onClick: vi.fn() },
           { label: '清除', onClick: vi.fn() },
-          { label: '刪除 3 個', onClick: vi.fn(), variant: 'danger' },
+          { label: '删除 3 个', onClick: vi.fn(), variant: 'danger' },
         ]}
       />,
     )
-    expect(screen.getByText('已選 3')).toBeInTheDocument()
-    expect(screen.getByText('全選本頁')).toBeInTheDocument()
+    expect(screen.getByText('已选 3')).toBeInTheDocument()
+    expect(screen.getByText('全选本页')).toBeInTheDocument()
     expect(screen.getByText('清除')).toBeInTheDocument()
-    expect(screen.getByText('刪除 3 個')).toBeInTheDocument()
+    expect(screen.getByText('删除 3 个')).toBeInTheDocument()
   })
 
   it('fires action onClick', async () => {
@@ -64,11 +64,11 @@ describe('ActionPillBar', () => {
         badge="x"
         actions={[
           { label: '清除', onClick: vi.fn() },
-          { label: '刪除 2 個', onClick: vi.fn(), variant: 'danger' },
+          { label: '删除 2 个', onClick: vi.fn(), variant: 'danger' },
         ]}
       />,
     )
-    expect(screen.getByText('刪除 2 個').querySelector('svg')).toBeTruthy()
+    expect(screen.getByText('删除 2 个').querySelector('svg')).toBeTruthy()
     expect(screen.getByText('清除').querySelector('svg')).toBeNull()
   })
 })

@@ -11,6 +11,13 @@ import toast from 'react-hot-toast'
 import { useVideoStore, type VideoStoreHook } from '../stores/videoStore'
 import { uploadToTos } from '../api/tos'
 import type { LocalMedia } from '../types'
+import { useOptionalI18n } from '../i18n/useOptionalI18n'
+import {
+  DEFAULT_LOCALE,
+  messages,
+  type Locale,
+  type MessageKey,
+} from '../i18n/locales'
 
 function generateId(): string {
   // Browser crypto is available in tests via jsdom
@@ -24,26 +31,35 @@ type Kind = 'video' | 'audio'
 
 interface KindStrings {
   label: string
-  successMessage: string
-  failureMessage: (msg: string) => string
+  successKey: MessageKey
+  failureKey: MessageKey
 }
 
 const COPY: Record<Kind, KindStrings> = {
   video: {
     label: 'video',
-    successMessage: '參考影片已上傳到 TOS',
-    failureMessage: (msg) => `影片上傳失敗: ${msg}`,
+    successKey: 'video.toast.referenceVideoUploaded',
+    failureKey: 'video.toast.videoUploadFailed',
   },
   audio: {
     label: 'audio',
-    successMessage: '參考音訊已上傳到 TOS',
-    failureMessage: (msg) => `音訊上傳失敗: ${msg}`,
+    successKey: 'video.toast.referenceAudioUploaded',
+    failureKey: 'video.toast.audioUploadFailed',
   },
 }
 
 export interface UploadDeps {
   /** Inject upload implementation for tests. */
   upload?: (file: File) => Promise<{ key: string; viewUrl: string; expiresAt: number }>
+  locale?: Locale
+}
+
+function translate(locale: Locale | undefined, key: MessageKey, params?: Record<string, string | number>) {
+  const template = messages[locale ?? DEFAULT_LOCALE][key]
+  if (!params) return template
+  return template.replace(/\{([a-zA-Z0-9_]+)\}/g, (match, name: string) => (
+    params[name] === undefined ? match : String(params[name])
+  ))
 }
 
 /** Add a media item to the store and immediately upload to TOS. Tolerant of
@@ -90,7 +106,7 @@ export async function addReferenceWithUpload(
       tosKey: result.key,
       error: undefined,
     })
-    toast.success(COPY[kind].successMessage)
+    toast.success(translate(deps.locale, COPY[kind].successKey))
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     const list = pickList(kind, useStore)
@@ -101,7 +117,7 @@ export async function addReferenceWithUpload(
         ? useStore.getState().updateReferenceVideo
         : useStore.getState().updateReferenceAudio
     updateAction(idx, { uploading: false, error: msg })
-    toast.error(COPY[kind].failureMessage(msg))
+    toast.error(translate(deps.locale, COPY[kind].failureKey, { message: msg }))
   }
 }
 
@@ -112,17 +128,18 @@ function pickList(kind: Kind, useStore: VideoStoreHook): LocalMedia[] {
 
 /** Hook surface used by VideoParams. */
 export function useReferenceUpload(deps: UploadDeps = {}, useStore: VideoStoreHook = useVideoStore) {
+  const { locale } = useOptionalI18n()
   const addReferenceVideo = useCallback(
     (m: LocalMedia) => {
-      void addReferenceWithUpload('video', m, deps, useStore)
+      void addReferenceWithUpload('video', m, { ...deps, locale }, useStore)
     },
-    [deps, useStore],
+    [deps, locale, useStore],
   )
   const addReferenceAudio = useCallback(
     (m: LocalMedia) => {
-      void addReferenceWithUpload('audio', m, deps, useStore)
+      void addReferenceWithUpload('audio', m, { ...deps, locale }, useStore)
     },
-    [deps, useStore],
+    [deps, locale, useStore],
   )
   return { addReferenceVideo, addReferenceAudio }
 }
