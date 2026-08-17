@@ -551,7 +551,7 @@ describe('partialize — imported items are NOT persisted', () => {
     })
     // Trigger persist by setting any persisted field.
     useVideoStore.getState().setPrompt('trigger-persist')
-    const raw = sessionStorage.getItem('byteplus-ai-gen-platform-video')
+    const raw = sessionStorage.getItem('dgen-platform-video')
     expect(raw).not.toBeNull()
     const persisted = JSON.parse(raw!) as { state: { history: Array<{ taskId: string }> } }
     const ids = persisted.state.history.map((h) => h.taskId)

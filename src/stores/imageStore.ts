@@ -8,6 +8,11 @@ import {
   type SizeLevel,
   type OutputFormat,
 } from '../utils/seedreamModels'
+import {
+  createMigratingSessionStorage,
+  sanitizeImageHistory,
+  sanitizeImagePersistedState,
+} from './persistence'
 
 export type SizeMode = 'preset' | 'custom'
 
@@ -198,10 +203,13 @@ export const useImageStore = create<ImageState>()(
         }),
     }),
     {
-      name: 'byteplus-ai-gen-platform-image',
+      name: 'dgen-platform-image',
       // sessionStorage = per-tab，同 authStore / videoStore 的理由。
-      storage: createJSONStorage(() => sessionStorage),
-      version: 1,
+      storage: createJSONStorage(() =>
+        createMigratingSessionStorage('byteplus-ai-gen-platform-image'),
+      ),
+      version: 2,
+      migrate: (persistedState) => persistedState,
       partialize: (state) => ({
         modelKey: state.modelKey,
         prompt: state.prompt,
@@ -216,8 +224,8 @@ export const useImageStore = create<ImageState>()(
         maxImages: state.maxImages,
         refUrls: state.refUrls,
         currentEntryId: state.currentEntryId,
-        // imported 项目的 blob: URL 刷新后必死，不持久化（同 videoStore 理由）。
-        history: state.history.filter((h) => !h.imported),
+        // imported/blob/data 项目刷新后无法恢复；只持久化轻量历史。
+        history: sanitizeImageHistory(state.history),
         // File 不能 JSON 序列化 → 存档名 stub，rehydrate 标记 stale。
         refImages: state.refImages.map((m) => ({
           filename: m.filename ?? m.file?.name ?? 'unknown',
@@ -227,7 +235,7 @@ export const useImageStore = create<ImageState>()(
         const p = (persistedState ?? {}) as Partial<ImageState> & {
           refImages?: Array<{ filename: string }>
         }
-        return {
+        return sanitizeImagePersistedState({
           ...currentState,
           ...p,
           refImages: (p.refImages ?? []).map((stub, i) => ({
@@ -236,7 +244,7 @@ export const useImageStore = create<ImageState>()(
             filename: stub.filename,
             stale: true,
           })),
-        }
+        })
       },
     },
   ),

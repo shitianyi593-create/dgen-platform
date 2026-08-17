@@ -1,6 +1,9 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useImageStore } from '../stores/imageStore'
 import type { ImageHistoryItem } from '../types/image'
+
+let _seq = 0
+const freshStore = () => import('../stores/imageStore?t=' + Date.now() + '_' + ++_seq)
 
 function makeItem(over: Partial<ImageHistoryItem> = {}): ImageHistoryItem {
   return {
@@ -20,6 +23,7 @@ function makeItem(over: Partial<ImageHistoryItem> = {}): ImageHistoryItem {
 
 describe('imageStore', () => {
   beforeEach(() => {
+    sessionStorage.clear()
     useImageStore.setState(useImageStore.getInitialState(), true)
   })
 
@@ -191,5 +195,52 @@ describe('imageStore', () => {
     >
     expect(merged.refImages[0].stale).toBe(true)
     expect(merged.refImages[0].file).toBeUndefined()
+  })
+
+  it('persists under the DGen image key and migrates the legacy key', async () => {
+    sessionStorage.removeItem('dgen-platform-image')
+    sessionStorage.setItem('byteplus-ai-gen-platform-image', JSON.stringify({
+      version: 1,
+      state: { prompt: 'legacy image', history: [] },
+    }))
+
+    vi.resetModules()
+    const mod = await freshStore()
+    expect(mod.useImageStore.getState().prompt).toBe('legacy image')
+    mod.useImageStore.getState().setPrompt('new image')
+    await new Promise((r) => setTimeout(r, 0))
+
+    expect(sessionStorage.getItem('byteplus-ai-gen-platform-image')).toBeNull()
+    const raw = sessionStorage.getItem('dgen-platform-image')
+    expect(raw).not.toBeNull()
+    expect(JSON.parse(raw as string).state.prompt).toBe('new image')
+  })
+
+  it('does not persist blob/data image history URLs', () => {
+    const s = useImageStore.getState()
+    s.addHistory(makeItem({
+      id: 'big',
+      status: 'succeeded',
+      images: [
+        { url: 'data:image/png;base64,' + 'A'.repeat(5000) },
+        { url: 'https://x/out.png' },
+      ],
+      params: {
+        size: '2K',
+        watermark: false,
+        sequential: false,
+        refFilenames: [],
+        refUrls: ['blob:local-ref', 'https://x/ref.png'],
+        aspectRatio: 'auto',
+      },
+    }))
+
+    const opts = useImageStore.persist.getOptions()
+    const partial = opts.partialize!(useImageStore.getState()) as {
+      history: ImageHistoryItem[]
+    }
+    expect(JSON.stringify(partial)).not.toContain('data:image/png;base64')
+    expect(partial.history[0].images).toEqual([{ url: 'https://x/out.png' }])
+    expect(partial.history[0].params.refUrls).toEqual(['https://x/ref.png'])
   })
 })

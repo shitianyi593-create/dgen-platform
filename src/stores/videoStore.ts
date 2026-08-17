@@ -3,6 +3,11 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { VideoHistoryItem, LocalMedia, AssetRef, VideoGenMode, ImageRole } from '../types';
 import { revokeImportedUrls } from '../api/importBundle';
 import { defaultRoleForMode } from '../utils/videoMode';
+import {
+  createMigratingSessionStorage,
+  sanitizeVideoHistory,
+  sanitizeVideoPersistedState,
+} from './persistence';
 
 export interface VideoState {
   // ── Generation mode (Seedance 2.0 三模式互斥) ──
@@ -256,12 +261,15 @@ export const useVideoStore = create<VideoState>()(
     }),
     }),
     {
-      name: 'byteplus-ai-gen-platform-video',
+      name: 'dgen-platform-video',
       // sessionStorage = per-tab. Same rationale as authStore: tab refresh
       // restores active tasks + history, but a different user opening the
       // same browser sees a clean slate. Closing the tab also clears.
-      storage: createJSONStorage(() => sessionStorage),
-      version: 1,
+      storage: createJSONStorage(() =>
+        createMigratingSessionStorage('byteplus-ai-gen-platform-video'),
+      ),
+      version: 2,
+      migrate: (persistedState) => persistedState,
       // What to persist: everything serializable. Reference media is
       // flattened to filename stubs because File objects don't survive
       // JSON round-trips and blob: URLs are invalidated on page unload.
@@ -270,12 +278,9 @@ export const useVideoStore = create<VideoState>()(
         prompt: state.prompt,
         assetRefs: state.assetRefs,
         activeTaskIds: state.activeTaskIds,
-        // Drop imported items from persisted history: their `objectUrl` /
-        // `frameObjectUrl` are blob: URLs whose Blobs die on page unload,
-        // so rehydrating them would yield broken <video> sources with no
-        // recovery path. The user holds the source bundle on disk; they
-        // can re-import after reload.
-        history: state.history.filter((h) => !h.imported),
+        // Persist only lightweight history. The live in-memory item keeps the
+        // full request for export, but sessionStorage must not hold base64 media.
+        history: sanitizeVideoHistory(state.history),
         currentTaskId: state.currentTaskId,
         currentVideoUrl: state.currentVideoUrl,
         ratio: state.ratio,
@@ -296,13 +301,13 @@ export const useVideoStore = create<VideoState>()(
           referenceVideos?: Array<{ filename: string; type: 'video' }>;
           referenceAudios?: Array<{ filename: string; type: 'audio' }>;
         };
-        return {
+        return sanitizeVideoPersistedState({
           ...currentState,
           ...p,
           referenceImages: (p.referenceImages ?? []).map(rehydrateStaleRef),
           referenceVideos: (p.referenceVideos ?? []).map(rehydrateStaleRef),
           referenceAudios: (p.referenceAudios ?? []).map(rehydrateStaleRef),
-        };
+        });
       },
     },
   ),
