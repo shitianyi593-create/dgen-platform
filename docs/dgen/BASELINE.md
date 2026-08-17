@@ -8,6 +8,11 @@ Repository:
 - Remote: `https://github.com/shitianyi593-create/dgen-platform.git`
 - Baseline commit before this document: `5032a40 chore: import sanitized DGen baseline`
 
+Related DGen documents:
+
+- `docs/dgen/PROGRESS_2026-08-17.md` - latest implementation progress and verification notes.
+- `docs/dgen/PERSONAL_WORKBENCH_ROADMAP.md` - personal workbench and multi-provider product roadmap.
+
 ## Environment
 
 - OS: macOS 26.4.1 arm64
@@ -147,4 +152,3 @@ Task 1 intentionally did not change:
 - Zustand store field names or persisted storage keys.
 - ZIP import/export schema.
 - Existing dependency versions.
-
