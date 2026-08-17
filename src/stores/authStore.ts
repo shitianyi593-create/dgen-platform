@@ -4,6 +4,7 @@ import { verifyAssetCreds, verifyTosCreds } from '../api/verify'
 import type { CredKey, CredStatus } from '../components/credentials/schema'
 import type { EnvCredsPartial } from '../components/credentials/envImport'
 import { parseBucketAndPrefix } from '../utils/tosBucket'
+import { createMigratingSessionStorage } from './persistence'
 
 /** BytePlus ARK credentials for asset operations (NOT TOS object-storage keys). */
 export interface AssetCreds {
@@ -328,12 +329,14 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'byteplus-ai-gen-platform-auth',
+      name: 'dgen-platform-auth',
       // sessionStorage = per-tab. Refreshes within a tab keep credentials;
       // closing the tab / opening a new tab starts fresh so a previous user's
       // keys do not leak to the next person opening the browser.
-      storage: createJSONStorage(() => sessionStorage),
-      version: 8,
+      storage: createJSONStorage(() =>
+        createMigratingSessionStorage('byteplus-ai-gen-platform-auth'),
+      ),
+      version: 9,
       migrate: (persistedState: unknown, fromVersion: number) => {
         const s = (persistedState ?? {}) as Partial<AuthState>
         const next: Partial<AuthState> = { ...s }

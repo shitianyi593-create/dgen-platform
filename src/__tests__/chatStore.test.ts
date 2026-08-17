@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import type { ChatTurn } from '../types/chat'
+import { DEFAULT_GEN_PARAMS } from '../types/chat'
 
 let _importSeq = 0
 const freshStore = () => import('../stores/chatStore?t=' + Date.now() + '_' + ++_importSeq)
@@ -67,6 +68,27 @@ describe('chatStore', () => {
     expect(t.pending).toBe(false)
     expect(t.aborted).toBe(true)
     expect(useChatStore.getState().isGenerating).toBe(false)
+  })
+
+  it('migrates the legacy BytePlus chat key to the DGen key on write', async () => {
+    sessionStorage.setItem('byteplus-ai-gen-platform-chat', JSON.stringify({
+      version: 2,
+      state: {
+        apiMode: 'chat',
+        params: { ...DEFAULT_GEN_PARAMS },
+        turns: [],
+        composerDraft: 'legacy draft',
+      },
+    }))
+    const { useChatStore } = await freshStore()
+    expect(useChatStore.getState().composerDraft).toBe('legacy draft')
+    useChatStore.getState().setComposerDraft('new draft')
+    await new Promise((r) => setTimeout(r, 0))
+
+    expect(sessionStorage.getItem('byteplus-ai-gen-platform-chat')).toBeNull()
+    const raw = sessionStorage.getItem('dgen-platform-chat')
+    expect(raw).not.toBeNull()
+    expect(JSON.parse(raw as string).state.composerDraft).toBe('new draft')
   })
 
   it('setSystemPrompt / setSystemPromptMode：有轮次后锁定（no-op）；newConversation 后保留并解锁', async () => {
@@ -145,7 +167,7 @@ describe('chatStore', () => {
   it('isGenerating 不持久化', async () => {
     const { useChatStore } = await freshStore()
     useChatStore.getState().setGenerating(true)
-    const persisted = JSON.parse(sessionStorage.getItem('byteplus-ai-gen-platform-chat') ?? '{}') as { state?: Record<string, unknown> }
+    const persisted = JSON.parse(sessionStorage.getItem('dgen-platform-chat') ?? '{}') as { state?: Record<string, unknown> }
     expect(persisted.state).not.toHaveProperty('isGenerating')
   })
 })

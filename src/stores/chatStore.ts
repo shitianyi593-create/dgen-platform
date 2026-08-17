@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { ChatApiMode, ChatTurn, GenParams, SystemPromptMode } from '../types/chat'
 import { DEFAULT_GEN_PARAMS } from '../types/chat'
+import { createMigratingSessionStorage } from './persistence'
 
 /** Responses 模式下一轮要带的 previous_response_id：最后一个非 error 且有 responseId 的轮。 */
 export function lastResponseId(turns: ChatTurn[]): string | undefined {
@@ -76,10 +77,12 @@ export const useChatStore = create<ChatState>()(
       newConversation: () => set({ turns: [], isGenerating: false }),
     }),
     {
-      name: 'byteplus-ai-gen-platform-chat',
+      name: 'dgen-platform-chat',
       // sessionStorage = per-tab，同 authStore / videoStore / imageStore 的理由。
-      storage: createJSONStorage(() => sessionStorage),
-      version: 2,
+      storage: createJSONStorage(() =>
+        createMigratingSessionStorage('byteplus-ai-gen-platform-chat'),
+      ),
+      version: 3,
       migrate: (persisted, fromVersion) => {
         const s = persisted as Partial<ChatState>
         if (fromVersion < 2) {

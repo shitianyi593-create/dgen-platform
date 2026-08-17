@@ -150,3 +150,27 @@ describe('authStore v7 → v8 migration', () => {
     expect(s.videoEndpoint25).toBe('')
   })
 })
+
+describe('authStore legacy storage key migration', () => {
+  beforeEach(() => {
+    sessionStorage.clear()
+    localStorage.clear()
+  })
+
+  it('reads the legacy BytePlus key and writes back to the DGen key', async () => {
+    sessionStorage.setItem('byteplus-ai-gen-platform-auth', JSON.stringify({
+      version: 8,
+      state: { apiKey: 'legacy-key', endpoint: 'ep-20260101000000-abcde' },
+    }))
+
+    const mod = await freshStore()
+    expect(mod.useAuthStore.getState().apiKey).toBe('legacy-key')
+    mod.useAuthStore.getState().setApiKey('new-key')
+    await new Promise((r) => setTimeout(r, 0))
+
+    expect(sessionStorage.getItem('byteplus-ai-gen-platform-auth')).toBeNull()
+    const raw = sessionStorage.getItem('dgen-platform-auth')
+    expect(raw).not.toBeNull()
+    expect(JSON.parse(raw as string).state.apiKey).toBe('new-key')
+  })
+})
