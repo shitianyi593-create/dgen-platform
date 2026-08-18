@@ -22,6 +22,45 @@ DGen uses a BYO credential model:
 
 Use separate access keys for object storage and private asset operations when your provider supports scoped keys. Avoid admin-level keys for routine demos.
 
+## Credential Groups
+
+DGen separates credentials by responsibility so personal workflows can stay local-first without mixing unrelated permissions.
+
+### Model Service
+
+The model-service credentials are used to call text, image, and video models.
+
+- **API key**: authenticates model requests.
+- **Video endpoint**: identifies the deployed video generation model.
+- **Video 2.5 endpoint**: optionally identifies the Seedance 2.5 workflow. When omitted, the app can use the default model-id path supported by the current implementation.
+- **Image endpoint**: identifies the deployed image generation model.
+- **Text endpoint**: identifies the text model used by chat and prompt optimization flows.
+
+These credentials are required for generation. Text-only use usually needs only the API key and text endpoint. Image and video flows need their corresponding endpoints.
+
+### Private Asset Library
+
+The private asset-library credentials are used for provider-side asset management, not for ordinary model generation and not for object storage.
+
+- **Access key ID**: authenticates private asset API requests.
+- **Access key secret**: signs private asset API requests.
+- **Project name**: scopes asset groups to a provider project. The default project name is usually `default`.
+
+This section is needed for `/assets` and for workflows that register uploaded media as provider-side asset IDs such as `asset://...`.
+
+### Object Storage
+
+Object storage stores local reference media in a cloud-readable location before a remote model can fetch it.
+
+- **Access key ID**: authenticates object-storage operations.
+- **Access key secret**: signs object-storage operations.
+- **Region**: the bucket's data-center region.
+- **Bucket**: the cloud storage container.
+- **Endpoint**: derived from the region for BytePlus TOS in normal use.
+- **Key prefix**: an optional folder-like prefix such as `dgen/` that keeps DGen files grouped inside the bucket.
+
+The current implementation supports BytePlus TOS directly. The intended product direction is to keep this user experience as "connect my cloud space" while adding a `StorageProvider` abstraction for S3-compatible targets such as Cloudflare R2, AWS S3, and MinIO.
+
 ## Requirements
 
 - Node.js 22
@@ -108,6 +147,8 @@ dgen-platform/
 ## Documentation
 
 - `docs/dgen/BASELINE.md`: migration baseline and screenshot notes
+- `docs/dgen/PROGRESS_2026-08-17.md`: latest implementation progress and validation notes
+- `docs/dgen/PERSONAL_WORKBENCH_ROADMAP.md`: personal workbench, credential, storage, and multi-provider roadmap
 - `docs/deployment-guide.md`: self-hosted deployment guide
 
 ## Notes

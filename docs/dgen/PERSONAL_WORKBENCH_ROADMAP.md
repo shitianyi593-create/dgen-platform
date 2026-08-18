@@ -10,6 +10,7 @@ The intended usage model is:
 - The owner buys and configures API accounts.
 - Creative projects, prompts, generated outputs, and reusable local assets are stored locally by default.
 - Cloud object storage is used only when a remote model must fetch large reference media.
+- Object storage should feel like connecting "my cloud space" once, not manually configuring low-level fields for every upload.
 - BytePlus becomes one provider implementation, not the core product architecture.
 
 ## Difficulty Assessment
@@ -69,6 +70,85 @@ Recommended cost-control rules:
 - Keep a local cache and avoid re-uploading identical reference files.
 - Start with a single storage bucket/prefix for personal use.
 
+## Credential Model
+
+DGen should keep three credential groups separate because they authorize different systems and have different risk profiles.
+
+### Model Service Credentials
+
+Purpose: call text, image, and video models.
+
+Current fields:
+
+- API key.
+- Video generation endpoint.
+- Video 2.5 endpoint, optional in the current flow.
+- Image generation endpoint.
+- Text generation endpoint.
+
+How it works:
+
+- The user enters a prompt and generation parameters.
+- DGen selects the endpoint for the active modality.
+- The model service receives the API key, endpoint/model identifier, prompt, parameters, and optional reference media URLs or asset IDs.
+- The model service returns text, image output, or an async video task/result.
+
+Configuration rule:
+
+- Text-only use should not require storage or asset-library credentials.
+- Image generation should require storage only when the selected model needs cloud-readable reference media.
+- Video generation often needs storage because remote video models cannot read local files directly.
+
+### Private Asset-Library Credentials
+
+Purpose: manage provider-side asset records, such as BytePlus ARK Asset Library entries.
+
+Current fields:
+
+- Access key ID.
+- Access key secret.
+- Project name.
+
+How it works:
+
+- DGen uploads a local file to object storage first.
+- DGen gives the provider asset-library API a cloud-readable URL.
+- The provider imports or processes that URL and returns a provider asset ID.
+- Later generation requests can refer to that provider asset ID, for example `asset://...`.
+
+Configuration rule:
+
+- This should be optional for personal workflows.
+- It is required for `/assets` and for providers that require their own asset IDs.
+- It should use a separate scoped key from object storage whenever possible.
+
+### Object-Storage Credentials
+
+Purpose: store local reference media in a cloud-readable location and generate temporary URLs for remote model access.
+
+Current BytePlus TOS fields:
+
+- Access key ID.
+- Access key secret.
+- Region.
+- Bucket.
+- Endpoint, derived from region in normal BytePlus TOS use.
+- Key prefix, optional and defaultable, for example `dgen/`.
+
+How it works:
+
+- DGen asks the local server to sign an upload URL.
+- The browser uploads the file directly to object storage.
+- DGen asks the local server to sign a temporary GET URL.
+- The model service fetches the file from that temporary URL.
+- DGen can optionally delete temporary objects after use.
+
+Configuration rule:
+
+- The basic user experience should only ask for access key, secret key, region, and bucket.
+- Endpoint, prefix, signed URL TTL, CORS origins, and cleanup policy belong in advanced settings.
+- For private single-user deployments, these settings can live in server environment variables so the UI only shows "cloud storage connected."
+
 ## Storage Planning
 
 ### Local Storage
@@ -126,6 +206,8 @@ Use it for:
 - Large reference images.
 - Provider input files that must be fetched by URL.
 
+It is not mandatory that users create a BytePlus TOS bucket. The product requirement is an object-storage system that can upload files, generate HTTPS URLs readable by remote models, sign temporary access, and delete objects. BytePlus TOS is the current implementation, not the long-term product boundary.
+
 Supported storage targets to consider:
 
 - BytePlus TOS.
@@ -141,6 +223,7 @@ Minimum storage abstraction:
 interface StorageProvider {
   id: string
   name: string
+  authSchema: CredentialField[]
   upload(file: File, options: UploadOptions): Promise<StoredObject>
   signGet(objectKey: string, ttlSeconds: number): Promise<string>
   delete(objectKey: string): Promise<void>
@@ -148,6 +231,21 @@ interface StorageProvider {
 ```
 
 For personal use, only one storage provider needs to be active at a time.
+
+Recommended personal-cloud UX:
+
+- Simple mode: provider, access key, secret key, region, bucket.
+- Hide endpoint when it can be derived from region.
+- Default the prefix to `dgen/`.
+- Configure or verify CORS during the connection test.
+- Show the connected storage as "My cloud space" after validation.
+- Keep advanced settings available for endpoint overrides, custom domains, URL TTL, prefix, and cleanup policy.
+
+Provider priority:
+
+- Keep BytePlus TOS working first because the current code already supports it.
+- Add an S3-compatible adapter next. This unlocks Cloudflare R2, AWS S3, and MinIO with one architecture.
+- Treat ordinary drive products as lower priority because shared links often include redirects, browser pages, anti-hotlinking, or unstable access rules that remote AI models may not be able to fetch reliably.
 
 ### Provider Asset Libraries
 
@@ -256,17 +354,20 @@ Scope:
 
 - Add `StorageProvider` abstraction.
 - Keep BytePlus TOS as one implementation.
-- Add S3-compatible implementation.
+- Add S3-compatible implementation for Cloudflare R2, AWS S3, and MinIO-style targets.
 - Add local-only asset records.
+- Add a simple "connect my cloud space" settings flow that hides endpoint, prefix, URL TTL, and CORS unless the user opens advanced settings.
 - Add URL-only reference media mode.
 
 Expected result:
 
 - The user can use local storage for organization and cloud storage only when remote models need file access.
+- The product flow remains the same whether files are stored in TOS, R2, S3, or MinIO.
 
 Risk:
 
 - Signed URL expiration and provider-specific CORS rules.
+- Some drive-style storage services expose share pages rather than direct model-readable files.
 
 ### Phase 3 - Model Provider Registry
 
