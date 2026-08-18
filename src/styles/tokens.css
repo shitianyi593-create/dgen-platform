@@ -4,17 +4,19 @@
   --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 
-  --color-bg: #0A0A0B;
-  --color-surface: #141416;
-  --color-surface-raised: #1C1C1F;
-  --color-text: #F5F5F6;
-  --color-text-muted: #A0A0A8;
-  --color-text-subtle: #68686F;
-  --color-border: #303036;
-  --color-accent: #F2F2F3;
-  --color-success: #36C98A;
-  --color-warning: #E3A43B;
-  --color-danger: #FF6B6B;
+  --color-bg: #080B12;
+  --color-surface: rgba(15, 23, 35, 0.88);
+  --color-surface-raised: rgba(22, 34, 50, 0.92);
+  --color-text: #F6FAFF;
+  --color-text-muted: #A8B7CA;
+  --color-text-subtle: #6F7F93;
+  --color-border: rgba(103, 132, 171, 0.28);
+  --color-accent: #4FD7FF;
+  --color-accent-2: #7CFFCB;
+  --color-accent-3: #B995FF;
+  --color-success: #49E6A2;
+  --color-warning: #F3C969;
+  --color-danger: #FF6F8F;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -29,14 +31,14 @@
   --radius-xl: 14px;
   --radius-pill: 999px;
 
-  --shadow-panel: 0 18px 54px rgba(0, 0, 0, 0.42);
-  --shadow-drawer: -30px 0 60px rgba(0, 0, 0, 0.58);
-  --shadow-focus: 0 0 0 3px rgba(242, 242, 243, 0.18);
+  --shadow-panel: 0 18px 60px rgba(0, 0, 0, 0.48), 0 0 36px rgba(79, 215, 255, 0.07);
+  --shadow-drawer: -30px 0 70px rgba(0, 0, 0, 0.62), -1px 0 0 rgba(79, 215, 255, 0.18);
+  --shadow-focus: 0 0 0 3px rgba(79, 215, 255, 0.22), 0 0 22px rgba(124, 255, 203, 0.12);
 
   /* Compatibility aliases for the existing component surface. */
   --bg-primary: var(--color-bg);
   --bg-secondary: var(--color-surface);
-  --bg-tertiary: #18181B;
+  --bg-tertiary: rgba(18, 29, 44, 0.78);
   --bg-input: var(--color-surface-raised);
   --border: var(--color-border);
   --border-focus: var(--color-accent);
@@ -44,10 +46,9 @@
   --text-secondary: var(--color-text-muted);
   --text-muted: var(--color-text-subtle);
 
-  /* Existing buttons often hard-code #fff text, so keep this alias dark. */
-  --accent: #3F3F46;
-  --accent-hover: #52525B;
-  --accent-contrast: #111113;
+  --accent: #168BFF;
+  --accent-hover: #1DB8FF;
+  --accent-contrast: #061019;
 
   --danger: var(--color-danger);
   --success: var(--color-success);
@@ -57,21 +58,23 @@
   --warn: var(--color-danger);
   --pend: var(--color-text-muted);
 
-  --ok-bg: rgba(54, 201, 138, 0.12);
-  --warn-bg: rgba(255, 107, 107, 0.12);
-  --pend-bg: rgba(160, 160, 168, 0.11);
-  --ok-bd: rgba(54, 201, 138, 0.34);
-  --warn-bd: rgba(255, 107, 107, 0.34);
-  --pend-bd: rgba(160, 160, 168, 0.24);
+  --ok-bg: rgba(73, 230, 162, 0.12);
+  --warn-bg: rgba(255, 111, 143, 0.13);
+  --pend-bg: rgba(168, 183, 202, 0.11);
+  --ok-bd: rgba(73, 230, 162, 0.36);
+  --warn-bd: rgba(255, 111, 143, 0.38);
+  --pend-bd: rgba(168, 183, 202, 0.24);
 
-  --success-bg: rgba(54, 201, 138, 0.12);
-  --success-bd: rgba(54, 201, 138, 0.34);
-  --danger-bg: rgba(255, 107, 107, 0.12);
-  --danger-bd: rgba(255, 107, 107, 0.38);
-  --warning-bg: rgba(227, 164, 59, 0.13);
-  --warning-bd: rgba(227, 164, 59, 0.36);
-  --accent-bg: rgba(242, 242, 243, 0.10);
-  --accent-bd: rgba(242, 242, 243, 0.22);
+  --success-bg: rgba(73, 230, 162, 0.12);
+  --success-bd: rgba(73, 230, 162, 0.36);
+  --danger-bg: rgba(255, 111, 143, 0.12);
+  --danger-bd: rgba(255, 111, 143, 0.38);
+  --warning-bg: rgba(243, 201, 105, 0.13);
+  --warning-bd: rgba(243, 201, 105, 0.36);
+  --accent-bg: rgba(79, 215, 255, 0.11);
+  --accent-bd: rgba(79, 215, 255, 0.32);
 
-  --type-image: #B8A3FF;
+  --type-image: #B995FF;
+  --tech-grid: rgba(103, 132, 171, 0.11);
+  --tech-grid-strong: rgba(79, 215, 255, 0.16);
 }

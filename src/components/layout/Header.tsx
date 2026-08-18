@@ -34,7 +34,9 @@ export default function Header() {
         padding: '0 24px',
         height: 56,
         borderBottom: '1px solid var(--border)',
-        background: 'var(--bg-secondary)',
+        background: 'rgba(8, 13, 22, 0.82)',
+        boxShadow: '0 1px 0 rgba(79, 215, 255, 0.12), 0 14px 40px rgba(0, 0, 0, 0.26)',
+        backdropFilter: 'blur(18px) saturate(1.18)',
         flexShrink: 0,
       }}
     >
@@ -70,14 +72,17 @@ export default function Header() {
               onClick={() => navigate(path)}
               style={{
                 padding: '8px 16px',
-                background: isActive ? 'var(--bg-input)' : 'transparent',
+                background: isActive
+                  ? 'linear-gradient(135deg, rgba(79, 215, 255, 0.18), rgba(124, 255, 203, 0.10))'
+                  : 'transparent',
                 color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                border: isActive ? '1px solid var(--border)' : '1px solid transparent',
+                border: isActive ? '1px solid var(--accent-bd)' : '1px solid transparent',
                 borderRadius: 6,
                 fontSize: 14,
                 cursor: 'pointer',
                 fontWeight: isActive ? 500 : 400,
                 whiteSpace: 'nowrap',
+                boxShadow: isActive ? 'inset 0 1px 0 rgba(255,255,255,0.08), 0 0 18px rgba(79,215,255,0.08)' : 'none',
                 transition: 'all 0.15s',
               }}
             >
@@ -96,13 +101,15 @@ export default function Header() {
           aria-label={t('credentials.openSettings')}
           onClick={() => openDrawer()}
           style={{
-            background: 'transparent',
-            border: 'none',
+            background: 'var(--bg-input)',
+            border: '1px solid var(--border)',
+            borderRadius: 8,
             color: 'var(--text-secondary)',
             cursor: 'pointer',
-            padding: 4,
+            padding: 5,
             display: 'grid',
             placeItems: 'center',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
           }}
           title={`${t('credentials.title')} (⌘,)`}
         >

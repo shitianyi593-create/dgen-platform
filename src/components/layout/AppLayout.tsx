@@ -23,7 +23,16 @@ export default function AppLayout() {
   }, [])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', position: 'relative' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        position: 'relative',
+        background:
+          'linear-gradient(180deg, rgba(79, 215, 255, 0.04), rgba(8, 11, 18, 0) 22%), transparent',
+      }}
+    >
       <Header />
       <main style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
         <Outlet />

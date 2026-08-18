@@ -23,6 +23,7 @@ export function LanguageSwitcher() {
         background: 'var(--bg-input)',
         color: 'var(--text-secondary)',
         flexShrink: 0,
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
       }}
     >
       {OPTIONS.map((option, index) => {
@@ -42,7 +43,7 @@ export function LanguageSwitcher() {
               style={{
                 border: 'none',
                 borderRadius: 999,
-                background: isActive ? 'var(--bg-secondary)' : 'transparent',
+                background: isActive ? 'var(--accent-bg)' : 'transparent',
                 color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
                 cursor: 'pointer',
                 fontSize: 12,
@@ -50,6 +51,7 @@ export function LanguageSwitcher() {
                 lineHeight: 1,
                 minWidth: option.locale === 'zh-CN' ? 24 : 30,
                 padding: '6px 8px',
+                boxShadow: isActive ? '0 0 12px rgba(79,215,255,0.10)' : 'none',
               }}
             >
               {option.short}

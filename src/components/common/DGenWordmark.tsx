@@ -14,10 +14,11 @@ export function DGenWordmark({ compact = false }: DGenWordmarkProps) {
         alignItems: 'baseline',
         fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
         fontSize: compact ? 15 : 18,
-        letterSpacing: compact ? '-0.04em' : '-0.055em',
+        letterSpacing: 0,
         lineHeight: 1,
         whiteSpace: 'nowrap',
-        fontWeight: 650,
+        fontWeight: 700,
+        textShadow: '0 0 18px rgba(79, 215, 255, 0.22)',
       }}
     >
       {BRAND.wordmark}
